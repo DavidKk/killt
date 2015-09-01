@@ -1,0 +1,43 @@
+{
+  "name": "oTemplate",
+  "version": "1.0.0-pre",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "ignore": [
+    ".tmp",
+    ".build",
+    ".git",
+    ".gitignore",
+
+    "bower_components",
+    "node_modules",
+    "package.json",
+    "Gruntfile.js",
+
+    "*.bak",
+    "*.diff",
+    "*.err",
+    "*.orig",
+    "*.log",
+    "*.rej",
+    "*.swo",
+    "*.swp",
+    "*.zip",
+    "*.vi",
+    "*~",
+
+    ".DS_Store",
+    "._*",
+    "Thumbs.db",
+    ".cache",
+    ".project",
+    ".settings",
+    ".tmproj",
+    "*.esproj",
+    "nbproject",
+    "*.sublime-project",
+    "*.sublime-workspace",
+    ".idea"
+  ]
+}
