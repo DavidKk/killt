@@ -1,8 +1,14 @@
 /**
  * @class OTemplate 模板引擎
  * @param {Object} options 配置
- *   @param {String} openTag  起始标识
- *   @param {String} closeTag 结束标识
+ *   @param {Menu}    env        [unit, develop, produce]
+ *   @param {Boolean} noSyntax   是否使用使用原生语法
+ *   @param {Boolean} strict     是否通过严格模式编译语法
+ *   @param {Boolean} compress   压缩生成的HTML代码
+ *   @param {String}  openTag    语法的起始标识
+ *   @param {String}  closeTag   语法的结束标识
+ *   @param {Boolean} cache      是否缓存编译过的模板
+ *   @param {Array}   depends    追加渲染器的传值设定
  */
 var OTemplate = function(options) {
   options = options || {}
@@ -17,6 +23,38 @@ var OTemplate = function(options) {
 
   // set any syntax/设置语法
   isFunction(OTemplate._extends) && this.extends(OTemplate._extends)
+
+  ~extend(this._helpers, {
+    include: function(filename, data, options) {
+      return this.render(filename, data, options)
+    },
+    each: function(data, callback) {
+      forEach(data, callback)
+    },
+    escape: (function() {
+      var escapeHTML = {}
+      escapeHTML.SOURCES = {
+        '<': '&lt;',
+        '>': '&gt;',
+        '&': '&amp;',
+        '"': '&quot;',
+        "'": '&#x27;',
+        '/': '&#x2f;'
+      }
+
+      escapeHTML.escapeFn = function(name) {
+        return this.SOURCES[name]
+      }
+
+      escapeHTML.escape = function(content) {
+        return toString(content).replace(/&(?![\w#]+;)|[<>"']/g, this.escapeFn)
+      }
+
+      return function() {
+        return escapeHTML.escape.apply(escapeHTML, arguments)
+      }
+    })()
+  })
 }
 
 OTemplate._defaults = {             // 默认配置
@@ -27,7 +65,7 @@ OTemplate._defaults = {             // 默认配置
   openTag: '{{',                    // 起始标识
   closeTag: '}}',                   // 结束标识
   cache: true,                      // cache the compiled template/是否缓存编译过的模板
-  depends: []                       // add render arguments/添加渲染器的传值设定,默认拥有
+  depends: []                       // add render arguments/追加渲染器的传值设定,默认拥有 $data
 }
 
 /**
@@ -446,20 +484,20 @@ OTemplate.prototype.unhelper = function(name) {
 
 /**
  * @function compile 编译模板文件
- * @param  {String}   file     文件名
+ * @param  {String}   filename 文件名
  * @param  {Function} callback 回调函数
  * @param  {Object}   options  配置
  */
-OTemplate.prototype.compile = function(file, callback, options) {
+OTemplate.prototype.compile = function(filename, callback, options) {
   var conf = extend({}, this._defaults, options),
-      render = this.$$cache(file)
+      render = this.$$cache(filename)
 
   isFunction(render)
     ? callback(render)
-    : readFile(file, function(source) {
+    : readFile(filename, function(source) {
         render = this.$compile(source)
         if (true === conf.cache) {
-          this.$$cache(file, render)
+          this.$$cache(filename, render)
         }
 
         callback(render)
@@ -468,11 +506,11 @@ OTemplate.prototype.compile = function(file, callback, options) {
 
 /**
  * @function render 渲染模板文件
- * @param  {String}   file     文件名
+ * @param  {String}   filename 文件名
  * @param  {Object}   data     数据
  * @param  {Function} callback 回调函数
  * @param  {Object}   options  配置
  */
-OTemplate.prototype.render = function(file, data, callback, options) {
-
+OTemplate.prototype.render = function(filename, data, callback, options) {
+  
 }

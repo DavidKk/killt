@@ -4,47 +4,15 @@ OTemplate._defaults = extend(OTemplate._defaults, {
 
 OTemplate._extends = function() {
   this
-    .$registerSyntax('if@ifopen', 'if\\s*(.+)?\\s*', 'if($1) {')
-    .$registerSyntax('else@ifopen', 'else', '} else {')
-    .$registerSyntax('elseif@ifopen', 'else\\s*if\\s*(.+)?\\s*', '} else if($1) {')
-    .$registerSyntax('if@ifclose', '\\/if', '}')
-    .$registerSyntax('each@eachopen', 'each\\s*([^\\s]+)?\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', 'each($1, function($3$4) {')
-    .$registerSyntax('each@eachclose', '\\/each', '})')
+    .$registerSyntax('ifopen', 'if\\s*(.+)?\\s*', 'if($1) {')
+    .$registerSyntax('else', 'else', '} else {')
+    .$registerSyntax('elseif', 'else\\s*if\\s*(.+)?\\s*', '} else if($1) {')
+    .$registerSyntax('ifclose', '\\/if', '}')
+    .$registerSyntax('eachopen', 'each\\s*([^\\s]+)?\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', 'each($1, function($3$4) {')
+    .$registerSyntax('eachclose', '\\/each', '})')
     .$registerSyntax('include', 'include\\s*([^\\s,]+)?\\s*(,\\s*[^\\s+]+)?\\s*', 'include($1$2)')
     .$registerSyntax('escape', '#\\s*([^\\s]+)?\\s*', 'escape($1)')
     .$registerSyntax('helper', '\\s*(\\w*\\s*\\\()*([^<%= closeTag %>]*?)\\s*\\|\\s*([\\w]*?)\\s*(:\\s*([,\\w]*?))?(\\\))*\\s*', '$3(<%= openTag %>$2<%= closeTag %>,$5)', true)
-
-  ~extend(this._helpers, {
-    include: function(path) {
-      return ''
-    },
-    each: function(data, callback) {
-      forEach(data, callback)
-    },
-    escape: (function() {
-      var escapeHTML = {}
-      escapeHTML.SOURCES = {
-        '<': '&lt;',
-        '>': '&gt;',
-        '&': '&amp;',
-        '"': '&quot;',
-        "'": '&#x27;',
-        '/': '&#x2f;'
-      }
-
-      escapeHTML.escapeFn = function(name) {
-        return this.SOURCES[name]
-      }
-
-      escapeHTML.escape = function(content) {
-        return toString(content).replace(/&(?![\w#]+;)|[<>"']/g, this.escapeFn)
-      }
-
-      return function() {
-        return escapeHTML.escape.apply(escapeHTML, arguments)
-      }
-    })()
-  })
 }
 
 /**
