@@ -2,6 +2,7 @@
   "name": "oTemplate",
   "version": "1.0.0-pre",
   "license": "MIT",
+  "main": "dist",
   "dependencies": {},
   "devDependencies": {},
   "ignore": [
