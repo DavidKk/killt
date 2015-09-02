@@ -1,5 +1,5 @@
 /**
- * @class OTemplate 模板引擎
+ * @class OTemplate A Template engine for Javascript
  * @param {Object} options 配置
  *   @param {Menu}    env        [unit, develop, produce]
  *   @param {Boolean} noSyntax   是否使用使用原生语法

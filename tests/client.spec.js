@@ -1,8 +1,8 @@
-describe('Test OTemplate.', function() {
+describe('Test OTemplate In Client.', function() {
   oTemplate.config('env', 'unit')
 
   // lit version
-  describe('OTemplate can parse templates.', function() {
+  describe('oTemplate can parse templates.', function() {
     beforeEach(function() {
       jasmine.Ajax.install()
     })

@@ -1,6 +1,6 @@
 ~(function(root) {'use strict';
 /**
- * @class OTemplate 模板引擎
+ * @class OTemplate A Template engine for Javascript
  * @param {Object} options 配置
  *   @param {Menu}    env        [unit, develop, produce]
  *   @param {Boolean} noSyntax   是否使用使用原生语法
@@ -602,11 +602,25 @@ OTemplate.prototype.renderFile = function(filename, data, callback, options) {
     callback(render(data || {}))
   }, options)
 };
+/**
+ * Syntax - 语法模块
+ * @description
+ * 该模块主要提供一系列方法和基础语法供使用者更为简洁编写模板和自定义扩展语法
+ * 你可以通过 `$registerSyntax` 方法来扩展自己所需求的语法；
+ * 同时，现有的默认语法均可以通过 `$unregisterSyntax` 方法进行删除或清空，
+ * 使用者可以拥有完全自主的控制权，但是语法最终必须替换成原生语法 (以 `<%` 和 `%>` 为包裹标记)
+ * 其包裹内容是 Javascript 代码，你可以通过 `block` `helper` 为模板渲染时创建
+ * 需要的辅助函数。
+ * 
+ * 自定义语法需注意：
+ * 1. 正则表达式之间最好不要具有优先次序
+ * 2. 注意贪婪模式与非贪婪模式的选择
+ */
 OTemplate._defaults = extend(OTemplate._defaults, {
   noSyntax: false
 })
 
-OTemplate._extends = function(self) {
+OTemplate._extends = function() {
   var HELPER_SYNTAX = '\\s*([^\\s\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
       HELPER_REGEXP = this.$$compileRegexp(HELPER_SYNTAX)
 
