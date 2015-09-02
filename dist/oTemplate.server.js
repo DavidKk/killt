@@ -1184,20 +1184,14 @@ function UMD(name, factory, root) {
       // no module definaction
       : root[name] = factory(root)
 };
-function readFile(filename, callback) {
-  if (!isFunction(callback)) {
-    return
-  }
+var fs = require('fs')
 
-  var xhr = new XMLHttpRequest()
-  xhr.onreadystatechange = function() {
-    this.DONE === this.readyState && callback(this.responseText)
-  }
+function readFile(filename, callback, sync) {
+  sync = isBoolean(sync) ? sync : false
 
-  xhr.onerror = xhr.ontimeout = xhr.onabort = function() {
-    callback('')
+  if (isFunction(callback)) {
+    fs.readFile(filename, function(err, buffer) {
+      callback(buffer.toString())
+    })
   }
-
-  xhr.open('GET', filename, true)
-  xhr.send(null)
 }})(this);

@@ -1,9 +1,13 @@
 OTemplate._defaults = extend(OTemplate._defaults, {
-  noSyntax: true
+  noSyntax: false
 })
 
-OTemplate._extends = function() {
+OTemplate._extends = function(self) {
+  var HELPER_SYNTAX = '\\s*([^\\s\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
+      HELPER_REGEXP = this.$$compileRegexp(HELPER_SYNTAX)
+
   this
+    .$registerSyntax('echo', '@\\s*([^<%= closeTag %>]+)?\\s*', '=$1')
     .$registerSyntax('ifopen', 'if\\s*(.+)?\\s*', 'if($1) {')
     .$registerSyntax('else', 'else', '} else {')
     .$registerSyntax('elseif', 'else\\s*if\\s*(.+)?\\s*', '} else if($1) {')
@@ -12,7 +16,20 @@ OTemplate._extends = function() {
     .$registerSyntax('eachclose', '\\/each', '})')
     .$registerSyntax('include', 'include\\s*([^\\s,]+)?\\s*(,\\s*[^\\s+]+)?\\s*', 'include($1$2)')
     .$registerSyntax('escape', '#\\s*([^\\s]+)?\\s*', 'escape($1)')
-    .$registerSyntax('helper', '\\s*(\\w*\\s*\\\()*([^<%= closeTag %>]*?)\\s*\\|\\s*([\\w]*?)\\s*(:\\s*([,\\w]*?))?(\\\))*\\s*', '$3(<%= openTag %>$2<%= closeTag %>,$5)', true)
+    .$registerSyntax('helper', HELPER_SYNTAX, (function() {
+        return function($all, $1, $2, $3, $4, $5) {
+          var str = format.apply(this, arguments)
+          while(HELPER_REGEXP.exec(str)) {
+            str = str.replace(HELPER_REGEXP, format)
+          }
+
+          return '<%' + str + '%>'
+        }
+
+        function format($all, $1, $2, $3, $4, $5) {
+          return $2 + '(' + $1 + ($4 ? ',' + $4 : '') + ')' + ($5 ? $5.replace(/^\s*$/, '') : '')
+        }
+      })())
 }
 
 /**
@@ -52,10 +69,9 @@ OTemplate.prototype.$$compileRegexp = function(patternTpl, attributes) {
 
 /**
  * @function $registerSyntax 注册语法
- * @param  {String}               name       语法名称
- * @param  {String|Array|Object}  var_syntax 语法正则 (请使用非贪婪匹配的正则表达式)
- * @param  {String}               shell      元脚本
- * @param  {Boolean}              repeat     是否递推到不能匹配才停止
+ * @param  {String}                      name         语法名称
+ * @param  {String|Array|Object|RegExp}  var_syntax   语法正则 (请注意贪婪与贪婪模式)，当为 RegExp时，记得用 openTag 和 closeTag 包裹
+ * @param  {String|Function}             shell        元脚本, 当为 Function 时记得加上 `<%` 和 `%>` 包裹
  * @return {OTemplate}
  * @description
  *
@@ -68,14 +84,13 @@ OTemplate.prototype.$$compileRegexp = function(patternTpl, attributes) {
  * 但是这个正则是贪婪匹配，这样会造成很多匹配错误，我们必须将其改成 '(\\\w+)?'
  * 例如匹配 '{{aaa}}{{aaa}}' 的是否，贪婪匹配会将整个字符串匹配完成，而不是 '{{aaa}}'
  */
-OTemplate.prototype.$registerSyntax = function(name, var_syntax, shell, repeat) {
+OTemplate.prototype.$registerSyntax = function(name, var_syntax, shell) {
   var self = this
 
   if (2 < arguments.length) {
     this._blocks[name] = {
-      syntax: this.$$compileRegexp('<%= openTag %>' + var_syntax + '<%= closeTag %>', 'igm'),
-      shell: '<%' + this.$$compile(shell) + '%>',
-      repeat: true === repeat
+      syntax: isRegExp(var_syntax) ? var_syntax : this.$$compileRegexp('<%= openTag %>' + var_syntax + '<%= closeTag %>', 'igm'),
+      shell: isFunction(shell) ? shell : '<%' + this.$$compile(shell) + '%>'
     }
   }
   else if (isPlainObject(var_syntax)) {
@@ -86,7 +101,7 @@ OTemplate.prototype.$registerSyntax = function(name, var_syntax, shell, repeat) 
   else if (isArray(var_syntax)) {
     forEach(var_syntax, function(compiler) {
       isString(compiler.syntax)
-      && isString(compiler.shell)
+      && isString(compiler.shell) || isFunction(compiler.shell)
       && self.$registerSyntax(name, compiler.syntax, compiler.shell)
     })
   }
@@ -190,26 +205,12 @@ OTemplate.prototype.$compileSyntax = function(source, strict) {
   strict = !(false === strict)
 
   var conf = this._defaults,
-      shell,
       valid
 
   forEach(this._blocks, function(handle) {
-    var lastCompiled = source.replace(handle.syntax, handle.shell)
-
-    if (handle.repeat) {
-      while(source !== lastCompiled) {
-        source = lastCompiled
-        lastCompiled = source.replace(handle.syntax, handle.shell)
-      }
-    }
-
-    source = lastCompiled
+    source = source.replace(handle.syntax, handle.shell)
   })
 
-  shell = source
-    .replace(/<%(.*)(<%)+?(.*)(%>)+?(.*)%>/igm, '<%$1$3$5%>')
-    .replace(this.$$compileRegexp('<%(.*)?<%= openTag %>(.*)?<%= closeTag %>(.*)?%>', 'igm'), '<%$1$2$3%>')
-
   // 检测一下是否存在未匹配语法
-  return strict ? (true === (valid = this.$analyzeSyntax(shell, false)) ? shell : (this.$$throw(valid) || '')) : this.$clearSyntax(shell)
+  return strict ? (true === (valid = this.$analyzeSyntax(source, false)) ? source : (this.$$throw(valid) || '')) : this.$clearSyntax(source)
 }

@@ -15,6 +15,7 @@ var OTemplate = function(options) {
 
   this._caches = {}                   // render caches/编译器缓存
   this._blocks = {}                   // block syntax/块状语法
+  this._blockHelpers = {}             // block helpers/块状辅助函数
   this._helpers = {}                  // helpers/辅助函数
   this._defaults = {}                 // defualt config/默认配置
 
@@ -113,8 +114,10 @@ OTemplate.prototype.$$table = function(str) {
 OTemplate.prototype.$compileShell = function(source, strip) {
   strip = isBoolean(strip) ? strip : this._defaults.compress
 
-  var helpers = this._helpers,
-      methods = [],
+  var _helpers_ = this._helpers,
+      _blocks_ = this._blockHelpers,
+      helpers = [],
+      blocks = [],
       variables = [],
       line = 1,
       buffer = ''
@@ -141,23 +144,32 @@ OTemplate.prototype.$compileShell = function(source, strip) {
     buffer = 'var ' + name + '=$data.' + name + ';' + buffer
   })
 
-  forEach(unique(methods), function(name) {
+  forEach(unique(helpers), function(name) {
     buffer = 'var ' + name + '=$helpers.' + name + ';' + buffer
+  })
+
+  forEach(unique(blocks), function(name) {
+    buffer = 'var ' + name + '=$blocks.' + name + ';' + buffer
   })
 
   // use strict
   buffer = 'try {'
     +        '"use strict";'
-    +        'var $scope=this,$helpers=$scope.$helpers,$buffer="",$runtime=0;'
+    +        'var $scope=this,$helpers=$scope.$helpers,$blocks=$scope.$blocks,$buffer="",$runtime=0;'
     +        buffer
     +        'return $buffer;'
-    +      '} catch(err) {'
-    +         'throw {'
-    +           'message: err.message,'
-    +           'line: $runtime,'
-    +           'shell: "' + escape(this.$$table(source)) + '"'
-    +         '};'
-    +       '}'
+    +      '}'
+    +      'catch(err) {'
+    +        'throw {'
+    +          'message: err.message,'
+    +          'line: $runtime,'
+    +          'shell: "' + escape(this.$$table(source)) + '"'
+    +        '};'
+    +      '}'
+
+    +      'function $append(buffer) {'
+    +        '$buffer += buffer'
+    +      '}'
 
   return buffer
 
@@ -195,23 +207,7 @@ OTemplate.prototype.$compileShell = function(source, strip) {
    * @return {String}
    */
   function shellToJs(source) {
-    analyzeVariables(source)
-
-    if (/^\s*\w+\s*\([^\)]*?\)\s*$/.exec(source)) {
-      source = '$buffer+=' + source + '||"";'
-    }
-
-    line += source.split(/\n/).length - 1
-    source += '$runtime=' + line +  ';'
-    return source
-  }
-
-  /**
-   * @function analyzeVariables 给变量分类
-   * @param  {String} source JS shell
-   * @return {Array}
-   */
-  function analyzeVariables(source) {
+    // analyze and define variables
     forEach(getVariables(source), function(name) {
       if (!name) {
         return
@@ -222,15 +218,31 @@ OTemplate.prototype.$compileShell = function(source, strip) {
         return
       }
 
-      if (isFunction(helpers[name])) {
-        methods.push(name)
+      if (isFunction(_helpers_[name])) {
+        helpers.push(name)
+        return
+      }
+
+      if (isFunction(_blocks_[name])) {
+        blocks.push(name)
         return
       }
 
       variables.push(name)
     })
 
-    return [methods, variables]
+    // echo
+    if (/^=\s*[\w]+?\s*$/.exec(source)) {
+      source = '$buffer+=(' + source.replace(/[=\s;]/g, '') + ')||"";'
+    }
+    // echo helper
+    else if (/^\s*\w+\s*\([^\)]*?\)\s*$/.exec(source)) {
+      source = '$buffer+=' + source + '||"";'
+    }
+
+    line += source.split(/\n/).length - 1
+    source += '$runtime=' + line +  ';'
+    return source
   }
 
   /**
@@ -241,6 +253,7 @@ OTemplate.prototype.$compileShell = function(source, strip) {
   function getVariables(source) {
     var KEYWORDS = [
       '$data', '$helper', '$buffer', '$runtime',
+      '$append',
 
       'abstract', 'arguments',
       'break', 'boolean', 'byte',
@@ -262,12 +275,15 @@ OTemplate.prototype.$compileShell = function(source, strip) {
       'yield'
     ]
 
-    return source
+    var variables = source
       .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
       .replace(/[^\w$]+/g, ',')
-      .replace(new RegExp('\\b' + KEYWORDS.join('\\b|\\b') + '\\b', 'g'), '')
       .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
       .split(/^$|,+/)
+
+    return variables.filter(function(variable) {
+      return -1 === KEYWORDS.indexOf(variable)
+    })
   }
 }
 
@@ -289,7 +305,8 @@ OTemplate.prototype.$compile = function(source, options) {
   var shell = this.$compileShell(source)
   return buildRender(shell, args, {
     $source: this.$$table(origin),
-    $helpers: this._helpers
+    $helpers: this._helpers,
+    $blocks: this._blockHelpers
   })
 
   function buildRender(shell, args, scope) {
@@ -305,9 +322,7 @@ OTemplate.prototype.$compile = function(source, options) {
         shell: shell
       })
 
-      render = function() {
-        return ''
-      }
+      render = __render
     }
 
     return function() {
@@ -328,18 +343,6 @@ OTemplate.prototype.$compile = function(source, options) {
       }
     }
   }
-}
-
-/**
- * @function $render 渲染模板
- * @param  {String} source  模板
- * @param  {Object} data    数据
- * @param  {Object} options 配置
- * @return {String}
- */
-OTemplate.prototype.$render = function(source, data, options) {
-  var render = this.$compile(source, options)
-  return render(data)
 }
 
 /**
@@ -380,7 +383,7 @@ OTemplate.prototype.config = function(var_query, value) {
 
   var self = this
   if (isPlainObject(var_query)) {
-    each(options, function(name, value) {
+    forEach(options, function(name, value) {
       self.config(name, value)
     })
 
@@ -403,13 +406,13 @@ OTemplate.prototype.block = function(var_query, callback) {
     if (isString(var_query) && isFunction(callback)) {
       this
         .$registerSyntax(var_query + 'open', var_query + '\\s*([^<%= closeTag %>]*?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', var_query + '($1, function($3$4) {')
-        .$registerSyntax(var_query + 'close', '/' + var_query, '})')
-        ._helpers[var_query] = callback
+        .$registerSyntax(var_query + 'close', '/' + var_query, '}, $append);')
+        ._blockHelpers[var_query] = callback
     }
   }
   else {
     if (isString(var_query)) {
-      return this._helpers[var_query]
+      return this._blockHelpers[var_query]
     }
 
     if (isPlainObject(var_query)) {
@@ -429,7 +432,7 @@ OTemplate.prototype.block = function(var_query, callback) {
  * @return {OTemplate}
  */
 OTemplate.prototype.unblock = function(name) {
-  var blocks = this._blocks
+  var blocks = this._blockHelpers
 
   if (helpers.hasOwnProperty(name)) {
     delete helpers[name]
@@ -483,34 +486,118 @@ OTemplate.prototype.unhelper = function(name) {
 }
 
 /**
- * @function compile 编译模板文件
- * @param  {String}   filename 文件名
- * @param  {Function} callback 回调函数
- * @param  {Object}   options  配置
+ * @function compile 编译模板
+ * @param  {String} source  模板
+ * @param  {Object} options 配置
+ * @return {Function}
  */
-OTemplate.prototype.compile = function(filename, callback, options) {
+OTemplate.prototype.compile = function(source, options) {
   var conf = extend({}, this._defaults, options),
-      render = this.$$cache(filename)
+      cache = conf.cache,
+      filename = conf.filename,
+      render
 
-  isFunction(render)
-    ? callback(render)
-    : readFile(filename, function(source) {
-        render = this.$compile(source)
-        if (true === conf.cache) {
-          this.$$cache(filename, render)
-        }
+  if (true === cache && isString(filename)) {
+    render = this.$$cache(filename)
+    if (isFunction(render)) {
+      return render
+    }
 
-        callback(render)
-      })
+    render = this.$compile(source, conf)
+    this.$$cache(filename, source)
+    return render
+  }
+
+  return this.$compile(source, conf)
 }
 
 /**
- * @function render 渲染模板文件
+ * @function render 渲染模板
+ * @param  {String} source  模板
+ * @param  {Object} data    数据
+ * @param  {Object} options 配置
+ * @return {String}
+ */
+OTemplate.prototype.render = function(source, data, options) {
+  return this.compile(source, options)(data || {})
+}
+
+/**
+ * @function compileTpl 编译内联模板
+ * @param  {String} id      模板ID
+ * @param  {Object} options 配置
+ * @return {Function}
+ */
+OTemplate.prototype.compileTpl = function(id, options) {
+  var tpl = document.getElementById(id)
+  return tpl
+    ? this.compile(tpl.innerHTML, {
+        filename: id,
+      }, options)
+    : __throw({
+        message: '[Compile Template]: template `' + id + '` is not found.'
+      }) || __render
+}
+
+/**
+ * @function renderTpl 渲染内联模板
+ * @param  {String} id      模板ID
+ * @param  {Object} data    数据
+ * @param  {Object} options 配置
+ * @return {String}
+ */
+OTemplate.prototype.renderTpl = function(id, data, options) {
+  var render = this.compileTpl(id, options)
+  return render(data || {})
+}
+
+/**
+ * @function compileFile 编译模板文件
+ * @param  {String}   filename 文件名
+ * @param  {Function} callback 回调函数
+ *   @param {Function} render  渲染函数
+ * @param  {Object}   options  配置
+ */
+OTemplate.prototype.compileFile = function(filename, callback, options) {
+  if (!isFunction(callback)) {
+    return
+  }
+
+  var self = this,
+      conf = extend({}, this._defaults, options),
+      cache = conf.cache,
+      render
+
+  if (true === cache) {
+    render = this.$$cache(filename)
+
+    if (isFunction(render)) {
+      callback(render)
+    }
+    else {
+      readFile(filename, function(source) {
+        render = self.$compile(source)
+        self.$$cache(filename, render)
+        callback(render)
+      })
+    }
+  }
+  else {
+    render = self.$compile(source)
+    callback(render)
+  }
+}
+
+/**
+ * @function renderFile 渲染模板文件
  * @param  {String}   filename 文件名
  * @param  {Object}   data     数据
  * @param  {Function} callback 回调函数
+ *   @param {String} html 渲染结果HTML
  * @param  {Object}   options  配置
  */
-OTemplate.prototype.render = function(filename, data, callback, options) {
-  
+OTemplate.prototype.renderFile = function(filename, data, callback, options) {
+  return this.compileFile(filename, function(render) {
+    callback(render(data || {}))
+  }, options)
 }

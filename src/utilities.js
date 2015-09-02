@@ -100,6 +100,15 @@ function isArray(a) {
 }
 
 /**
+ * @function isRegExp 判断是否为正则
+ * @param  {Anything} a 需要判断的对象
+ * @return {Boolean}
+ */
+function isRegExp(a) {
+  return '[object RegExp]' === type(a)
+}
+
+/**
  * @function isPlainObject 是否为一个纯对象
  * @param  {Anything} a 需要判断的对象
  * @return {Boolean}
@@ -323,6 +332,14 @@ function __throw(error) {
 
     console.error(message)
   }
+}
+
+/**
+ * @function __render 伪渲染函数
+ * @return {String}
+ */
+function __render() {
+  return ''
 }
 
 /**
