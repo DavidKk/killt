@@ -25,6 +25,7 @@ var OTemplate = function(options) {
   // set any syntax/设置语法
   isFunction(OTemplate._extends) && this.extends(OTemplate._extends)
 
+  // set any helpers/设置基础辅助函数
   ~extend(this._helpers, {
     include: function(filename, data, options) {
       return this.render(filename, data, options)
@@ -92,14 +93,38 @@ OTemplate.prototype.$$cache = function(name, render) {
 
 /**
  * @function $$table 给每行开头添加序列号/add the line number to the string
- * @param  {String} str 
+ * @param  {String} str 需要添加序列号的字符串
  * @return {String}
  */
 OTemplate.prototype.$$table = function(str) {
-  var line = 0
+  var line = 0,
+      match = str.match(/([^\n]*)?\n|([^\n]+)$/g)
+
+  if (!match) {
+    return line + ' | ' + str
+  }
+
+  var max = match.length
   return str.replace(/([^\n]*)?\n|([^\n]+)$/g, function($all) {
-    return (++ line) + ':' + $all
+    return zeroize(++ line, max) + ' | ' + $all
   })
+
+  /**
+   * @function zeroize 补零
+   * @param  {Integer} num  需要补零的数字
+   * @param  {Integer} max  补零参考数字易为最大补零数字
+   * @param  {String}  zero 需要填补的 "零"
+   * @return {String}
+   */
+  function zeroize(num, max, zero) {
+    zero = zero || ' '
+    num = num.toString()
+    max = max.toString().replace(/\d/g, zero)
+
+    var res = max.split('')
+    res.splice(- num.length, num.length, num)
+    return res.join('')
+  }
 }
 
 /**
