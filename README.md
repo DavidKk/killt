@@ -8,7 +8,7 @@ oTempalte is a light template engine for Javascript.
 bower install oTemplate
 ```
 
-### How can is use?
+### How can i use?
 
 ```
 var oTempalte = require('oTemplate');
