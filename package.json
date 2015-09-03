@@ -1,6 +1,6 @@
 {
   "name": "oTemplate",
-  "version": "1.0.0-pre",
+  "version": "1.0.0-beta",
   "license": "MIT",
   "description": "Template engine for Javascript.",
   "homepage": "https://github.com/DavidKk/oTemplate",

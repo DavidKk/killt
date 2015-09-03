@@ -1,6 +1,6 @@
 {
   "name": "oTemplate",
-  "version": "1.0.0-pre",
+  "version": "1.0.0-beta",
   "license": "MIT",
   "main": "dist",
   "dependencies": {},
