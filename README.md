@@ -17,13 +17,13 @@ var oTempalte = require('oTemplate');
 oTempalte.compile('<div></div>', options)
 oTemplate.render('<div></div>', data, options)
 
-// Inline
+// Nested
 script(id="/template/inline.html", type="template/text")
 oTemplate.compileTpl('/template/inline.html', options)
 oTemplate.renderTpl('/template/index.html', data, options)
 
 // Ajax
-oTemplate.compileFile('/template/index.html', callback,options)
+oTemplate.compileFile('/template/index.html', callback, options)
 oTemplate.renderFile('/template/index.html', data, callback, options)
 ```
 
