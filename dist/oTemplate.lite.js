@@ -30,9 +30,6 @@ var OTemplate = function(options) {
     include: function(filename, data, options) {
       return this.render(filename, data, options)
     },
-    each: function(data, callback) {
-      forEach(data, callback)
-    },
     escape: (function() {
       var escapeHTML = {}
       escapeHTML.SOURCES = {
@@ -394,54 +391,6 @@ OTemplate.prototype.config = function(var_query, value) {
   if (isString(var_query)) {
     return this._defaults[var_query]
   }
-}
-
-/**
- * @function block 查询/设置块级辅助函数
- * @param  {String|Object}  var_query 需要查找或设置的函数名|需要设置辅助函数集合
- * @param  {Function}       callback  回调函数
- * @return {OTemplate|Function}
- */
-OTemplate.prototype.block = function(var_query, callback) {
-  if (1 < arguments.length) {
-    if (isString(var_query) && isFunction(callback)) {
-      this
-        .$registerSyntax(var_query + 'open', var_query + '\\s*([^<%= closeTag %>]*?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', var_query + '($1, function($3$4) {')
-        .$registerSyntax(var_query + 'close', '/' + var_query, '}, $append);')
-        ._blockHelpers[var_query] = callback
-    }
-  }
-  else {
-    if (isString(var_query)) {
-      return this._blockHelpers[var_query]
-    }
-
-    if (isPlainObject(var_query)) {
-      var name
-      for (name in var_query) {
-        this.block(name, var_query[name])
-      }
-    }
-  }
-
-  return this
-}
-
-/**
- * @function $unregisterSyntax 注销块级辅助函数
- * @param  {String} name 名称
- * @return {OTemplate}
- */
-OTemplate.prototype.unblock = function(name) {
-  var blocks = this._blockHelpers
-
-  if (helpers.hasOwnProperty(name)) {
-    delete helpers[name]
-    delete blocks[name + 'open']
-    delete blocks[name + 'close']
-  }
-
-  return this
 }
 
 /**
@@ -967,6 +916,11 @@ function UMD(name, factory, root) {
       // no module definaction
       : root[name] = factory(root)
 };
+/**
+ * @function readFile 读取文件
+ * @param  {String}   filename 文件名
+ * @param  {Function} callback 回调函数
+ */
 function readFile(filename, callback) {
   if (!isFunction(callback)) {
     return

@@ -26,4 +26,10 @@ OTemplate._extends = function() {
           return $2 + '(' + $1 + ($4 ? ',' + $4 : '') + ')' + ($5 ? $5.replace(/^\s*$/, '') : '')
         }
       })())
+
+  ~extend(this._helpers, {
+    each: function(data, callback) {
+      forEach(data, callback)
+    }
+  })
 }

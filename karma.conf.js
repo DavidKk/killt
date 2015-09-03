@@ -3,6 +3,7 @@ module.exports = function(config) {
     files: [
       'node_modules/jasmine-ajax/lib/mock-ajax.js',
       'dist/oTemplate.js',
+      'tests/main.spec.js',
       'tests/client.spec.js'
     ],
     autoWatch: false,

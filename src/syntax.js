@@ -1,5 +1,5 @@
 /**
- * Syntax - 语法模块
+ * Syntax Module - 语法模块
  * @description
  * 该模块主要提供一系列方法和基础语法供使用者更为简洁编写模板和自定义扩展语法
  * 你可以通过 `$registerSyntax` 方法来扩展自己所需求的语法；
@@ -15,36 +15,6 @@
 OTemplate._defaults = extend(OTemplate._defaults, {
   noSyntax: false
 })
-
-OTemplate._extends = function() {
-  var HELPER_SYNTAX = '\\s*([^\\s\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
-      HELPER_REGEXP = this.$$compileRegexp(HELPER_SYNTAX)
-
-  this
-    .$registerSyntax('echo', '@\\s*([^<%= closeTag %>]+)?\\s*', '=$1')
-    .$registerSyntax('ifopen', 'if\\s*(.+)?\\s*', 'if($1) {')
-    .$registerSyntax('else', 'else', '} else {')
-    .$registerSyntax('elseif', 'else\\s*if\\s*(.+)?\\s*', '} else if($1) {')
-    .$registerSyntax('ifclose', '\\/if', '}')
-    .$registerSyntax('eachopen', 'each\\s*([^\\s]+)?\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', 'each($1, function($3$4) {')
-    .$registerSyntax('eachclose', '\\/each', '})')
-    .$registerSyntax('include', 'include\\s*([^\\s,]+)?\\s*(,\\s*[^\\s+]+)?\\s*', 'include($1$2)')
-    .$registerSyntax('escape', '#\\s*([^\\s]+)?\\s*', 'escape($1)')
-    .$registerSyntax('helper', HELPER_SYNTAX, (function() {
-        return function($all, $1, $2, $3, $4, $5) {
-          var str = format.apply(this, arguments)
-          while(HELPER_REGEXP.exec(str)) {
-            str = str.replace(HELPER_REGEXP, format)
-          }
-
-          return '<%' + str + '%>'
-        }
-
-        function format($all, $1, $2, $3, $4, $5) {
-          return $2 + '(' + $1 + ($4 ? ',' + $4 : '') + ')' + ($5 ? $5.replace(/^\s*$/, '') : '')
-        }
-      })())
-}
 
 /**
  * @function $$compile 通过配置作为数据来替换模板
@@ -227,4 +197,52 @@ OTemplate.prototype.$compileSyntax = function(source, strict) {
 
   // 检测一下是否存在未匹配语法
   return strict ? (true === (valid = this.$analyzeSyntax(source, false)) ? source : (this.$$throw(valid) || '')) : this.$clearSyntax(source)
+}
+
+/**
+ * @function block 查询/设置块级辅助函数
+ * @param  {String|Object}  var_query 需要查找或设置的函数名|需要设置辅助函数集合
+ * @param  {Function}       callback  回调函数
+ * @return {OTemplate|Function}
+ */
+OTemplate.prototype.block = function(var_query, callback) {
+  if (1 < arguments.length) {
+    if (isString(var_query) && isFunction(callback)) {
+      this
+        .$registerSyntax(var_query + 'open', '(' + var_query + ')\\s*([\\w\\s,\\\"\\\']+)?\\s*(:\\s*([,\\w\\s]+)?)?', '$1($2, $append, function($4) {var $buffer="";')
+        .$registerSyntax(var_query + 'close', '/' + var_query, 'return $buffer;});')
+        ._blockHelpers[var_query] = callback
+    }
+  }
+  else {
+    if (isString(var_query)) {
+      return this._blockHelpers[var_query]
+    }
+
+    if (isPlainObject(var_query)) {
+      var name
+      for (name in var_query) {
+        this.block(name, var_query[name])
+      }
+    }
+  }
+
+  return this
+}
+
+/**
+ * @function $unregisterSyntax 注销块级辅助函数
+ * @param  {String} name 名称
+ * @return {OTemplate}
+ */
+OTemplate.prototype.unblock = function(name) {
+  var blocks = this._blockHelpers
+
+  if (helpers.hasOwnProperty(name)) {
+    delete helpers[name]
+    delete blocks[name + 'open']
+    delete blocks[name + 'close']
+  }
+
+  return this
 }

@@ -8,7 +8,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch')
   grunt.loadNpmTasks('grunt-karma')
 
-  // Configuring
+  // Configure
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
@@ -35,6 +35,7 @@ module.exports = function(grunt) {
         src: [
           'src/main.js',
           'src/syntax.js',
+          'syntax/default.js',
           'src/export.js',
           'src/utilities.js',
           'src/client.js'
@@ -54,6 +55,7 @@ module.exports = function(grunt) {
         src: [
           'src/main.js',
           'src/syntax.js',
+          'syntax/default.js',
           'src/export.js',
           'src/utilities.js',
           'src/server.js'
