@@ -548,14 +548,14 @@ OTemplate.prototype.compileFile = function(filename, callback, options) {
             requires = [],
             match
 
-        while(match = /include\s*\([\"\']([\w\/\.]+)[\"\']?\s*(,\s*\{[^\}]+\})\)/g.exec(_source)) {
-          requires.push(match[1])
+        while(match = /<%\s*include\(\s*(\'([^\']+)?\'|\"([^\"]+)?\")((,\s*([\w]+|\{[\w\W]+\})\s*)*)\s*\)\s*%>/.exec(_source)) {
+          requires.push(match[3])
           _source = _source.replace(match[0], '')
         }
 
         var total = requires.length
         total > 0
-          ? forEach(requires, function(file) {
+          ? forEach(unique(requires), function(file) {
               self.compileFile(file, function() {
                 0 >= (-- total) && __return()
               }, extend(conf, { overwrite: false }))
