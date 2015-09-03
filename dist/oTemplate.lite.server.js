@@ -549,7 +549,7 @@ OTemplate.prototype.compileFile = function(filename, callback, options) {
             requires = [],
             match
 
-        while(match = /<%\s*include\(\s*(\'([^\']+)?\'|\"([^\"]+)?\")((,\s*([\w]+|\{[\w\W]+\})\s*)*)\s*\)\s*%>/.exec(_source)) {
+        while(match = /<%\s*include\s*\(\s*(\'([^\']+)?\'|\"([^\"]+)?\")((,\s*([\w]+|\{[\w\W]+\})\s*)*)\s*\)\s*%>/.exec(_source)) {
           requires.push(match[3])
           _source = _source.replace(match[0], '')
         }
