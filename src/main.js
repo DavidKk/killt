@@ -303,7 +303,7 @@ OTemplate.prototype.$compileShell = function(source, strip) {
       .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
       .split(/^$|,+/)
 
-    return variables.filter(function(variable) {
+    return filter(variables, function(variable) {
       return -1 === KEYWORDS.indexOf(variable)
     })
   }
@@ -446,7 +446,7 @@ OTemplate.prototype.helper = function(var_query, callback) {
 }
 
 /**
- * @function helper 注销辅助函数
+ * @function unhelper 注销辅助函数
  * @param  {String} name 名称
  * @return {OTemplate}
  */

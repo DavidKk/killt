@@ -1,3 +1,12 @@
+/**
+ * Simple Syntax Defination/定义简单语法
+ * @description
+ * `if`:      {{if true}}...{{elseif}}...{{else}}...{{/if}}
+ * `each`:    {{each data as value,key}}...{{/each}}
+ * `include`: {{include "/templates/index.html", data}}
+ * `escape`:  {{# "<div></div>"}}
+ * `helper`:  {{data | helperA:dataA,dataB,dataC | helperB:dataD,dataE,dataF}}
+ */
 OTemplate._extends = function() {
   var HELPER_SYNTAX = '\\s*([^\\s\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
       HELPER_REGEXP = this.$$compileRegexp(HELPER_SYNTAX)

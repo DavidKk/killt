@@ -19,8 +19,8 @@ oTemplate.render('<div></div>', data, options)
 
 // Inline
 script(id="/template/inline.html", type="template/text")
-oTemplate.comiple('/template/inline.html', options)
-oTemplate.render('/template/index.html', data, options)
+oTemplate.compileTpl('/template/inline.html', options)
+oTemplate.renderTpl('/template/index.html', data, options)
 
 // Ajax
 oTemplate.compileFile('/template/index.html', callback,options)

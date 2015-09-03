@@ -171,41 +171,6 @@ function namespace(query, space, token) {
 }
 
 /**
- * @function make 制作对象
- * @param  {String}     query
- * @param  {Object}     space 需要制作的对象
- * @param  {Anything} value 需要赋的值
- * @param  {String}     token 分割 token
- * @return {Anything}
- * 
- * @example
- *     {a:{}}       -> $.make('a.a.a.a', 1) -> {a:{a:{a:{a:1}}}}
- *     {a:{a:1}}    -> $.make('a.a', 2)     -> {a:{a:2}}
- */
-function make(query, space, value, token) {
-  var i = 0,
-      ns = query.split(token || '.'),
-      l = ns.length,
-      ori = space || {},
-      re = ori;
-
-  for (; i < l; i ++) {
-      if (i == l -1) {
-        re[ns[i]] = value;
-      }
-      else {
-        if (!(re.hasOwnProperty(ns[i]) && isPlainObject(re[ns[i]]))) {
-          re[ns[i]] = {}
-        }
-
-        re = re[ns[i]]
-      }
-  }
-
-  return ori
-}
-
-/**
  * @function toString 强制转化成字符串
  * @param  {Anything} value 传入的值
  * @return {String}
@@ -287,6 +252,25 @@ function unique(a) {
   }
 
   return r
+}
+
+/**
+ * @function filter 过滤
+ * @param  {Object|Array}   collection  需要过滤的元素
+ * @param  {Function}       callback    回调函数
+ * @return {Object|Array}
+ */
+function filter(collection, callback) {
+  var isArr = isArray(collection),
+      res = isArr ? [] : {}
+
+  forEach(collection, function(val, key) {
+    if (callback(val, key)) {
+      res[isArr ? res.length : key] = val
+    }
+  })
+
+  return res
 }
 
 /**
