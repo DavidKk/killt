@@ -12,6 +12,7 @@ describe('Test OTemplate.', function() {
       var view = oTemplate.render('<%if (1) {%><div><%= message %></div><%}%>', {
         message: 'Hello world'
       })
+
       expect(view).toEqual('<div>Hello world</div>')
     })
   })

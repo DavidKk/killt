@@ -7,7 +7,6 @@
  *   @param {Boolean} compress   压缩生成的HTML代码
  *   @param {String}  openTag    语法的起始标识
  *   @param {String}  closeTag   语法的结束标识
- *   @param {Boolean} cache      是否缓存编译过的模板
  *   @param {Array}   depends    追加渲染器的传值设定
  */
 var OTemplate = function(options) {
@@ -57,15 +56,14 @@ var OTemplate = function(options) {
   })
 }
 
-OTemplate._defaults = {             // 默认配置
-  env: 'produce',                   // 当前环境 [unit, develop, produce]
-  noSyntax: false,                  // is use origin js syntax/是否使用使用原生语法
+OTemplate._defaults = {             // default options/默认配置
+  env: 'produce',                   // current entironment/当前环境 [unit, develop, produce]
+  noSyntax: false,                  // is use native syntax/是否使用使用原生语法
   strict: true,                     // compile syntax in strict mode/是否通过严格模式编译语法
   compress: true,                   // compress the html code/压缩生成的HTML代码
-  openTag: '{{',                    // 起始标识
-  closeTag: '}}',                   // 结束标识
-  cache: true,                      // cache the compiled template/是否缓存编译过的模板
-  depends: []                       // add render arguments/追加渲染器的传值设定,默认拥有 $data
+  openTag: '{{',                    // open tag for syntax/起始标识
+  closeTag: '}}',                   // close tag for syntax/结束标识
+  depends: []                       // addition render arguments/追加渲染器的传值设定,默认拥有 $data
 }
 
 /**
@@ -467,23 +465,19 @@ OTemplate.prototype.unhelper = function(name) {
  * @return {Function}
  */
 OTemplate.prototype.compile = function(source, options) {
+  source = source.toString()
+
   var conf = extend({}, this._defaults, options),
-      cache = conf.cache,
       filename = conf.filename,
-      render
+      render = true === conf.overwrite || this.$$cache(filename)
 
-  if (true === cache && isString(filename)) {
-    render = this.$$cache(filename)
-    if (isFunction(render)) {
-      return render
-    }
-
-    render = this.$compile(source, conf)
-    this.$$cache(filename, source)
+  if (isFunction(render)) {
     return render
   }
 
-  return this.$compile(source, conf)
+  render = this.$compile(source, conf)
+  isString(filename) && this.$$cache(filename, render)
+  return render
 }
 
 /**
@@ -504,14 +498,19 @@ OTemplate.prototype.render = function(source, data, options) {
  * @return {Function}
  */
 OTemplate.prototype.compileTpl = function(id, options) {
-  var tpl = document.getElementById(id)
-  return tpl
-    ? this.compile(tpl.innerHTML, {
-        filename: id,
-      }, options)
-    : __throw({
-        message: '[Compile Template]: template `' + id + '` is not found.'
-      }) || __render
+  id = id.toString()
+
+  var conf = extend({}, this._defaults, options),
+      render = true === conf.overwrite || this.$$cache(id)
+
+  if (isFunction(render)) {
+    return render
+  }
+
+  var node = document.getElementById(id)
+  return node
+    ? this.compile(node.innerHTML, { filename: id }, conf)
+    : __throw({ message: '[Compile Template]: template `' + id + '` is not found.' }) || __render
 }
 
 /**
@@ -540,27 +539,35 @@ OTemplate.prototype.compileFile = function(filename, callback, options) {
 
   var self = this,
       conf = extend({}, this._defaults, options),
-      cache = conf.cache,
-      render
+      render = true === conf.overwrite || this.$$cache(filename)
 
-  if (true === cache) {
-    render = this.$$cache(filename)
+  isFunction(render)
+    ? callback(render)
+    : readFile(filename, function(source) {
+        var _source = source,
+            requires = [],
+            match
 
-    if (isFunction(render)) {
-      callback(render)
-    }
-    else {
-      readFile(filename, function(source) {
-        render = self.$compile(source)
-        self.$$cache(filename, render)
-        callback(render)
+        while(match = /include\s*\([\"\']([\w\/\.]+)[\"\']?\s*(,\s*\{[^\}]+\})\)/g.exec(_source)) {
+          requires.push(match[1])
+          _source = _source.replace(match[0], '')
+        }
+
+        var total = requires.length
+        total > 0
+          ? forEach(requires, function(file) {
+              self.compileFile(file, function() {
+                0 >= (-- total) && __return()
+              }, extend(conf, { overwrite: false }))
+            })
+          : __return()
+
+        function __return() {
+          render = self.$compile(source)
+          self.$$cache(filename, render)
+          callback(render)
+        }
       })
-    }
-  }
-  else {
-    render = self.$compile(source)
-    callback(render)
-  }
 }
 
 /**
@@ -572,7 +579,11 @@ OTemplate.prototype.compileFile = function(filename, callback, options) {
  * @param  {Object}   options  配置
  */
 OTemplate.prototype.renderFile = function(filename, data, callback, options) {
-  return this.compileFile(filename, function(render) {
+  if (isFunction(data)) {
+    return this.renderFile(filename, {}, data, callback)
+  }
+
+  isFunction(callback) && this.compileFile(filename, function(render) {
     callback(render(data || {}))
   }, options)
 }

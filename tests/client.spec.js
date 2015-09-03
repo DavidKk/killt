@@ -66,7 +66,7 @@ describe('Test OTemplate In Client.', function() {
         responseText: '<div><%= mesage %></div>'
       })
 
-      oTemplate.renderFile('/templates/e.html', function(view) {
+      oTemplate.renderFile('/templates/e.html', {}, function(view) {
         expect(view).toEqual('<div>Hello AJAX!!!</div>')
         done()
       })
