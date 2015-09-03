@@ -34,7 +34,7 @@ describe('Test OTemplate.', function() {
       expect(shell).toEqual('<%each(data, function(value, key) {%>\n<div></div>\n<%})%>')
 
       shell = oTemplate.$compileSyntax('{{each data}}\n<div></div>\n{{/each}}')
-      expect(shell).toEqual('<%each(data, function() {%>\n<div></div>\n<%})%>')
+      expect(shell).toEqual('<%each(data, function($value, $index) {%>\n<div></div>\n<%})%>')
     })
 
     it('should allow compile `include` syntax.', function() {

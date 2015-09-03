@@ -65,8 +65,8 @@ oTemplate.renderFile('/template/index.html', data, callback, options)
 
 ```
 var oTempalte = require('oTemplate')
-oTemplate.helper('like', function(who) {
-  return 'Like ' + who + '!!!'
+oTemplate.helper('hate', function(who) {
+  return 'Hate ' + who + '!!!'
 })
 ```
 
@@ -74,7 +74,7 @@ oTemplate.helper('like', function(who) {
 
 ```
 var oTempalte = require('oTemplate')
-oTemplate.block('hate', function(who, $append, blockShell) {
+oTemplate.block('Like', function(who, $append, blockShell) {
   $append(who ? '<span>Like ' + who + '!!!</span>' : blockShell())
 })
 
@@ -86,7 +86,7 @@ oTemplate.block('hate', function(who, $append, blockShell) {
 
 ```
 var oTemplate = require('oTemplate')
-oTemplate.$registerSyntax('fuck', 'fuck\\s*([^<%= closeTag %>]+)?\\s*', 'hate($1)')
+oTemplate.$registerSyntax('fuck', 'fuck\\s*([^<%= closeTag %>]+)?\\s*', 'fuck($1)')
 
 // HTML
 {{fuck 'Q'}}

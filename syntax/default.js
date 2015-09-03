@@ -17,7 +17,10 @@ OTemplate._extends = function() {
     .$registerSyntax('else', 'else', '} else {')
     .$registerSyntax('elseif', 'else\\s*if\\s*(.+)?\\s*', '} else if($1) {')
     .$registerSyntax('ifclose', '\\/if', '}')
-    .$registerSyntax('eachopen', 'each\\s*([^\\s]+)?\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', 'each($1, function($3$4) {')
+    .$registerSyntax('eachopen', 'each\\s*([^\\s]+)?\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', function($all, $1, $2, $3, $4) {
+        var str = 'each(' + $1 + ', function(' + ($3 || '$value') + ($4 || ', $index') + ') {'
+        return '<%' + str + '%>'
+      })
     .$registerSyntax('eachclose', '\\/each', '})')
     .$registerSyntax('include', 'include\\s*([^\\s,]+)?\\s*(,\\s*[^\\s+]+)?\\s*', 'include($1$2)')
     .$registerSyntax('escape', '#\\s*([^\\s]+)?\\s*', 'escape($1)')

@@ -95,7 +95,7 @@ module.exports = function(grunt) {
         tasks: ['develop']
       },
       compile: {
-        files: ['src/*.js'],
+        files: ['src/*.js', 'syntax/*.js'],
         tasks: ['clean', 'concat', 'uglify']
       }
     }
