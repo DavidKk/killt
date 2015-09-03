@@ -19,7 +19,7 @@ module.exports = function(grunt) {
     concat: {
       options: {
         separator: ';\n',
-        banner: '~(function(root) {\'use strict\';\n',
+        banner: '~(function(root) {\'use strict\'\n',
         footer: '})(this);'
       },
       lite: {

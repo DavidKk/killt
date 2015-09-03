@@ -12,6 +12,7 @@
  */
 var OTemplate = function(options) {
   options = options || {}
+  var self = this
 
   this._caches = {}                   // render caches/编译器缓存
   this._blocks = {}                   // block syntax/块状语法
@@ -28,7 +29,7 @@ var OTemplate = function(options) {
   // set any helpers/设置基础辅助函数
   ~extend(this._helpers, {
     include: function(filename, data, options) {
-      return this.render(filename, data, options)
+      return self.renderTpl(filename, data, options)
     },
     escape: (function() {
       var escapeHTML = {}
