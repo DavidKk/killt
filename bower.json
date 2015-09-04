@@ -3,19 +3,15 @@
   "version": "1.0.0-beta",
   "license": "MIT",
   "main": "dist",
-  "dependencies": {},
-  "devDependencies": {},
   "ignore": [
     ".tmp",
     ".build",
     ".git",
     ".gitignore",
-
     "bower_components",
     "node_modules",
     "package.json",
     "Gruntfile.js",
-
     "*.bak",
     "*.diff",
     "*.err",
@@ -27,7 +23,6 @@
     "*.zip",
     "*.vi",
     "*~",
-
     ".DS_Store",
     "._*",
     "Thumbs.db",
@@ -39,6 +34,19 @@
     "nbproject",
     "*.sublime-project",
     "*.sublime-workspace",
-    ".idea"
+    ".idea",
+    "**/.*",
+    "test",
+    "tests"
+  ],
+  "homepage": "https://github.com/DavidKk/oTemplate",
+  "authors": [
+    "David Jones <qowera@qq.com>"
+  ],
+  "description": "Template engine for Javascript.",
+  "keywords": [
+    "template",
+    "engine",
+    "javascript"
   ]
 }

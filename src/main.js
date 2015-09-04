@@ -554,13 +554,20 @@ OTemplate.prototype.compileFile = function(filename, callback, options) {
         }
 
         var total = requires.length
-        total > 0
-          ? forEach(unique(requires), function(file) {
-              self.compileFile(file, function() {
-                0 >= (-- total) && __return()
-              }, extend(conf, { overwrite: false }))
-            })
-          : __return()
+        if (total > 0) {
+          forEach(unique(requires), function(file) {
+            self.$$cache(file)
+              ? __exec()
+              : self.compileFile(file, __exec, extend(conf, { overwrite: false }))
+          })
+        }
+        else {
+          __return()
+        }
+
+        function __exec() {
+          0 >= (-- total) && __return()
+        }
 
         function __return() {
           render = self.$compile(source)

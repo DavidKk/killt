@@ -8,6 +8,10 @@ oTempalte is a light template engine for Javascript.
 bower install oTemplate
 ```
 
+### Docs
+
+[http://davidkk.github.io/oTemplate](http://davidkk.github.io/oTemplate)
+
 ### How can i use?
 
 ```
@@ -68,18 +72,21 @@ var oTempalte = require('oTemplate')
 oTemplate.helper('hate', function(who) {
   return 'Hate ' + who + '!!!'
 })
+
+// HTML
+{{"U" | hate}}
 ```
 
 #### Customize Block (full version, not in lite version)
 
 ```
 var oTempalte = require('oTemplate')
-oTemplate.block('Like', function(who, $append, blockShell) {
+oTemplate.block('like', function(who, $append, blockShell) {
   $append(who ? '<span>Like ' + who + '!!!</span>' : blockShell())
 })
 
 // HTML
-{{hate 'U'}}<div>Me?</div>{{/hate}}
+{{like 'U'}}<div>Me?</div>{{/like}}
 ```
 
 #### Customize Syntax (full version, not in lite version)
@@ -90,9 +97,6 @@ oTemplate.$registerSyntax('fuck', 'fuck\\s*([^<%= closeTag %>]+)?\\s*', 'fuck($1
 
 // HTML
 {{fuck 'Q'}}
-
-// Shell
-<%fuck("Q")%>
 ```
 
 Note: `fuck` is a helper, so u must use `oTemplate.helper('fuck', function() {})` to add a helper.
