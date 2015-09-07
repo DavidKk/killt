@@ -14,7 +14,7 @@ describe('Test OTemplate In Client.', function() {
     it('should render the templates in script-node.', function() {
       document.body.innerHTML = '<script id="/templates/a.html" type="/templates/text"><%if (1) {%><div>Hello world</div><%}%></script>'
 
-      var view = oTemplate.renderTpl('/templates/a.html')
+      var view = oTemplate.renderById('/templates/a.html')
       expect(view).toEqual('<div>Hello world</div>')
     })
 
@@ -43,7 +43,7 @@ describe('Test OTemplate In Client.', function() {
       ]
 
       document.body.innerHTML = template.join('')
-      var view = oTemplate.renderTpl('/templates/c.html')
+      var view = oTemplate.renderById('/templates/c.html')
       expect(view).toEqual('<div>Hello Nested!!!</div>')
     })
 

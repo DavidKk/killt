@@ -23,8 +23,8 @@ oTemplate.render('<div></div>', data, options)
 
 // Nested
 script(id="/template/inline.html", type="template/text")
-oTemplate.compileTpl('/template/inline.html', options)
-oTemplate.renderTpl('/template/index.html', data, options)
+oTemplate.compileById('/template/inline.html', options)
+oTemplate.renderById('/template/index.html', data, options)
 
 // Ajax
 oTemplate.compileFile('/template/index.html', callback, options)

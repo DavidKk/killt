@@ -29,7 +29,7 @@ var OTemplate = function(options) {
   // set any helpers/设置基础辅助函数
   ~extend(this._helpers, {
     include: function(filename, data, options) {
-      return self.renderTpl(filename, data, options)
+      return self.renderById(filename, data, options)
     },
     escape: (function() {
       var escapeHTML = {}
@@ -96,18 +96,20 @@ OTemplate.prototype.$$cache = function(name, render) {
  * @param  {String} str 需要添加序列号的字符串
  * @return {String}
  */
-OTemplate.prototype.$$table = function(str) {
-  var line = 0,
-      match = str.match(/([^\n]*)?\n|([^\n]+)$/g)
+OTemplate.prototype.$$table = (function() {
+  return function(str) {
+    var line = 0,
+        match = str.match(/([^\n]*)?\n|([^\n]+)$/g)
 
-  if (!match) {
-    return line + ' | ' + str
+    if (!match) {
+      return line + ' | ' + str
+    }
+
+    var max = match.length
+    return str.replace(/([^\n]*)?\n|([^\n]+)$/g, function($all) {
+      return zeroize(++ line, max) + ' | ' + $all
+    })
   }
-
-  var max = match.length
-  return str.replace(/([^\n]*)?\n|([^\n]+)$/g, function($all) {
-    return zeroize(++ line, max) + ' | ' + $all
-  })
 
   /**
    * @function zeroize 补零
@@ -125,7 +127,7 @@ OTemplate.prototype.$$table = function(str) {
     res.splice(- num.length, num.length, num)
     return res.join('')
   }
-}
+})()
 
 /**
  * @function $compileShell 编译脚本
@@ -133,138 +135,140 @@ OTemplate.prototype.$$table = function(str) {
  * @param  {Boolean}  strict 严格模式
  * @return {String}
  */
-OTemplate.prototype.$compileShell = function(source, strip) {
-  strip = isBoolean(strip) ? strip : this._defaults.compress
+OTemplate.prototype.$compileShell = (function() {
+  return function(source, strip) {
+    strip = isBoolean(strip) ? strip : this._defaults.compress
 
-  var _helpers_ = this._helpers,
-      _blocks_ = this._blockHelpers,
-      helpers = [],
-      blocks = [],
-      variables = [],
-      line = 1,
-      buffer = ''
+    var _helpers_ = this._helpers,
+        _blocks_ = this._blockHelpers,
+        helpers = [],
+        blocks = [],
+        variables = [],
+        line = 1,
+        buffer = ''
 
-  source = (source || '')
+    /**
+     * @function htmlToJs 解析HTML为JS字符串拼接
+     * @param  {String} source HTML
+     * @return {String}
+     */
+    var htmlToJs = function(source) {
+      source = source
+        .replace(/<!--[\w\W]*?-->/g, '')
+        .replace(/^ +$/, '')
 
-  forEach(source.split('<%'), function(code) {
-    code = code.split('%>')
+      if (source === '') {
+        return ''
+      }
 
-    var p1 = code[0],
-        p2 = code[1]
+      line += source.split(/\n/).length - 1
+      source = source.replace(/(["'\\])/g, '\\$1')
+      source = true === strip
+        ? source
+          .replace(/[\r\t\n]/g, '')
+          .replace(/ +/g, ' ')
+        : source
+          .replace(/\t/g, '\\t')
+          .replace(/\r/g, '\\r')
+          .replace(/\n/g, '\\n')
 
-    if (1 === code.length) {
-      buffer += htmlToJs(p1)
-    }
-    else {
-      buffer += shellToJs(p1)
-      buffer += htmlToJs(p2)
-    }
-  })
-
-  // define helpers and variables
-  forEach(unique(variables), function(name) {
-    buffer = 'var ' + name + '=$data.' + name + ';' + buffer
-  })
-
-  forEach(unique(helpers), function(name) {
-    buffer = 'var ' + name + '=$helpers.' + name + ';' + buffer
-  })
-
-  forEach(unique(blocks), function(name) {
-    buffer = 'var ' + name + '=$blocks.' + name + ';' + buffer
-  })
-
-  // use strict
-  buffer = 'try {'
-    +        '"use strict";'
-    +        'var $scope=this,$helpers=$scope.$helpers,$blocks=$scope.$blocks,$buffer="",$runtime=0;'
-    +        buffer
-    +        'return $buffer;'
-    +      '}'
-    +      'catch(err) {'
-    +        'throw {'
-    +          'message: err.message,'
-    +          'line: $runtime,'
-    +          'shell: "' + escape(this.$$table(source)) + '"'
-    +        '};'
-    +      '}'
-
-    +      'function $append(buffer) {'
-    +        '$buffer += buffer'
-    +      '}'
-
-  return buffer
-
-  /**
-   * @function htmlToJs 解析HTML为JS字符串拼接
-   * @param  {String} source HTML
-   * @return {String}
-   */
-  function htmlToJs(source) {
-    source = source
-      .replace(/<!--[\w\W]*?-->/g, '')
-      .replace(/^ +$/, '')
-
-    if (source === '') {
-      return ''
+      return '$buffer+="' + source + '";'
     }
 
-    line += source.split(/\n/).length - 1
-    source = source.replace(/(["'\\])/g, '\\$1')
-    source = true === strip
-      ? source
-        .replace(/[\r\t\n]/g, '')
-        .replace(/ +/g, ' ')
-      : source
-        .replace(/\t/g, '\\t')
-        .replace(/\r/g, '\\r')
-        .replace(/\n/g, '\\n')
+    /**
+     * @function shellToJs 解析脚本为JS字符串拼接
+     * @param  {String} source JS shell
+     * @return {String}
+     */
+    var shellToJs = function(source) {
+      // analyze and define variables
+      forEach(getVariables(source), function(name) {
+        if (!name) {
+          return
+        }
 
-    return '$buffer+="' + source + '";'
-  }
+        var func = root[name]
+        if (isFunction(func) && func.toString().match(/^\s*?function \w+\(\) \{\s*?\[native code\]\s*?\}\s*?$/i)) {
+          return
+        }
 
-  /**
-   * @function shellToJs 解析脚本为JS字符串拼接
-   * @param  {String} source JS shell
-   * @return {String}
-   */
-  function shellToJs(source) {
-    // analyze and define variables
-    forEach(getVariables(source), function(name) {
-      if (!name) {
-        return
+        if (isFunction(_helpers_[name])) {
+          helpers.push(name)
+          return
+        }
+
+        if (isFunction(_blocks_[name])) {
+          blocks.push(name)
+          return
+        }
+
+        variables.push(name)
+      })
+
+      // echo
+      if (/^=\s*[\w]+?\s*$/.exec(source)) {
+        source = '$buffer+=(' + source.replace(/[=\s;]/g, '') + ')||"";'
+      }
+      // echo helper
+      else if (/^\s*\w+\s*\([^\)]*?\)\s*$/.exec(source)) {
+        source = '$buffer+=' + source + '||"";'
       }
 
-      var func = root[name]
-      if (isFunction(func) && func.toString().match(/^\s*?function \w+\(\) \{\s*?\[native code\]\s*?\}\s*?$/i)) {
-        return
-      }
+      line += source.split(/\n/).length - 1
+      source += '$runtime=' + line +  ';'
+      return source
+    }
 
-      if (isFunction(_helpers_[name])) {
-        helpers.push(name)
-        return
-      }
+    source = (source || '')
 
-      if (isFunction(_blocks_[name])) {
-        blocks.push(name)
-        return
-      }
+    forEach(source.split('<%'), function(code) {
+      code = code.split('%>')
 
-      variables.push(name)
+      var p1 = code[0],
+          p2 = code[1]
+
+      if (1 === code.length) {
+        buffer += htmlToJs(p1)
+      }
+      else {
+        buffer += shellToJs(p1)
+        buffer += htmlToJs(p2)
+      }
     })
 
-    // echo
-    if (/^=\s*[\w]+?\s*$/.exec(source)) {
-      source = '$buffer+=(' + source.replace(/[=\s;]/g, '') + ')||"";'
-    }
-    // echo helper
-    else if (/^\s*\w+\s*\([^\)]*?\)\s*$/.exec(source)) {
-      source = '$buffer+=' + source + '||"";'
-    }
+    // define helpers and variables
+    forEach(unique(variables), function(name) {
+      buffer = 'var ' + name + '=$data.' + name + ';' + buffer
+    })
 
-    line += source.split(/\n/).length - 1
-    source += '$runtime=' + line +  ';'
-    return source
+    forEach(unique(helpers), function(name) {
+      buffer = 'var ' + name + '=$helpers.' + name + ';' + buffer
+    })
+
+    forEach(unique(blocks), function(name) {
+      buffer = 'var ' + name + '=$blocks.' + name + ';' + buffer
+    })
+
+    // use strict
+    buffer = 'try {'
+      +        '"use strict";'
+      +        'var $scope=this,$helpers=$scope.$helpers,$blocks=$scope.$blocks,$buffer="",$runtime=0;'
+      +        buffer
+      +        'return $buffer;'
+      +      '}'
+      +      'catch(err) {'
+      +        'throw {'
+      +          'message: err.message,'
+      +          'line: $runtime,'
+      +          'shell: "' + escape(this.$$table(source)) + '"'
+      +        '};'
+      +      '}'
+
+      +      'function $append(buffer) {'
+      +        '$buffer += buffer'
+      +      '}'
+
+    return buffer
   }
 
   /**
@@ -307,7 +311,7 @@ OTemplate.prototype.$compileShell = function(source, strip) {
       return -1 === KEYWORDS.indexOf(variable)
     })
   }
-}
+})()
 
 /**
  * @function $compile 编译模板为函数
@@ -315,21 +319,23 @@ OTemplate.prototype.$compileShell = function(source, strip) {
  * @param   {Object}    options  编译配置
  * @return  {Function}
  */
-OTemplate.prototype.$compile = function(source, options) {
-  var origin = source,
-      conf = extend({}, this._defaults, options),
-      args = ['$data'].concat(conf.depends).join(',')
+OTemplate.prototype.$compile = (function() {
+  return function(source, options) {
+    var origin = source,
+        conf = extend({}, this._defaults, options),
+        args = ['$data'].concat(conf.depends).join(',')
 
-  if (true !== conf.noSyntax) {
-    source = this.$compileSyntax(source, !!conf.strict)
+    if (true !== conf.noSyntax) {
+      source = this.$compileSyntax(source, !!conf.strict)
+    }
+
+    var shell = this.$compileShell(source)
+    return buildRender(shell, args, {
+      $source: this.$$table(origin),
+      $helpers: this._helpers,
+      $blocks: this._blockHelpers
+    })
   }
-
-  var shell = this.$compileShell(source)
-  return buildRender(shell, args, {
-    $source: this.$$table(origin),
-    $helpers: this._helpers,
-    $blocks: this._blockHelpers
-  })
 
   function buildRender(shell, args, scope) {
     var render
@@ -365,7 +371,7 @@ OTemplate.prototype.$compile = function(source, options) {
       }
     }
   }
-}
+})()
 
 /**
  * @function OTemplate 生成一个新的 OTemplate 制作对象
@@ -493,12 +499,12 @@ OTemplate.prototype.render = function(source, data, options) {
 }
 
 /**
- * @function compileTpl 编译内联模板
+ * @function compileById 编译内联模板
  * @param  {String} id      模板ID
  * @param  {Object} options 配置
  * @return {Function}
  */
-OTemplate.prototype.compileTpl = function(id, options) {
+OTemplate.prototype.compileById = function(id, options) {
   id = id.toString()
 
   var conf = extend({}, this._defaults, options),
@@ -515,14 +521,14 @@ OTemplate.prototype.compileTpl = function(id, options) {
 }
 
 /**
- * @function renderTpl 渲染内联模板
+ * @function renderById 渲染内联模板
  * @param  {String} id      模板ID
  * @param  {Object} data    数据
  * @param  {Object} options 配置
  * @return {String}
  */
-OTemplate.prototype.renderTpl = function(id, data, options) {
-  var render = this.compileTpl(id, options)
+OTemplate.prototype.renderById = function(id, data, options) {
+  var render = this.compileById(id, options)
   return render(data || {})
 }
 
@@ -555,6 +561,17 @@ OTemplate.prototype.compileFile = function(filename, callback, options) {
         }
 
         var total = requires.length
+        var __exec = function() {
+          0 >= (-- total) && __return()
+        }
+
+        var __return = function() {
+          render = self.$compile(source)
+          self.$$cache(filename, render)
+          callback(render)
+          total = undefined
+        }
+
         if (total > 0) {
           forEach(unique(requires), function(file) {
             self.$$cache(file)
@@ -564,16 +581,6 @@ OTemplate.prototype.compileFile = function(filename, callback, options) {
         }
         else {
           __return()
-        }
-
-        function __exec() {
-          0 >= (-- total) && __return()
-        }
-
-        function __return() {
-          render = self.$compile(source)
-          self.$$cache(filename, render)
-          callback(render)
         }
       })
 }
