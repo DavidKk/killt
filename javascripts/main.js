@@ -1,22 +1,60 @@
 !(function() {
-  // Configure
+  // Helpers
   var routes = {}
+  function addRoute(name, handle) {
+    if ($.isFunction(handle)) {
+      routes[name] = handle
+    }
+  }
+
+  function digest() {
+    var route = window.location.hash.replace('#', '')
+    $.each(routes, function(name, handle) {
+      name === route && handle()
+    })
+  }
+
+  var views = {}
+  function render(file) {
+    if (views.hasOwnProperty(file)) {
+      $('#main-content').html(views[file])
+    }
+    else {
+      $.get(file)
+      .success(function(tpl) {
+        var view = views[file] = marked(tpl, {
+          highlight: function(code, lang) {
+            try {
+              return hljs.highlight(lang, code).value
+            }
+            catch(e) {
+              return hljs.highlightAuto(code).value
+            }
+          }
+        })
+
+        $('#main-content').html(view)
+      })
+    }
+  }
+
+
+  // Configure
   addRoute('gettingstarted', function() {
+    var view
     $('[data-role="nav"][href="#gettingstarted"]')
       .parent()
       .addClass('active')
 
-    var view = oTemplate.renderTpl('templates/index.html')
-    $('#main-content').html(view)
+    render('markdowns/index.md')
   })
 
-  addRoute('example', function() {
-    $('[data-role="nav"][href="#example"]')
+  addRoute('examples', function() {
+    $('[data-role="nav"][href="#examples"]')
       .parent()
       .addClass('active')
 
-    var view = oTemplate.renderTpl('templates/example.html')
-    $('#main-content').html(view)
+    render('markdowns/examples.md')
   })
 
   addRoute('docs', function() {
@@ -24,13 +62,19 @@
       .parent()
       .addClass('active')
 
-    var view = oTemplate.renderTpl('templates/docs.html')
-    $('#main-content').html(view)
+    render('markdowns/docs.md')
   })
 
   // Ready
   $(document)
   .ready(function() {
+    var loc = window.location,
+        route = loc.hash.replace(/^#*([\w]+?)/, '$1')
+
+    if (!routes.hasOwnProperty(route)) {
+      loc.hash = Object.keys(routes)[0]
+    }
+
     digest()
   })
   // Events
@@ -47,17 +91,4 @@
     setTimeout(digest)
   })
 
-  // Helpers
-  function addRoute(name, handle) {
-    if ($.isFunction(handle)) {
-      routes[name] = handle
-    }
-  }
-
-  function digest() {
-    var route = window.location.hash.replace('#', '')
-    $.each(routes, function(name, handle) {
-      name === route && handle()
-    })
-  }
 })();

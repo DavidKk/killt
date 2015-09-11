@@ -38,3 +38,7 @@ nav .nav > .active > a {
   color: #463265;
   background-color: #EAECEF;
 }
+
+#main-content ul {
+  margin-bottom: 0;
+}

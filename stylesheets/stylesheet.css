@@ -429,7 +429,7 @@ th {
 /* LAYOUT STYLES */
 body {
   font-family: 'Helvetica Neue', Helvetica, Arial, serif;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 400;
   line-height: 1.5;
   color: #666;
@@ -562,14 +562,15 @@ pre {
   padding: 20px;
   overflow: auto;
   text-shadow: none;
-  background: #fff;
+  background: #f7f7f7;
   border: solid 1px #f2f2f2;
 }
 pre code {
   padding: 0;
-  color: #2879d0;
-  background-color: #fff;
+  background-color: transparent;
   border: none;
+  color: #333;
+  font-size: 16px;
 }
 
 ul, ol, dl {
