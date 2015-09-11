@@ -2,105 +2,134 @@
 
 oTempalte is a light template engine for Javascript.
 
+### Examples & Docs
+
+[http://davidkk.github.io/oTemplate](http://davidkk.github.io/oTemplate)
+
 ### Install
 
 ```
 bower install oTemplate
 ```
 
-### Docs
+### Features
 
-[http://davidkk.github.io/oTemplate](http://davidkk.github.io/oTemplate)
+- Support request template by ajax.
+- Support comstom block helper.
+- Support comstom syntax.
+- Support compiled caches.
+- Support UMD.
 
 ### How can i use?
 
-```
-var oTempalte = require('oTemplate');
+#### Lit Version
 
+```
+<script id="templates/list/default.html" type="template/text">
+  <h1><%= title %></h1>
+  <ul>
+    <%each(list, function(value, index) {%>
+      <li><%= index %>: <%= @value %></li>
+    <%})%>
+  </ul>
+</script>
+```
+
+#### Default Syntax Version
+```
+# Template In HTML
+<script id="templates/list/default.html" type="template/text">
+  <h1>{{@title}}</h1>
+  <ul>
+      {{each list as value index}}
+          <li>{{@index}}: {{@value}}</li>
+      {{\/each}}
+  </ul>
+</script>
+```
+
+### Compile and Render
+```
 // Source
-oTempalte.compile('<div></div>', options)
-oTemplate.render('<div></div>', data, options)
+oTempalte.compile([String source], [Object options])
+oTemplate.render([String source], [Object Data], [Object options])
 
 // Nested
 script(id="/template/inline.html", type="template/text")
-oTemplate.compileById('/template/inline.html', options)
-oTemplate.renderById('/template/index.html', data, options)
+oTemplate.compileById([String TemplateId], [Object options])
+oTemplate.renderById([String TemplateId], [Object data], [Object options])
 
 // Ajax
-oTemplate.compileFile('/template/index.html', callback, options)
-oTemplate.renderFile('/template/index.html', data, callback, options)
+oTemplate.compileFile([String File], [Function callback], [Object options])
+oTemplate.renderFile([String File], [Object data], [Function callback], [Object options])
 ```
 
-### Lite
-
+####  by template
 ```
-<%if (true) {%>
-  <div>Hello World</div>
-<%}%>
+var oTemplate = window.oTemplate
+var oTempalte = require('oTemplate')
 
-<% for (var i = 0 ; i < 10; i ++) {%>
-  <div><%= i %> Times</div>
-<% } %>
-
-<% helper(data) %>
-<% include(data) %>
+oTemplate.renderById('templates/list/default.html', {
+  title: 'Customer Title',
+  list: {
+    Author: 'David Jones',
+    Gender: 'Male'e
+  }
+})
 ```
 
-### Syntax
-
+##### Compiled by Ajax
 ```
-{{if true}}
-  <div>Hello World</div>
-{{/if}}
-
-{{each data as value, key}}
-  <div>{{@key}}:{{@value}}</div>
-{{/each}}
-
-{{helper(data)}}
-{{include "/templates/index.html", data}}
-
-{{block data : value}}
-  <div>{{value}}</div>
-{{/block}}
+oTemplate.renderByAjax('templates/list/default.html', function(html) {
+  // do something...
+})
 ```
 
 #### Customize Helpers
 
 ```
-var oTempalte = require('oTemplate')
 oTemplate.helper('hate', function(who) {
   return 'Hate ' + who + '!!!'
 })
 
 // HTML
 {{"U" | hate}}
+
+// Output
+'Hate U !!!'
 ```
 
 #### Customize Block (full version, not in lite version)
 
 ```
-var oTempalte = require('oTemplate')
 oTemplate.block('like', function(who, $append, blockShell) {
-  $append(who ? '<span>Like ' + who + '!!!</span>' : blockShell())
+  $append(who ? 'Like ' + who + '!!!' : blockShell())
 })
 
 // HTML
-{{like 'U'}}<div>Me?</div>{{/like}}
+{{like 'U'}}Me?{{/like}}
+
+// Output
+'Like U!!!'
 ```
 
 #### Customize Syntax (full version, not in lite version)
 
 ```
-var oTemplate = require('oTemplate')
 oTemplate.$registerSyntax('fuck', 'fuck\\s*([^<%= closeTag %>]+)?\\s*', 'fuck($1)')
 
 // HTML
 {{fuck 'Q'}}
+
+// Be comipled to native template is
+<% fuck('Q'); %>
 ```
 
 Note: `fuck` is a helper, so u must use `oTemplate.helper('fuck', function() {})` to add a helper.
 
-#### Detail
+### Details
 
-[See the code and the annotate...](https://github.com/DavidKk/oTemplate/blob/master/dist/oTemplate.js)
+[See the code and the detailed annotate...](https://github.com/DavidKk/oTemplate/blob/master/dist/oTemplate.js)
+
+### Updates
+

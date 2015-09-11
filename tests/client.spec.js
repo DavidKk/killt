@@ -28,7 +28,7 @@ describe('Test OTemplate In Client.', function() {
         responseText: '<%if (1) {%><div>Hello world</div><%}%>'
       })
 
-      oTemplate.renderFile('/templates/b.html', {}, function(view) {
+      oTemplate.renderByAjax('/templates/b.html', {}, function(view) {
         expect(view).toEqual('<div>Hello world</div>')
         done()
       })
@@ -66,7 +66,7 @@ describe('Test OTemplate In Client.', function() {
         responseText: '<div><%= mesage %></div>'
       })
 
-      oTemplate.renderFile('/templates/e.html', {}, function(view) {
+      oTemplate.renderByAjax('/templates/e.html', {}, function(view) {
         expect(view).toEqual('<div>Hello AJAX!!!</div>')
         done()
       })

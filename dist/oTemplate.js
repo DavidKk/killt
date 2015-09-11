@@ -533,13 +533,13 @@ OTemplate.prototype.renderById = function(id, data, options) {
 }
 
 /**
- * @function compileFile 编译模板文件
+ * @function compileByAjax 编译模板文件
  * @param  {String}   filename 文件名
  * @param  {Function} callback 回调函数
  *   @param {Function} render  渲染函数
  * @param  {Object}   options  配置
  */
-OTemplate.prototype.compileFile = function(filename, callback, options) {
+OTemplate.prototype.compileByAjax = function(filename, callback, options) {
   if (!isFunction(callback)) {
     return
   }
@@ -576,7 +576,7 @@ OTemplate.prototype.compileFile = function(filename, callback, options) {
           forEach(unique(requires), function(file) {
             self.$$cache(file)
               ? __exec()
-              : self.compileFile(file, __exec, extend(conf, { overwrite: false }))
+              : self.compileByAjax(file, __exec, extend(conf, { overwrite: false }))
           })
         }
         else {
@@ -586,19 +586,19 @@ OTemplate.prototype.compileFile = function(filename, callback, options) {
 }
 
 /**
- * @function renderFile 渲染模板文件
+ * @function renderByAjax 渲染模板文件
  * @param  {String}   filename 文件名
  * @param  {Object}   data     数据
  * @param  {Function} callback 回调函数
  *   @param {String} html 渲染结果HTML
  * @param  {Object}   options  配置
  */
-OTemplate.prototype.renderFile = function(filename, data, callback, options) {
+OTemplate.prototype.renderByAjax = function(filename, data, callback, options) {
   if (isFunction(data)) {
-    return this.renderFile(filename, {}, data, callback)
+    return this.renderByAjax(filename, {}, data, callback)
   }
 
-  isFunction(callback) && this.compileFile(filename, function(render) {
+  isFunction(callback) && this.compileByAjax(filename, function(render) {
     callback(render(data || {}))
   }, options)
 };
