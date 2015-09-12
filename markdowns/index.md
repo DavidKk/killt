@@ -4,19 +4,18 @@ oTemplate is a template engine for Javascript.
 
 
 ## Install
+
 ```
 bower install oTemplate
 ```
 
-
 ## Features
 
 - Support request template by ajax.
-- Support comstom block helper.
-- Support comstom syntax.
+- Support comstomize block helper.
+- Support comstomize syntax.
 - Support compiled caches.
 - Support UMD.
-
 
 ## How can i use?
 
@@ -34,7 +33,6 @@ bower install oTemplate
 ```
 
 ### Default Syntax Version
-
 ```
 # Template In HTML
 <script id="templates/list/default.html" type="template/text">
@@ -46,7 +44,6 @@ bower install oTemplate
   </ul>
 </script>
 ```
-
 
 ## Compile and Render
 
@@ -65,8 +62,7 @@ oTemplate.compileFile([String File], [Function callback], [Object options])
 oTemplate.renderFile([String File], [Object data], [Function callback], [Object options])
 ```
 
-### Compileted by Element
-
+### Compiled by node
 ```
 var oTemplate = window.oTemplate
 var oTempalte = require('oTemplate')
@@ -81,7 +77,6 @@ oTemplate.renderById('templates/list/default.html', {
 ```
 
 ### Compiled by Ajax
-
 ```
 oTemplate.renderByAjax('templates/list/default.html', function(html) {
   // do something...
@@ -119,7 +114,7 @@ oTemplate.block('like', function(who, $append, blockShell) {
 ## Customize Syntax (full version, not in lite version)
 
 ```
-oTemplate.$registerSyntax('fuck', 'fuck\\s*([^\s]+?)\\s*', 'fuck($1)')
+oTemplate.$registerSyntax('fuck', 'fuck\\s*([^<%= closeTag %>]+)?\\s*', 'fuck($1)')
 
 // HTML
 {{fuck 'Q'}}

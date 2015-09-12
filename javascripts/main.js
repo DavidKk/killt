@@ -40,31 +40,42 @@
 
   // Configure
   addRoute('gettingstarted', function() {
-    var view
+    var $con = $('#index-container')
     $('[data-role="nav"][href="#gettingstarted"]')
       .parent()
       .addClass('active')
 
     $('.module-container').hide()
-    render('markdowns/index.md', $('#index-container').show())
+
+    $con.data('render')
+      ? $con.show()
+      : render('markdowns/index.md', $con.data('render', true).show())
   })
 
   addRoute('examples', function() {
+    var $con = $('#examples-container')
     $('[data-role="nav"][href="#examples"]')
       .parent()
       .addClass('active')
 
     $('.module-container').hide()
-    render('markdowns/examples.md', $('#examples-container').show())
+
+    $con.data('render')
+      ? $con.show()
+      : render('markdowns/examples.md', $con.data('render', true).show())
   })
 
   addRoute('docs', function() {
+    var $con = $('#docs-container')
     $('[data-role="nav"][href="#docs"]')
       .parent()
       .addClass('active')
 
     $('.module-container').hide()
-    render('markdowns/docs.md', $('#docs-container').show())
+
+    $con.data('render')
+      ? $con.show()
+      : render('markdowns/docs.md', $con.data('render', true).show())
   })
 
   // Ready
