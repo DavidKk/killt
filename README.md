@@ -2,18 +2,18 @@
 
 oTempalte is a light template engine for Javascript.
 
-### Examples & Docs
+## Examples & Docs
 
 - [Docs](http://davidkk.github.io/oTemplate/#docs)
 - [Examples](http://davidkk.github.io/oTemplate/#examples)
 
-### Install
+## Install
 
 ```
 bower install oTemplate
 ```
 
-### Features
+## Features
 
 - Support request template by ajax.
 - Support comstom block helper.
@@ -21,9 +21,9 @@ bower install oTemplate
 - Support compiled caches.
 - Support UMD.
 
-### How can i use?
+## How can i use?
 
-#### Lit Version
+### Lit Version
 
 ```
 <script id="templates/list/default.html" type="template/text">
@@ -36,7 +36,7 @@ bower install oTemplate
 </script>
 ```
 
-#### Default Syntax Version
+### Default Syntax Version
 ```
 # Template In HTML
 <script id="templates/list/default.html" type="template/text">
@@ -49,7 +49,8 @@ bower install oTemplate
 </script>
 ```
 
-### Compile and Render
+## Compile and Render
+
 ```
 // Source
 oTempalte.compile([String source], [Object options])
@@ -65,7 +66,7 @@ oTemplate.compileFile([String File], [Function callback], [Object options])
 oTemplate.renderFile([String File], [Object data], [Function callback], [Object options])
 ```
 
-#### Compiled by node
+### Compiled by node
 ```
 var oTemplate = window.oTemplate
 var oTempalte = require('oTemplate')
@@ -79,14 +80,14 @@ oTemplate.renderById('templates/list/default.html', {
 })
 ```
 
-##### Compiled by Ajax
+### Compiled by Ajax
 ```
 oTemplate.renderByAjax('templates/list/default.html', function(html) {
   // do something...
 })
 ```
 
-#### Customize Helpers
+## Customize Helpers
 
 ```
 oTemplate.helper('hate', function(who) {
@@ -100,7 +101,7 @@ oTemplate.helper('hate', function(who) {
 'Hate U !!!'
 ```
 
-#### Customize Block (full version, not in lite version)
+## Customize Block (full version, not in lite version)
 
 ```
 oTemplate.block('like', function(who, $append, blockShell) {
@@ -114,7 +115,7 @@ oTemplate.block('like', function(who, $append, blockShell) {
 'Like U!!!'
 ```
 
-#### Customize Syntax (full version, not in lite version)
+## Customize Syntax (full version, not in lite version)
 
 ```
 oTemplate.$registerSyntax('fuck', 'fuck\\s*([^<%= closeTag %>]+)?\\s*', 'fuck($1)')
