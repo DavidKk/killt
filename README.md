@@ -4,7 +4,8 @@ oTempalte is a light template engine for Javascript.
 
 ### Examples & Docs
 
-[http://davidkk.github.io/oTemplate](http://davidkk.github.io/oTemplate)
+[Docs](http://davidkk.github.io/oTemplate/#docs)
+[Examples](http://davidkk.github.io/oTemplate/#examples)
 
 ### Install
 
