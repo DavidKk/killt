@@ -65,7 +65,7 @@ oTemplate.compileFile([String File], [Function callback], [Object options])
 oTemplate.renderFile([String File], [Object data], [Function callback], [Object options])
 ```
 
-####  by template
+#### Compiled by node
 ```
 var oTemplate = window.oTemplate
 var oTempalte = require('oTemplate')
