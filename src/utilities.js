@@ -18,41 +18,23 @@ function type(a) {
 }
 
 /**
- * @function isString 是否为一个字符串
+ * @function isDefined 是否不为 undefined
  * @param  {Anything} a 需要判断的对象
  * @return {Boolean}
  */
-function isString(a) {
-  return '[object String]' === type(a)
+function isDefined(a) {
+  return 'undefined' !== typeof a
 }
 
 /**
- * @function isBoolean 是否为一个布尔值
+ * @function isUndefined 是否为 undefined
  * @param  {Anything} a 需要判断的对象
  * @return {Boolean}
  */
-function isBoolean(a) {
-  return '[object Boolean]' === type(a)
+function isUndefined(a) {
+  return 'undefined' === typeof a
 }
 
-/**
- * @function isNumber 是否为一个数字对象
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isNumber(a) {
-  return '[object Number]' === type(a)
-}
-
-/**
- * @function isInteger 是否为整数
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isInteger(a) {
-  var y = parseInt(a, 10)
-  return !isNaN(y) && a === y && a.toString() === y.toString()
-}
 
 /**
  * @function isObject 是否为对象
@@ -73,21 +55,39 @@ function isFunction(a) {
 }
 
 /**
- * @function isDefined 是否不为 undefined
+ * @function isNumber 是否为一个数字对象
  * @param  {Anything} a 需要判断的对象
  * @return {Boolean}
  */
-function isDefined(a) {
-  return 'undefined' !== typeof a
+function isNumber(a) {
+  return '[object Number]' === type(a)
 }
 
 /**
- * @function isUndefined 是否为 undefined
+ * @function isBoolean 是否为一个布尔值
  * @param  {Anything} a 需要判断的对象
  * @return {Boolean}
  */
-function isUndefined(a) {
-  return 'undefined' === typeof a
+function isBoolean(a) {
+  return '[object Boolean]' === type(a)
+}
+
+/**
+ * @function isString 是否为一个字符串
+ * @param  {Anything} a 需要判断的对象
+ * @return {Boolean}
+ */
+function isString(a) {
+  return '[object String]' === type(a)
+}
+
+/**
+ * @function isRegExp 判断是否为正则
+ * @param  {Anything} a 需要判断的对象
+ * @return {Boolean}
+ */
+function isRegExp(a) {
+  return '[object RegExp]' === type(a)
 }
 
 /**
@@ -100,12 +100,13 @@ function isArray(a) {
 }
 
 /**
- * @function isRegExp 判断是否为正则
+ * @function isInteger 是否为整数
  * @param  {Anything} a 需要判断的对象
  * @return {Boolean}
  */
-function isRegExp(a) {
-  return '[object RegExp]' === type(a)
+function isInteger(a) {
+  var y = parseInt(a, 10)
+  return !isNaN(y) && a === y && a.toString() === y.toString()
 }
 
 /**

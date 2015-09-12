@@ -496,116 +496,21 @@ OTemplate.prototype.compile = function(source, options) {
  */
 OTemplate.prototype.render = function(source, data, options) {
   return this.compile(source, options)(data || {})
-}
-
-/**
- * @function compileById 编译内联模板
- * @param  {String} id      模板ID
- * @param  {Object} options 配置
- * @return {Function}
- */
-OTemplate.prototype.compileById = function(id, options) {
-  id = id.toString()
-
-  var conf = extend({}, this._defaults, options),
-      render = true === conf.overwrite || this.$$cache(id)
-
-  if (isFunction(render)) {
-    return render
-  }
-
-  var node = document.getElementById(id)
-  return node
-    ? this.compile(node.innerHTML, { filename: id }, conf)
-    : __throw({ message: '[Compile Template]: template `' + id + '` is not found.' }) || __render
-}
-
-/**
- * @function renderById 渲染内联模板
- * @param  {String} id      模板ID
- * @param  {Object} data    数据
- * @param  {Object} options 配置
- * @return {String}
- */
-OTemplate.prototype.renderById = function(id, data, options) {
-  var render = this.compileById(id, options)
-  return render(data || {})
-}
-
-/**
- * @function compileByAjax 编译模板文件
- * @param  {String}   filename 文件名
- * @param  {Function} callback 回调函数
- *   @param {Function} render  渲染函数
- * @param  {Object}   options  配置
- */
-OTemplate.prototype.compileByAjax = function(filename, callback, options) {
-  if (!isFunction(callback)) {
-    return
-  }
-
-  var self = this,
-      conf = extend({}, this._defaults, options),
-      render = true === conf.overwrite || this.$$cache(filename)
-
-  isFunction(render)
-    ? callback(render)
-    : readFile(filename, function(source) {
-        var _source = source,
-            requires = [],
-            match
-
-        while(match = /<%\s*include\s*\(\s*(\'([^\']+)?\'|\"([^\"]+)?\")((,\s*([\w]+|\{[\w\W]+\})\s*)*)\s*\)\s*%>/.exec(_source)) {
-          requires.push(match[3])
-          _source = _source.replace(match[0], '')
-        }
-
-        var total = requires.length
-        var __exec = function() {
-          0 >= (-- total) && __return()
-        }
-
-        var __return = function() {
-          render = self.$compile(source)
-          self.$$cache(filename, render)
-          callback(render)
-          total = undefined
-        }
-
-        if (total > 0) {
-          forEach(unique(requires), function(file) {
-            self.$$cache(file)
-              ? __exec()
-              : self.compileByAjax(file, __exec, extend(conf, { overwrite: false }))
-          })
-        }
-        else {
-          __return()
-        }
-      })
-}
-
-/**
- * @function renderByAjax 渲染模板文件
- * @param  {String}   filename 文件名
- * @param  {Object}   data     数据
- * @param  {Function} callback 回调函数
- *   @param {String} html 渲染结果HTML
- * @param  {Object}   options  配置
- */
-OTemplate.prototype.renderByAjax = function(filename, data, callback, options) {
-  if (isFunction(data)) {
-    return this.renderByAjax(filename, {}, data, callback)
-  }
-
-  isFunction(callback) && this.compileByAjax(filename, function(render) {
-    callback(render(data || {}))
-  }, options)
 };
-// Exports
-UMD('oTemplate', function() {
-  return new OTemplate()
-}, root);
+var fs = require('fs')
+
+/**
+ * @function readFile 读取文件
+ * @param  {String}   filename 文件名
+ * @param  {Function} callback 回调函数
+ */
+function readFile(filename, callback) {
+  if (isFunction(callback)) {
+    fs.readFile(filename, function(err, buffer) {
+      callback(buffer.toString())
+    })
+  }
+};
 /**
  * @function inline 所在行
  * @param  {String} str
@@ -626,41 +531,23 @@ function type(a) {
 }
 
 /**
- * @function isString 是否为一个字符串
+ * @function isDefined 是否不为 undefined
  * @param  {Anything} a 需要判断的对象
  * @return {Boolean}
  */
-function isString(a) {
-  return '[object String]' === type(a)
+function isDefined(a) {
+  return 'undefined' !== typeof a
 }
 
 /**
- * @function isBoolean 是否为一个布尔值
+ * @function isUndefined 是否为 undefined
  * @param  {Anything} a 需要判断的对象
  * @return {Boolean}
  */
-function isBoolean(a) {
-  return '[object Boolean]' === type(a)
+function isUndefined(a) {
+  return 'undefined' === typeof a
 }
 
-/**
- * @function isNumber 是否为一个数字对象
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isNumber(a) {
-  return '[object Number]' === type(a)
-}
-
-/**
- * @function isInteger 是否为整数
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isInteger(a) {
-  var y = parseInt(a, 10)
-  return !isNaN(y) && a === y && a.toString() === y.toString()
-}
 
 /**
  * @function isObject 是否为对象
@@ -681,21 +568,39 @@ function isFunction(a) {
 }
 
 /**
- * @function isDefined 是否不为 undefined
+ * @function isNumber 是否为一个数字对象
  * @param  {Anything} a 需要判断的对象
  * @return {Boolean}
  */
-function isDefined(a) {
-  return 'undefined' !== typeof a
+function isNumber(a) {
+  return '[object Number]' === type(a)
 }
 
 /**
- * @function isUndefined 是否为 undefined
+ * @function isBoolean 是否为一个布尔值
  * @param  {Anything} a 需要判断的对象
  * @return {Boolean}
  */
-function isUndefined(a) {
-  return 'undefined' === typeof a
+function isBoolean(a) {
+  return '[object Boolean]' === type(a)
+}
+
+/**
+ * @function isString 是否为一个字符串
+ * @param  {Anything} a 需要判断的对象
+ * @return {Boolean}
+ */
+function isString(a) {
+  return '[object String]' === type(a)
+}
+
+/**
+ * @function isRegExp 判断是否为正则
+ * @param  {Anything} a 需要判断的对象
+ * @return {Boolean}
+ */
+function isRegExp(a) {
+  return '[object RegExp]' === type(a)
 }
 
 /**
@@ -708,12 +613,13 @@ function isArray(a) {
 }
 
 /**
- * @function isRegExp 判断是否为正则
+ * @function isInteger 是否为整数
  * @param  {Anything} a 需要判断的对象
  * @return {Boolean}
  */
-function isRegExp(a) {
-  return '[object RegExp]' === type(a)
+function isInteger(a) {
+  var y = parseInt(a, 10)
+  return !isNaN(y) && a === y && a.toString() === y.toString()
 }
 
 /**
@@ -951,25 +857,7 @@ function UMD(name, factory, root) {
       // no module definaction
       : root[name] = factory(root)
 };
-/**
- * @function readFile 读取文件
- * @param  {String}   filename 文件名
- * @param  {Function} callback 回调函数
- */
-function readFile(filename, callback) {
-  if (!isFunction(callback)) {
-    return
-  }
-
-  var xhr = new XMLHttpRequest()
-  xhr.onreadystatechange = function() {
-    this.DONE === this.readyState && callback(this.responseText)
-  }
-
-  xhr.onerror = xhr.ontimeout = xhr.onabort = function() {
-    callback('')
-  }
-
-  xhr.open('GET', filename, true)
-  xhr.send(null)
-}})(this);
+// Exports
+UMD('oTemplate', function() {
+  return new OTemplate()
+}, root)})(this);
