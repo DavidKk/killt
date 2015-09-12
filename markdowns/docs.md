@@ -1,6 +1,6 @@
 # Template/模板写法
 
-### Lite Version/原生写法
+## Lite Version/原生写法
 
 ```
 <h1><%= title %></h1>
@@ -11,7 +11,7 @@
 </ul>
 ```
 
-### Syntax Version/简洁写法
+## Syntax Version/简洁写法
 
 ```
 <h1>{{@title}}</h1>

@@ -1,11 +1,13 @@
-## oTemplate
+# oTemplate
 
 oTemplate is a template engine for Javascript.
+
 
 ## Install
 ```
 bower install oTemplate
 ```
+
 
 ## Features
 
@@ -15,9 +17,36 @@ bower install oTemplate
 - Support compiled caches.
 - Support UMD.
 
+
 ## How can i use?
 
 ### Lit Version
+
+```
+<script id="templates/list/default.html" type="template/text">
+  <h1><%= title %></h1>
+  <ul>
+    <%each(list, function(value, index) {%>
+      <li><%= index %>: <%= @value %></li>
+    <%})%>
+  </ul>
+</script>
+```
+
+### Default Syntax Version
+
+```
+# Template In HTML
+<script id="templates/list/default.html" type="template/text">
+  <h1>{{@title}}</h1>
+  <ul>
+      {{each list as value index}}
+          <li>{{@index}}: {{@value}}</li>
+      {{\/each}}
+  </ul>
+</script>
+```
+
 
 ## Compile and Render
 
@@ -59,7 +88,7 @@ oTemplate.renderByAjax('templates/list/default.html', function(html) {
 })
 ```
 
-### Customize Helpers
+## Customize Helpers
 
 ```
 oTemplate.helper('hate', function(who) {

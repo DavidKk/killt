@@ -15,9 +15,9 @@
   }
 
   var views = {}
-  function render(file) {
+  function render(file, container) {
     if (views.hasOwnProperty(file)) {
-      $('#main-content').html(views[file])
+      $(container).html(views[file])
     }
     else {
       $.get(file)
@@ -33,11 +33,10 @@
           }
         })
 
-        $('#main-content').html(view)
+        $(container).html(view)
       })
     }
   }
-
 
   // Configure
   addRoute('gettingstarted', function() {
@@ -46,7 +45,8 @@
       .parent()
       .addClass('active')
 
-    render('markdowns/index.md')
+    $('.module-container').hide()
+    render('markdowns/index.md', $('#index-container').show())
   })
 
   addRoute('examples', function() {
@@ -54,7 +54,8 @@
       .parent()
       .addClass('active')
 
-    render('markdowns/examples.md')
+    $('.module-container').hide()
+    render('markdowns/examples.md', $('#examples-container').show())
   })
 
   addRoute('docs', function() {
@@ -62,7 +63,8 @@
       .parent()
       .addClass('active')
 
-    render('markdowns/docs.md')
+    $('.module-container').hide()
+    render('markdowns/docs.md', $('#docs-container').show())
   })
 
   // Ready
