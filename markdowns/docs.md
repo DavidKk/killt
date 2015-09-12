@@ -1,4 +1,26 @@
-# 模板写法
+# Template/模板写法
+
+### Lite Version/原生写法
+
+```
+<h1><%= title %></h1>
+<ul>
+  <%each(list, function(value, index) {%>
+    <li><%= index %>: <%= @value %></li>
+  <%})%>
+</ul>
+```
+
+### Syntax Version/简洁写法
+
+```
+<h1>{{@title}}</h1>
+<ul>
+  {{each list as value, index}}
+    <li>{{@index}}: {{@value}}</li>
+  {{/each}}
+</ul>
+```
 
 
 # Function/方法
@@ -218,7 +240,9 @@ name {String} 语法名称
 ### $clearSyntax/清除语法 (语法版本才能使用)
 
 ```
-oTemplate.$clearSyntax()
+oTemplate.$clearSyntax([String source])
+
+source {String} 模板资源
 ```
 
 
@@ -253,4 +277,4 @@ OTemplate._defaults = extend(OTemplate._defaults, {
 })
 ```
 
-[DEMO]()
+[DEMO](https://github.com/DavidKk/oTemplate/blob/master/src/syntax.js)
