@@ -6,7 +6,7 @@
   "homepage": "https://github.com/DavidKk/oTemplate",
   "repository": {
     "type": "git",
-    "url": "https://github.com/DavidKk/oTemplate.git"
+    "url": "git@github.com:DavidKk/oTemplate.git"
   },
   "author": "David Jones <qowera@qq.com>",
   "bugs": {
@@ -33,5 +33,10 @@
     "karma-firefox-launcher": "^0.1.6",
     "karma-jasmine": "^0.3.6",
     "karma-qunit": "^0.1.5"
+  },
+  "autoupdate": {
+    "source": "git",
+    "target": "git@github.com:DavidKk/oTemplate.git",
+    "basePath": ""
   }
 }
