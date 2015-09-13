@@ -63,6 +63,8 @@
     $con.data('render')
       ? $con.show()
       : render('markdowns/examples.md', $con.data('render', true).show())
+
+    oTemplate.render('')
   })
 
   addRoute('docs', function() {
