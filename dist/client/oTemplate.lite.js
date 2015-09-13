@@ -207,15 +207,15 @@ OTemplate.prototype.$compileShell = (function() {
 
       // echo
       if (/^=\s*[\w]+?\s*$/.exec(source)) {
-        source = '$buffer+=(' + source.replace(/[=\s;]/g, '') + ')||"";'
+        source = '$buffer+=$toString(' + source.replace(/[=\s;]/g, '') + ');'
       }
       // echo helper
       else if (/^\s*\w+\s*\([^\)]*?\)\s*$/.exec(source)) {
-        source = '$buffer+=' + source + '||"";'
+        source = '$buffer+=$toString(' + source + ');'
       }
 
       line += source.split(/\n/).length - 1
-      source += '$runtime=' + line +  ';'
+      source += (/\)$/.exec(source) ? ';' : '') + '$runtime=' + line +  ';'
       return source
     }
 
@@ -265,7 +265,15 @@ OTemplate.prototype.$compileShell = (function() {
       +      '}'
 
       +      'function $append(buffer) {'
-      +        '$buffer += buffer'
+      +        '$buffer += buffer;'
+      +      '}'
+
+      +      'function $toString(buffer) {'
+      +        'return "string" === typeof buffer'
+      +           '? buffer'
+      +           ': "number" === typeof buffer'
+      +             '? buffer += ""'
+      +             ': "";'
       +      '}'
 
     return buffer
@@ -279,7 +287,7 @@ OTemplate.prototype.$compileShell = (function() {
   function getVariables(source) {
     var KEYWORDS = [
       '$data', '$helper', '$buffer', '$runtime',
-      '$append',
+      '$append', '$toString',
 
       'abstract', 'arguments',
       'break', 'boolean', 'byte',
@@ -330,15 +338,16 @@ OTemplate.prototype.$compile = (function() {
     }
 
     var shell = this.$compileShell(source)
-    return buildRender(shell, args, {
-      $source: this.$$table(origin),
-      $helpers: this._helpers,
-      $blocks: this._blockHelpers
+    return buildRender(origin, source, shell, args, {
+      $source: source || '',
+      $helpers: this._helpers || {},
+      $blocks: this._blockHelpers || {}
     })
   }
 
-  function buildRender(shell, args, scope) {
+  function buildRender(origin, source, shell, args, scope) {
     var render
+
     try {
       render = new Function(args, shell)
     }
@@ -346,6 +355,7 @@ OTemplate.prototype.$compile = (function() {
       __throw({
         message: '[Build Render]: ' + err.message,
         line: 'Anonymous function can not find out the error line.',
+        syntax: origin,
         template: source,
         shell: shell
       })

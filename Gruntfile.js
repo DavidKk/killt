@@ -51,7 +51,7 @@ module.exports = function(grunt) {
         tasks: ['develop']
       },
       compile: {
-        files: ['src/*.js', 'syntax/*.js'],
+        files: ['src/*.js', 'syntax/*.js', 'vendors/*.js'],
         tasks: ['clean', 'scripts']
       }
     }
