@@ -822,7 +822,7 @@ OTemplate.prototype.compileById = function(id, options) {
   var node = document.getElementById(id)
   return node
     ? this.compile(node.innerHTML, { filename: id }, conf)
-    : __throw({ message: '[Compile Template]: template `' + id + '` is not found.' }) || __render
+    : __throw({ message: '[Compile Template]: Template ID `' + id + '` is not found.' }) || __render
 }
 
 /**
