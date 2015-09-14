@@ -18,7 +18,7 @@ OTemplate.extend(function() {
 OTemplate.prototype.compileById = function(id, options) {
   id = id.toString()
 
-  var conf = extend({}, this._defaults, options),
+  var conf = extend({}, this._defaults, options, { filename: id }),
       render = true === conf.overwrite || this.$$cache(id)
 
   if (isFunction(render)) {
@@ -27,8 +27,11 @@ OTemplate.prototype.compileById = function(id, options) {
 
   var node = document.getElementById(id)
   return node
-    ? this.compile(node.innerHTML, extend({ filename: id }, conf))
-    : __throw({ message: '[Compile Template]: Template ID `' + id + '` is not found.' }) || __render
+    ? this.compile(node.innerHTML, conf)
+    : (__throw({
+        message: '[Compile Template]: Template ID `' + id + '` is not found.'
+      }),
+      __render)
 }
 
 /**
@@ -128,15 +131,42 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
   xhr.onreadystatechange = function() {
     var status = this.status
     if (this.DONE === this.readyState) {
-      200 <= status && status < 400
-      ? callback(this.responseText)
-      : __throw({ message: '[Compile Template]: Template File `' + filename + '` is not found. \n[Response Status]: ' + status })
+      200 <= status && status < 400 && callback(this.responseText)
     }
   }
 
-  xhr.onerror = xhr.ontimeout = xhr.onabort = function() {
-    __throw({ message: '[Compile Template]: Request file `' + filename + '` occur any error.' })
-    isFunction(errorCallback) && errorCallback()
+  xhr.onerror = function() {
+    var err = {
+      message: '[Compile Template]: Request file `' + filename + '` some error occured.',
+      filename: filename,
+      response: '[Reponse State]: ' + this.status
+    }
+
+    __throw(err)
+    isFunction(errorCallback) && errorCallback(err)
+    errorCallback = undefined
+  }
+
+  xhr.ontimeout = function() {
+    var err = {
+      message: '[Request Template]: Request template file `' + filename + '` timeout.',
+      filename: filename
+    }
+
+    __throw(err)
+    isFunction(errorCallback) && errorCallback(err)
+    errorCallback = undefined
+  }
+
+  xhr.onabort = function() {
+    var err = {
+      message: '[Request Template]: Bowswer absort the request.',
+      filename: filename
+    }
+
+    __throw(err)
+    isFunction(errorCallback) && errorCallback(err)
+    errorCallback = undefined
   }
 
   xhr.open('GET', filename, true)

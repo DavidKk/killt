@@ -61,7 +61,10 @@ var OTemplate = function(options) {
     include: function(filename, data, options) {
       var node = document.getElementById(filename)
       if (node) {
-        __throw({ message: '[Include Error]: Template ID `' + filename + '` is not found.' })
+        __throw({
+          message: '[Include Error]: Template ID `' + filename + '` is not found.'
+        })
+
         return ''
       }
 
@@ -306,10 +309,9 @@ OTemplate.prototype.$compileShell = (function() {
       +      '}'
       +      'catch(err) {'
       +        'throw {'
-      +          'message: err.message,'
-      +          'line: $runtime,'
-      +          'shell: "' + escape(this.$$table(source)) + '",'
-      +          'buffer: "' + escape(buffer) + '"'
+      +          'Message: err.message,'
+      +          'Line: $runtime,'
+      +          'Shell: "' + escape(this.$$table(source)) + '"'
       +        '};'
       +      '}'
 
@@ -395,8 +397,8 @@ OTemplate.prototype.$compile = (function() {
       }
       catch(err) {
         __throw({
-          message: '[Build Render]: ' + err.message,
-          line: 'Anonymous function can not find out the error line.',
+          message: '[Compile Render]: ' + err.message,
+          line: 'Javascript syntax occur error, it can not find out the error line.',
           syntax: origin,
           template: source,
           shell: shell
@@ -417,9 +419,8 @@ OTemplate.prototype.$compile = (function() {
           __throw({
             message: '[Exec Render]: ' + err.message,
             line: err.line,
-            source: err.source,
-            shell: err.shell,
-            buffer: err.buffer
+            template: err.source,
+            shell: err.shell
           })
         }
       }

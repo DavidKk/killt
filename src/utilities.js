@@ -317,7 +317,7 @@ function __throw(error) {
     var message = ''
     if (isObject(error)) {
       forEach(error, function(value, name) {
-        message += '<' + name + '>\n' + value + '\n\n'
+        message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
       })
     }
     else if (isString(error)) {

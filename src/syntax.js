@@ -134,7 +134,7 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
     })
   }
 
-  // 语法错误，缺少闭合
+  // error open or close tag/语法错误，缺少闭合
   var tagReg = this.$$compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
       stripTpl = this.$clearSyntax(tpl)
       pos = stripTpl.search(tagReg)
@@ -144,11 +144,11 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
 
     return {
       message: '[Syntax Error]: Syntax error in line ' + line + '.',
-      template: this.$$table(origin)
+      syntax: this.$$table(origin)
     }
   }
 
-  // 语法错误，没有匹配到相关语法
+  // not match any syntax or helper/语法错误，没有匹配到相关语法
   var syntaxReg = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
       match = source.match(syntaxReg)
 
@@ -158,7 +158,7 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
 
     return {
       message: '[Syntax Error]: `' + match[0] + '` did not match any syntax in line ' + line + '.',
-      template: this.$$table(tpl)
+      syntax: this.$$table(tpl)
     }
   }
 

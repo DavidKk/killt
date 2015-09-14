@@ -62,7 +62,10 @@ var OTemplate = function(options) {
     include: function(filename, data, options) {
       var node = document.getElementById(filename)
       if (node) {
-        __throw({ message: '[Include Error]: Template ID `' + filename + '` is not found.' })
+        __throw({
+          message: '[Include Error]: Template ID `' + filename + '` is not found.'
+        })
+
         return ''
       }
 
@@ -307,10 +310,9 @@ OTemplate.prototype.$compileShell = (function() {
       +      '}'
       +      'catch(err) {'
       +        'throw {'
-      +          'message: err.message,'
-      +          'line: $runtime,'
-      +          'shell: "' + escape(this.$$table(source)) + '",'
-      +          'buffer: "' + escape(buffer) + '"'
+      +          'Message: err.message,'
+      +          'Line: $runtime,'
+      +          'Shell: "' + escape(this.$$table(source)) + '"'
       +        '};'
       +      '}'
 
@@ -396,8 +398,8 @@ OTemplate.prototype.$compile = (function() {
       }
       catch(err) {
         __throw({
-          message: '[Build Render]: ' + err.message,
-          line: 'Anonymous function can not find out the error line.',
+          message: '[Compile Render]: ' + err.message,
+          line: 'Javascript syntax occur error, it can not find out the error line.',
           syntax: origin,
           template: source,
           shell: shell
@@ -418,9 +420,8 @@ OTemplate.prototype.$compile = (function() {
           __throw({
             message: '[Exec Render]: ' + err.message,
             line: err.line,
-            source: err.source,
-            shell: err.shell,
-            buffer: err.buffer
+            template: err.source,
+            shell: err.shell
           })
         }
       }
@@ -688,7 +689,7 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
     })
   }
 
-  // 语法错误，缺少闭合
+  // error open or close tag/语法错误，缺少闭合
   var tagReg = this.$$compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
       stripTpl = this.$clearSyntax(tpl)
       pos = stripTpl.search(tagReg)
@@ -698,11 +699,11 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
 
     return {
       message: '[Syntax Error]: Syntax error in line ' + line + '.',
-      template: this.$$table(origin)
+      syntax: this.$$table(origin)
     }
   }
 
-  // 语法错误，没有匹配到相关语法
+  // not match any syntax or helper/语法错误，没有匹配到相关语法
   var syntaxReg = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
       match = source.match(syntaxReg)
 
@@ -712,7 +713,7 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
 
     return {
       message: '[Syntax Error]: `' + match[0] + '` did not match any syntax in line ' + line + '.',
-      template: this.$$table(tpl)
+      syntax: this.$$table(tpl)
     }
   }
 
@@ -1184,7 +1185,7 @@ function __throw(error) {
     var message = ''
     if (isObject(error)) {
       forEach(error, function(value, name) {
-        message += '<' + name + '>\n' + value + '\n\n'
+        message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
       })
     }
     else if (isString(error)) {
