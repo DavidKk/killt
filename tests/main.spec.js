@@ -43,8 +43,13 @@ describe('Test OTemplate.', function() {
     })
 
     it('should allow compile `escape` syntax.', function() {
+      var shell = oTemplate.$compileSyntax('{{!# toString(123) }}')
+      expect(shell).toEqual('<%!#toString(123)%>')
+    })
+
+    it('should allow compile `noescape` syntax.', function() {
       var shell = oTemplate.$compileSyntax('{{# toString(123) }}')
-      expect(shell).toEqual('<%escape(toString(123))%>')
+      expect(shell).toEqual('<%#toString(123)%>')
     })
 
     it('should allow compile `helper` syntax.', function() {
@@ -79,7 +84,7 @@ describe('Test OTemplate.', function() {
             '<div><%include("/templates/index.html", data)%></div>',
           '<%})%>',
         '<%} else if(1) {%>',
-          '<div><%escape(toString(1))%></div>',
+          '<div><%#toString(1)%></div>',
         '<%} else if(1) {%>',
           '<div></div>',
         '<%} else {%>',

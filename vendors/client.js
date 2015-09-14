@@ -1,3 +1,14 @@
+// 扩展新的 include 支持 ajax
+OTemplate.extend(function() {
+  var self = this
+
+  ~extend(this._helpers, {
+    include: function(filename, data, options) {
+      return self.renderById(filename, data, options)
+    }
+  })
+})
+
 /**
  * @function compileById 编译内联模板
  * @param  {String} id      模板ID
@@ -16,7 +27,7 @@ OTemplate.prototype.compileById = function(id, options) {
 
   var node = document.getElementById(id)
   return node
-    ? this.compile(node.innerHTML, { filename: id }, conf)
+    ? this.compile(node.innerHTML, extend({ filename: id }, conf))
     : __throw({ message: '[Compile Template]: Template ID `' + id + '` is not found.' }) || __render
 }
 

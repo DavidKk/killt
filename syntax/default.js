@@ -7,8 +7,8 @@
  * `escape`:  {{# "<div></div>"}}
  * `helper`:  {{data | helperA:dataA,dataB,dataC | helperB:dataD,dataE,dataF}}
  */
-OTemplate._extends = function() {
-  var HELPER_SYNTAX = '\\s*([^\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
+OTemplate.extend(function() {
+  var HELPER_SYNTAX = '!?#?\\s*([^\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
       HELPER_REGEXP = this.$$compileRegexp(HELPER_SYNTAX)
 
   this
@@ -23,7 +23,8 @@ OTemplate._extends = function() {
       })
     .$registerSyntax('eachclose', '\\/each', '})')
     .$registerSyntax('include', 'include\\s*([^\\s,]+)?\\s*(,\\s*[^\\s+]+)?\\s*', 'include($1$2)')
-    .$registerSyntax('escape', '#\\s*([^\\s]+)?\\s*', 'escape($1)')
+    .$registerSyntax('noescape', '#\\s*([^\\s]+)?\\s*', '#$1')
+    .$registerSyntax('escape', '!#\\s*([^\\s]+)?\\s*', '!#$1')
     .$registerSyntax('helper', HELPER_SYNTAX, (function() {
         return function($all, $1, $2, $3, $4, $5) {
           var str = format.apply(this, arguments)
@@ -44,4 +45,4 @@ OTemplate._extends = function() {
       forEach(data, callback)
     }
   })
-}
+})

@@ -1,0 +1,14 @@
+<script id="/template/debug/a.html" type="template/text">
+  <h1>{{@title</h1>
+  <p>{{#content}}</p>
+</script>
+
+<script id="/template/debug/b.html" type="template/text">
+  {{helper}}
+    <div>Hello world!!!</div>
+  {{/helper}}
+</script>
+
+<script id="/template/debug/c.html" type="template/text">
+  <div>{{"error helper" | helper}}</div>
+</script>

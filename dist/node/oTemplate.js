@@ -21,17 +21,11 @@ var OTemplate = function(options) {
   this._defaults = {}                 // defualt config/默认配置
 
   // set the config/设置配置
-  extend(this._defaults, OTemplate._defaults, options)
-
-  // set any syntax/设置语法
-  isFunction(OTemplate._extends) && this.extends(OTemplate._extends)
+  ~extend(this._defaults, OTemplate._defaults, options)
 
   // set any helpers/设置基础辅助函数
   ~extend(this._helpers, {
-    include: function(filename, data, options) {
-      return self.renderById(filename, data, options)
-    },
-    escape: (function() {
+    $escape: (function() {
       var escapeHTML = {}
       escapeHTML.SOURCES = {
         '<': '&lt;',
@@ -43,17 +37,42 @@ var OTemplate = function(options) {
       }
 
       escapeHTML.escapeFn = function(name) {
-        return this.SOURCES[name]
+        return escapeHTML.SOURCES[name]
       }
 
       escapeHTML.escape = function(content) {
-        return toString(content).replace(/&(?![\w#]+;)|[<>"']/g, this.escapeFn)
+        return toString(content).replace(/&(?![\w#]+;)|[<>"']/g, escapeHTML.escapeFn)
       }
 
       return function() {
         return escapeHTML.escape.apply(escapeHTML, arguments)
       }
-    })()
+    })(),
+    $noescape: function(str) {
+      return toString(str || '')
+    },
+    $toString: function(str, escape) {
+      var conf = self._defaults,
+          str = toString(str || '')
+
+      return true === (isBoolean(escape) ? escape : conf.escape)
+        ? self.helper('$escape')(str)
+        : str
+    },
+    include: function(filename, data, options) {
+      var node = document.getElementById(filename)
+      if (node) {
+        __throw({ message: '[Include Error]: Template ID `' + filename + '` is not found.' })
+        return ''
+      }
+
+      return self.render(node.innerHTML, data, options)
+    }
+  })
+
+  // set any syntax/设置语法
+  ~isArray(OTemplate._extends) && forEach(OTemplate._extends, function(_extends_) {
+    self.extends(_extends_)
   })
 }
 
@@ -62,9 +81,22 @@ OTemplate._defaults = {             // default options/默认配置
   noSyntax: false,                  // is use native syntax/是否使用使用原生语法
   strict: true,                     // compile syntax in strict mode/是否通过严格模式编译语法
   compress: true,                   // compress the html code/压缩生成的HTML代码
+  escape: true,                     // escape the HTML/是否编码输出变量的 HTML 字符
   openTag: '{{',                    // open tag for syntax/起始标识
   closeTag: '}}',                   // close tag for syntax/结束标识
   depends: []                       // addition render arguments/追加渲染器的传值设定,默认拥有 $data
+}
+
+OTemplate._extends = []             // extens plugins/扩展集合
+
+/**
+ * @function extend 扩展库
+ * @param  {Function}   _extends_ 扩展方法
+ * @return {OTemplate}
+ */
+OTemplate.extend = function(_extends_) {
+  isFunction(_extends_) && OTemplate._extends.push(_extends_)
+  return this
 }
 
 /**
@@ -132,14 +164,17 @@ OTemplate.prototype.$$table = (function() {
 /**
  * @function $compileShell 编译脚本
  * @param  {String}   source 脚本模板
- * @param  {Boolean}  strict 严格模式
+ * @param  {Object}   options 配置
  * @return {String}
  */
 OTemplate.prototype.$compileShell = (function() {
-  return function(source, strip) {
-    strip = isBoolean(strip) ? strip : this._defaults.compress
+  return function(source, options) {
+    options = options || {}
 
-    var _helpers_ = this._helpers,
+    var conf = this._defaults,
+        isEscape = isBoolean(options.escape) ? options.escape : conf.escape,
+        strip = isBoolean(options.compress) ? options.compress : conf.compress,
+        _helpers_ = this._helpers,
         _blocks_ = this._blockHelpers,
         helpers = [],
         blocks = [],
@@ -181,6 +216,8 @@ OTemplate.prototype.$compileShell = (function() {
      * @return {String}
      */
     var shellToJs = function(source) {
+      source = trim(source || '')
+
       // analyze and define variables
       forEach(getVariables(source), function(name) {
         if (!name) {
@@ -207,11 +244,21 @@ OTemplate.prototype.$compileShell = (function() {
 
       // echo
       if (/^=\s*[\w]+?\s*$/.exec(source)) {
-        source = '$buffer+=$toString(' + source.replace(/[=\s;]/g, '') + ');'
+        source = '$buffer+=$helpers.$toString(' + source.replace(/[=\s;]/g, '') + ', ' + isEscape + ');'
       }
-      // echo helper
-      else if (/^\s*\w+\s*\([^\)]*?\)\s*$/.exec(source)) {
-        source = '$buffer+=$toString(' + source + ');'
+      else {
+        // no escape HTML code
+        if (/^#\s*[\w]+?\s*$/.exec(source)) {
+          source = '$buffer+=$helpers.$noescape(' + source.replace(/[#\s;]/g, '') + ');'
+        }
+        // escape HTML code
+        else if (/^!#\s*[\w]+?\s*$/.exec(source)) {
+          source = '$buffer+=$helpers.$escape(' + source.replace(/[!#\s;]/g, '') + ');'
+        }
+        // echo helper
+        else if (/^\s*[\w\W]+\s*\([^\)]*?\)\s*$/.exec(source)) {
+          source = '$buffer+=$helpers.$toString(' + source + ', ' + isEscape + ');'
+        }
       }
 
       line += source.split(/\n/).length - 1
@@ -236,15 +283,17 @@ OTemplate.prototype.$compileShell = (function() {
       }
     })
 
-    // define helpers and variables
+    // define variables
     forEach(unique(variables), function(name) {
       buffer = 'var ' + name + '=$data.' + name + ';' + buffer
     })
 
+    // define helpers
     forEach(unique(helpers), function(name) {
       buffer = 'var ' + name + '=$helpers.' + name + ';' + buffer
     })
 
+    // define block helpers
     forEach(unique(blocks), function(name) {
       buffer = 'var ' + name + '=$blocks.' + name + ';' + buffer
     })
@@ -260,20 +309,13 @@ OTemplate.prototype.$compileShell = (function() {
       +        'throw {'
       +          'message: err.message,'
       +          'line: $runtime,'
-      +          'shell: "' + escape(this.$$table(source)) + '"'
+      +          'shell: "' + escape(this.$$table(source)) + '",'
+      +          'buffer: "' + escape(buffer) + '"'
       +        '};'
       +      '}'
 
       +      'function $append(buffer) {'
       +        '$buffer += buffer;'
-      +      '}'
-
-      +      'function $toString(buffer) {'
-      +        'return "string" === typeof buffer'
-      +           '? buffer'
-      +           ': "number" === typeof buffer'
-      +             '? buffer += ""'
-      +             ': "";'
       +      '}'
 
     return buffer
@@ -286,8 +328,9 @@ OTemplate.prototype.$compileShell = (function() {
    */
   function getVariables(source) {
     var KEYWORDS = [
-      '$data', '$helper', '$buffer', '$runtime',
-      '$append', '$toString',
+      '$scope', '$helpers', '$blocks',
+      '$data', '$buffer', '$runtime',
+      '$append',
 
       'abstract', 'arguments',
       'break', 'boolean', 'byte',
@@ -329,7 +372,8 @@ OTemplate.prototype.$compileShell = (function() {
  */
 OTemplate.prototype.$compile = (function() {
   return function(source, options) {
-    var origin = source,
+    var self = this,
+        origin = source,
         conf = extend({}, this._defaults, options),
         args = ['$data'].concat(conf.depends).join(',')
 
@@ -337,47 +381,48 @@ OTemplate.prototype.$compile = (function() {
       source = this.$compileSyntax(source, !!conf.strict)
     }
 
-    var shell = this.$compileShell(source)
-    return buildRender(origin, source, shell, args, {
+    var shell = this.$compileShell(source, conf)
+    return buildRender({
       $source: source || '',
       $helpers: this._helpers || {},
       $blocks: this._blockHelpers || {}
     })
-  }
 
-  function buildRender(origin, source, shell, args, scope) {
-    var render
+    function buildRender(scope) {
+      var render
 
-    try {
-      render = new Function(args, shell)
-    }
-    catch(err) {
-      __throw({
-        message: '[Build Render]: ' + err.message,
-        line: 'Anonymous function can not find out the error line.',
-        syntax: origin,
-        template: source,
-        shell: shell
-      })
-
-      render = __render
-    }
-
-    return function() {
       try {
-        return render.apply(scope, arguments)
+        render = new Function(args, shell)
       }
       catch(err) {
-        err = extend({}, err, {
-          source: scope.$source
+        __throw({
+          message: '[Build Render]: ' + err.message,
+          line: 'Anonymous function can not find out the error line.',
+          syntax: origin,
+          template: source,
+          shell: shell
         })
 
-        __throw({
-          message: '[Exec Render]: ' + err.message,
-          line: err.line,
-          source: err.source,
-          shell: err.shell
-        })
+        render = __render
+      }
+
+      return function() {
+        try {
+          return render.apply(scope, arguments)
+        }
+        catch(err) {
+          err = extend({}, err, {
+            source: self.$$table(scope.$source)
+          })
+
+          __throw({
+            message: '[Exec Render]: ' + err.message,
+            line: err.line,
+            source: err.source,
+            shell: err.shell,
+            buffer: err.buffer
+          })
+        }
       }
     }
   }
@@ -767,8 +812,8 @@ OTemplate.prototype.unblock = function(name) {
  * `escape`:  {{# "<div></div>"}}
  * `helper`:  {{data | helperA:dataA,dataB,dataC | helperB:dataD,dataE,dataF}}
  */
-OTemplate._extends = function() {
-  var HELPER_SYNTAX = '\\s*([^\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
+OTemplate.extend(function() {
+  var HELPER_SYNTAX = '!?#?\\s*([^\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
       HELPER_REGEXP = this.$$compileRegexp(HELPER_SYNTAX)
 
   this
@@ -783,7 +828,8 @@ OTemplate._extends = function() {
       })
     .$registerSyntax('eachclose', '\\/each', '})')
     .$registerSyntax('include', 'include\\s*([^\\s,]+)?\\s*(,\\s*[^\\s+]+)?\\s*', 'include($1$2)')
-    .$registerSyntax('escape', '#\\s*([^\\s]+)?\\s*', 'escape($1)')
+    .$registerSyntax('noescape', '#\\s*([^\\s]+)?\\s*', '#$1')
+    .$registerSyntax('escape', '!#\\s*([^\\s]+)?\\s*', '!#$1')
     .$registerSyntax('helper', HELPER_SYNTAX, (function() {
         return function($all, $1, $2, $3, $4, $5) {
           var str = format.apply(this, arguments)
@@ -804,7 +850,7 @@ OTemplate._extends = function() {
       forEach(data, callback)
     }
   })
-};
+});
 var fs = require('fs')
 
 /**

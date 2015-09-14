@@ -44,7 +44,7 @@ describe('Test OTemplate In Client.', function() {
 
       document.body.innerHTML = template.join('')
       var view = oTemplate.renderById('/templates/c.html')
-      expect(view).toEqual('<div>Hello Nested!!!</div>')
+      expect(view).toEqual('&lt;div&gt;Hello Nested!!!&lt;/div&gt;')
     })
 
     it('should render the nested templates file by AJAX.', function(done) {
@@ -67,7 +67,7 @@ describe('Test OTemplate In Client.', function() {
       })
 
       oTemplate.renderByAjax('/templates/e.html', {}, function(view) {
-        expect(view).toEqual('<div>Hello AJAX!!!</div>')
+        expect(view).toEqual('&lt;div&gt;Hello AJAX!!!&lt;/div&gt;')
         done()
       })
     })
