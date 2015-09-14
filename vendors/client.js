@@ -50,7 +50,7 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
 
   isFunction(render)
     ? callback(render)
-    : readFile(filename, function(source) {
+    : this.readFile(filename, function(source) {
         var _source = source,
             requires = [],
             match
@@ -108,18 +108,24 @@ OTemplate.prototype.renderByAjax = function(filename, data, callback, options) {
  * @param  {String}   filename 文件名
  * @param  {Function} callback 回调函数
  */
-function readFile(filename, callback) {
+OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
   if (!isFunction(callback)) {
     return
   }
 
   var xhr = new XMLHttpRequest()
   xhr.onreadystatechange = function() {
-    this.DONE === this.readyState && callback(this.responseText)
+    var status = this.status
+    if (this.DONE === this.readyState) {
+      200 <= status && status < 400
+      ? callback(this.responseText)
+      : __throw({ message: '[Compile Template]: Template File `' + filename + '` is not found. \n[Response Status]: ' + status })
+    }
   }
 
   xhr.onerror = xhr.ontimeout = xhr.onabort = function() {
-    callback('')
+    __throw({ message: '[Compile Template]: Request file `' + filename + '` occur any error.' })
+    isFunction(errorCallback) && errorCallback()
   }
 
   xhr.open('GET', filename, true)

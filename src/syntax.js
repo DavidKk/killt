@@ -123,7 +123,8 @@ OTemplate.prototype.$clearSyntax = function(source) {
  * @param  {Boolean}  compile   是否需要编译
  * @return {String|Boolean}
  */
-OTemplate.prototype.$analyzeSyntax = function(source, compile) {
+OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
+  origin = origin || ''
   compile = !(false === compile)
 
   var tpl = source
@@ -143,7 +144,7 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile) {
 
     return {
       message: '[Syntax Error]: Syntax error in line ' + line + '.',
-      template: this.$$table(source)
+      template: this.$$table(origin)
     }
   }
 
@@ -188,7 +189,8 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile) {
 OTemplate.prototype.$compileSyntax = function(source, strict) {
   strict = !(false === strict)
 
-  var conf = this._defaults,
+  var origin = source,
+      conf = this._defaults,
       valid
 
   forEach(this._blocks, function(handle) {
@@ -196,7 +198,7 @@ OTemplate.prototype.$compileSyntax = function(source, strict) {
   })
 
   // 检测一下是否存在未匹配语法
-  return strict ? (true === (valid = this.$analyzeSyntax(source, false)) ? source : (this.$$throw(valid) || '')) : this.$clearSyntax(source)
+  return strict ? (true === (valid = this.$analyzeSyntax(source, false, origin)) ? source : (this.$$throw(valid) || '')) : this.$clearSyntax(source)
 }
 
 /**

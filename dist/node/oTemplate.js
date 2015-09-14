@@ -632,7 +632,8 @@ OTemplate.prototype.$clearSyntax = function(source) {
  * @param  {Boolean}  compile   是否需要编译
  * @return {String|Boolean}
  */
-OTemplate.prototype.$analyzeSyntax = function(source, compile) {
+OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
+  origin = origin || ''
   compile = !(false === compile)
 
   var tpl = source
@@ -652,7 +653,7 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile) {
 
     return {
       message: '[Syntax Error]: Syntax error in line ' + line + '.',
-      template: this.$$table(source)
+      template: this.$$table(origin)
     }
   }
 
@@ -697,7 +698,8 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile) {
 OTemplate.prototype.$compileSyntax = function(source, strict) {
   strict = !(false === strict)
 
-  var conf = this._defaults,
+  var origin = source,
+      conf = this._defaults,
       valid
 
   forEach(this._blocks, function(handle) {
@@ -705,7 +707,7 @@ OTemplate.prototype.$compileSyntax = function(source, strict) {
   })
 
   // 检测一下是否存在未匹配语法
-  return strict ? (true === (valid = this.$analyzeSyntax(source, false)) ? source : (this.$$throw(valid) || '')) : this.$clearSyntax(source)
+  return strict ? (true === (valid = this.$analyzeSyntax(source, false, origin)) ? source : (this.$$throw(valid) || '')) : this.$clearSyntax(source)
 }
 
 /**
@@ -766,7 +768,7 @@ OTemplate.prototype.unblock = function(name) {
  * `helper`:  {{data | helperA:dataA,dataB,dataC | helperB:dataD,dataE,dataF}}
  */
 OTemplate._extends = function() {
-  var HELPER_SYNTAX = '\\s*([^\\s\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
+  var HELPER_SYNTAX = '\\s*([^\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
       HELPER_REGEXP = this.$$compileRegexp(HELPER_SYNTAX)
 
   this
@@ -793,7 +795,7 @@ OTemplate._extends = function() {
         }
 
         function format($all, $1, $2, $3, $4, $5) {
-          return $2 + '(' + $1 + ($4 ? ',' + $4 : '') + ')' + ($5 ? $5.replace(/^\s*$/, '') : '')
+          return $2 + '(' + trim($1) + ($4 ? ',' + $4 : '') + ')' + ($5 ? $5.replace(/^\s*$/, '') : '')
         }
       })())
 
@@ -956,6 +958,15 @@ function isPlainObject(o) {
     }
     
     return true
+}
+
+/**
+ * @trim 去除空格
+ * @param  {String}     str
+ * @return {String}
+ */
+function trim(str) {
+  return str.replace(/^\s+|\s+$/, '')
 }
 
 /**

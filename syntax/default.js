@@ -8,7 +8,7 @@
  * `helper`:  {{data | helperA:dataA,dataB,dataC | helperB:dataD,dataE,dataF}}
  */
 OTemplate._extends = function() {
-  var HELPER_SYNTAX = '\\s*([^\\s\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
+  var HELPER_SYNTAX = '\\s*([^\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
       HELPER_REGEXP = this.$$compileRegexp(HELPER_SYNTAX)
 
   this
@@ -35,7 +35,7 @@ OTemplate._extends = function() {
         }
 
         function format($all, $1, $2, $3, $4, $5) {
-          return $2 + '(' + $1 + ($4 ? ',' + $4 : '') + ')' + ($5 ? $5.replace(/^\s*$/, '') : '')
+          return $2 + '(' + trim($1) + ($4 ? ',' + $4 : '') + ')' + ($5 ? $5.replace(/^\s*$/, '') : '')
         }
       })())
 

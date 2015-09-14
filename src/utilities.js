@@ -140,6 +140,15 @@ function isPlainObject(o) {
 }
 
 /**
+ * @trim 去除空格
+ * @param  {String}     str
+ * @return {String}
+ */
+function trim(str) {
+  return str.replace(/^\s+|\s+$/, '')
+}
+
+/**
  * @function namespace 查找对象中的属性
  * @param  {String}     query
  * @param  {Object}     space 获取的对象

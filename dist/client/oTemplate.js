@@ -632,7 +632,8 @@ OTemplate.prototype.$clearSyntax = function(source) {
  * @param  {Boolean}  compile   是否需要编译
  * @return {String|Boolean}
  */
-OTemplate.prototype.$analyzeSyntax = function(source, compile) {
+OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
+  origin = origin || ''
   compile = !(false === compile)
 
   var tpl = source
@@ -652,7 +653,7 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile) {
 
     return {
       message: '[Syntax Error]: Syntax error in line ' + line + '.',
-      template: this.$$table(source)
+      template: this.$$table(origin)
     }
   }
 
@@ -697,7 +698,8 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile) {
 OTemplate.prototype.$compileSyntax = function(source, strict) {
   strict = !(false === strict)
 
-  var conf = this._defaults,
+  var origin = source,
+      conf = this._defaults,
       valid
 
   forEach(this._blocks, function(handle) {
@@ -705,7 +707,7 @@ OTemplate.prototype.$compileSyntax = function(source, strict) {
   })
 
   // 检测一下是否存在未匹配语法
-  return strict ? (true === (valid = this.$analyzeSyntax(source, false)) ? source : (this.$$throw(valid) || '')) : this.$clearSyntax(source)
+  return strict ? (true === (valid = this.$analyzeSyntax(source, false, origin)) ? source : (this.$$throw(valid) || '')) : this.$clearSyntax(source)
 }
 
 /**
@@ -766,7 +768,7 @@ OTemplate.prototype.unblock = function(name) {
  * `helper`:  {{data | helperA:dataA,dataB,dataC | helperB:dataD,dataE,dataF}}
  */
 OTemplate._extends = function() {
-  var HELPER_SYNTAX = '\\s*([^\\s\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
+  var HELPER_SYNTAX = '\\s*([^\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
       HELPER_REGEXP = this.$$compileRegexp(HELPER_SYNTAX)
 
   this
@@ -793,7 +795,7 @@ OTemplate._extends = function() {
         }
 
         function format($all, $1, $2, $3, $4, $5) {
-          return $2 + '(' + $1 + ($4 ? ',' + $4 : '') + ')' + ($5 ? $5.replace(/^\s*$/, '') : '')
+          return $2 + '(' + trim($1) + ($4 ? ',' + $4 : '') + ')' + ($5 ? $5.replace(/^\s*$/, '') : '')
         }
       })())
 
@@ -855,7 +857,7 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
 
   isFunction(render)
     ? callback(render)
-    : readFile(filename, function(source) {
+    : this.readFile(filename, function(source) {
         var _source = source,
             requires = [],
             match
@@ -913,23 +915,30 @@ OTemplate.prototype.renderByAjax = function(filename, data, callback, options) {
  * @param  {String}   filename 文件名
  * @param  {Function} callback 回调函数
  */
-function readFile(filename, callback) {
+OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
   if (!isFunction(callback)) {
     return
   }
 
   var xhr = new XMLHttpRequest()
   xhr.onreadystatechange = function() {
-    this.DONE === this.readyState && callback(this.responseText)
+    var status = this.status
+    if (this.DONE === this.readyState) {
+      200 <= status && status < 400
+      ? callback(this.responseText)
+      : __throw({ message: '[Compile Template]: Template File `' + filename + '` is not found. \n[Response Status]: ' + status })
+    }
   }
 
   xhr.onerror = xhr.ontimeout = xhr.onabort = function() {
-    callback('')
+    __throw({ message: '[Compile Template]: Request file `' + filename + '` occur any error.' })
+    isFunction(errorCallback) && errorCallback()
   }
 
   xhr.open('GET', filename, true)
   xhr.send(null)
-};
+}
+;
 /**
  * @function inline 所在行
  * @param  {String} str
@@ -1069,6 +1078,15 @@ function isPlainObject(o) {
     }
     
     return true
+}
+
+/**
+ * @trim 去除空格
+ * @param  {String}     str
+ * @return {String}
+ */
+function trim(str) {
+  return str.replace(/^\s+|\s+$/, '')
 }
 
 /**
