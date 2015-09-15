@@ -53,7 +53,7 @@ var OTemplate = function(options) {
     },
     $toString: function(str, escape) {
       var conf = self._defaults,
-          str = toString(str || '')
+          str = toString(str)
 
       return true === (isBoolean(escape) ? escape : conf.escape)
         ? self.helper('$escape')(str)
@@ -246,22 +246,20 @@ OTemplate.prototype.$compileShell = (function() {
       })
 
       // echo
-      if (/^=\s*[\w]+?\s*$/.exec(source)) {
+      if (/^=\s*[\w\W]+?\s*$/.exec(source)) {
         source = '$buffer+=$helpers.$toString(' + source.replace(/[=\s;]/g, '') + ', ' + isEscape + ');'
       }
-      else {
-        // no escape HTML code
-        if (/^#\s*[\w]+?\s*$/.exec(source)) {
-          source = '$buffer+=$helpers.$noescape(' + source.replace(/[#\s;]/g, '') + ');'
-        }
-        // escape HTML code
-        else if (/^!#\s*[\w]+?\s*$/.exec(source)) {
-          source = '$buffer+=$helpers.$escape(' + source.replace(/[!#\s;]/g, '') + ');'
-        }
-        // echo helper
-        else if (/^\s*[\w\W]+\s*\([^\)]*?\)\s*$/.exec(source)) {
-          source = '$buffer+=$helpers.$toString(' + source + ', ' + isEscape + ');'
-        }
+      // no escape HTML code
+      else if (/^#\s*[\w\W]+?\s*$/.exec(source)) {
+        source = '$buffer+=$helpers.$noescape(' + source.replace(/[#\s;]/g, '') + ');'
+      }
+      // escape HTML code
+      else if (/^!#\s*[\w\W]+?\s*$/.exec(source)) {
+        source = '$buffer+=$helpers.$escape(' + source.replace(/[!#\s;]/g, '') + ');'
+      }
+      // echo helper
+      else if (/^\s*([\w\W]+)\s*\([^\)]*?\)\s*$/.exec(source)) {
+        source = '$buffer+=$helpers.$toString(' + source + ', ' + isEscape + ');'
       }
 
       line += source.split(/\n/).length - 1

@@ -23,7 +23,7 @@ OTemplate.extend(function() {
       })
     .$registerSyntax('eachclose', '\\/each', '})')
     .$registerSyntax('include', 'include\\s*([^\\s,]+)?\\s*(,\\s*[^\\s+]+)?\\s*', function($all, $1, $2) {
-      return '<%include(' + $1 + ($2 ? $2 : ', $datas') + ')%>'
+      return '<%#include(' + $1 + ($2 ? $2 : ', $datas') + ')%>'
     })
     .$registerSyntax('noescape', '#\\s*([^\\s]+)?\\s*', '#$1')
     .$registerSyntax('escape', '!#\\s*([^\\s]+)?\\s*', '!#$1')

@@ -39,10 +39,10 @@ describe('Test OTemplate.', function() {
 
     it('should allow compile `include` syntax.', function() {
       var shell = oTemplate.$compileSyntax('<div>{{include "/template/modal.html", data}}</div>', true)
-      expect(shell).toEqual('<div><%include("/template/modal.html", data)%></div>')
+      expect(shell).toEqual('<div><%#include("/template/modal.html", data)%></div>')
 
       shell = oTemplate.$compileSyntax('<div>{{include "/template/modal.html"}}</div>', true)
-      expect(shell).toEqual('<div><%include("/template/modal.html", $datas)%></div>')
+      expect(shell).toEqual('<div><%#include("/template/modal.html", $datas)%></div>')
     })
 
     it('should allow compile `escape` syntax.', function() {
@@ -84,7 +84,7 @@ describe('Test OTemplate.', function() {
       expect(shell).toEqual([
         '<%if(1) {%>',
           '<%each(data, function(value, key) {%>',
-            '<div><%include("/templates/index.html", data)%></div>',
+            '<div><%#include("/templates/index.html", data)%></div>',
           '<%})%>',
         '<%} else if(1) {%>',
           '<div><%#toString(1)%></div>',
@@ -98,7 +98,7 @@ describe('Test OTemplate.', function() {
 
     it('should allow compile template which own syntax and shell.', function() {
       var shell = oTemplate.$compileSyntax('<%if(user.isLogin) {%>\n<div>{{include "/user/info.html", data}}</div>\n<%}%>')
-      expect(shell).toEqual('<%if(user.isLogin) {%>\n<div><%include("/user/info.html", data)%></div>\n<%}%>')
+      expect(shell).toEqual('<%if(user.isLogin) {%>\n<div><%#include("/user/info.html", data)%></div>\n<%}%>')
     })
   })
   
