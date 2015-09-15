@@ -8,7 +8,7 @@
  * `helper`:  {{data | helperA:dataA,dataB,dataC | helperB:dataD,dataE,dataF}}
  */
 OTemplate.extend(function() {
-  var HELPER_SYNTAX = '!?#?\\s*([^\\|]+)?\\s*\\|\\s*([\\w]+)?(:([,\\w]+)?)?(.*)',
+  var HELPER_SYNTAX = '(!?#?)\\s*([^\\|]+)?\\s*\\|\\s*([\\w$]+)?(:([,\\w$]+)?)?(.*)',
       HELPER_REGEXP = this.$$compileRegexp(HELPER_SYNTAX)
 
   this
@@ -22,21 +22,23 @@ OTemplate.extend(function() {
         return '<%' + str + '%>'
       })
     .$registerSyntax('eachclose', '\\/each', '})')
-    .$registerSyntax('include', 'include\\s*([^\\s,]+)?\\s*(,\\s*[^\\s+]+)?\\s*', 'include($1$2)')
+    .$registerSyntax('include', 'include\\s*([^\\s,]+)?\\s*(,\\s*[^\\s+]+)?\\s*', function($all, $1, $2) {
+      return '<%include(' + $1 + ($2 ? $2 : ', $datas') + ')%>'
+    })
     .$registerSyntax('noescape', '#\\s*([^\\s]+)?\\s*', '#$1')
     .$registerSyntax('escape', '!#\\s*([^\\s]+)?\\s*', '!#$1')
     .$registerSyntax('helper', HELPER_SYNTAX, (function() {
-        return function($all, $1, $2, $3, $4, $5) {
+        return function($all, $1, $2, $3, $4, $5, $6) {
           var str = format.apply(this, arguments)
           while(HELPER_REGEXP.exec(str)) {
             str = str.replace(HELPER_REGEXP, format)
           }
 
-          return '<%' + str + '%>'
+          return '<%' + toString($1) + str + '%>'
         }
 
-        function format($all, $1, $2, $3, $4, $5) {
-          return $2 + '(' + trim($1) + ($4 ? ',' + $4 : '') + ')' + ($5 ? $5.replace(/^\s*$/, '') : '')
+        function format($all, $1, $2, $3, $4, $5, $6) {
+          return $3 + '(' + trim($2) + ($5 ? ',' + $5 : '') + ')' + ($6 ? $6.replace(/^\s*$/, '') : '')
         }
       })())
 

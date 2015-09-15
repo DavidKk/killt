@@ -86,7 +86,7 @@ OTemplate._defaults = {             // default options/默认配置
   escape: true,                     // escape the HTML/是否编码输出变量的 HTML 字符
   openTag: '{{',                    // open tag for syntax/起始标识
   closeTag: '}}',                   // close tag for syntax/结束标识
-  depends: []                       // addition render arguments/追加渲染器的传值设定,默认拥有 $data
+  depends: []                       // addition render arguments (must be use `$` to define variable name)/追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量)
 }
 
 OTemplate._extends = []             // extens plugins/扩展集合
@@ -370,13 +370,37 @@ OTemplate.prototype.$compileShell = (function() {
  * @param   {String}    tpl      模板
  * @param   {Object}    options  编译配置
  * @return  {Function}
+ * @description
+ * 
+ * Render and it's options will be cached together,
+ * and they can not be modified by any operation.
+ * If you want to replace or modify the options, u
+ * must compile it again. And u can use options.overwrite
+ * to overwrite it.
+ * 
+ * 渲染器的 options 将与渲染器一起缓存起来，且不会被
+ * 外界影响，若要修改 options，则必须重新生成渲染器，
+ * 可以设置 options.overwrite 为 true 来覆盖
  */
 OTemplate.prototype.$compile = (function() {
   return function(source, options) {
     var self = this,
         origin = source,
         conf = extend({}, this._defaults, options),
-        args = ['$data'].concat(conf.depends).join(',')
+        deps = conf.depends,
+        _args_ = ['$data'].concat(deps).join(','),
+        args = []
+
+    // 获取需求的参数，除 data 之外
+    ~forEach(deps, function(name) {
+      if ('$' === name.charAt(0)) {
+        name = name.replace('$', '')
+        args.push(conf[name])
+      }
+      else {
+        args.push(undefined)
+      }
+    })
 
     if (true !== conf.noSyntax) {
       source = this.$compileSyntax(source, !!conf.strict)
@@ -393,7 +417,7 @@ OTemplate.prototype.$compile = (function() {
       var render
 
       try {
-        render = new Function(args, shell)
+        render = new Function(_args_, shell)
       }
       catch(err) {
         __throw({
@@ -407,9 +431,9 @@ OTemplate.prototype.$compile = (function() {
         render = __render
       }
 
-      return function() {
+      return function(data) {
         try {
-          return render.apply(scope, arguments)
+          return render.apply(scope, [data].concat(args))
         }
         catch(err) {
           err = extend({}, err, {
@@ -525,6 +549,11 @@ OTemplate.prototype.unhelper = function(name) {
  * @param  {String} source  模板
  * @param  {Object} options 配置
  * @return {Function}
+ * @description
+ * 
+ * 当渲染器已经被缓存的情况下，options 除 overwrite 外的所有属性均不会
+ * 对渲染器造成任何修改；当 overwrite 为 true 的时候，缓存将被刷新，此
+ * 时才能真正修改渲染器的配置
  */
 OTemplate.prototype.compile = function(source, options) {
   source = source.toString()

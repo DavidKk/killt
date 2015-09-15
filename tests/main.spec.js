@@ -40,6 +40,9 @@ describe('Test OTemplate.', function() {
     it('should allow compile `include` syntax.', function() {
       var shell = oTemplate.$compileSyntax('<div>{{include "/template/modal.html", data}}</div>', true)
       expect(shell).toEqual('<div><%include("/template/modal.html", data)%></div>')
+
+      shell = oTemplate.$compileSyntax('<div>{{include "/template/modal.html"}}</div>', true)
+      expect(shell).toEqual('<div><%include("/template/modal.html", $datas)%></div>')
     })
 
     it('should allow compile `escape` syntax.', function() {
@@ -59,8 +62,8 @@ describe('Test OTemplate.', function() {
       shell = oTemplate.$compileSyntax('<div>{{data | helper:a,b,c}}</div>')
       expect(shell).toEqual('<div><%helper(data,a,b,c)%></div>')
 
-      shell = oTemplate.$compileSyntax('<div>{{data | h1:a1,b1,c1 | h2:a2,b2,c2}}</div>')
-      expect(shell).toEqual('<div><%h2(h1(data,a1,b1,c1),a2,b2,c2)%></div>')
+      shell = oTemplate.$compileSyntax('<div>{{#data | $h1:a_1,b_1,c_1 | h2:a2,b2,c2}}</div>')
+      expect(shell).toEqual('<div><%#h2($h1(data,a_1,b_1,c_1),a2,b2,c2)%></div>')
     })
 
     it('should allow compile all syntax at the same time.', function() {
