@@ -647,13 +647,15 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
   isFunction(render)
     ? callback(render)
     : this.readFile(filename, function(source) {
-        var _source = source,
+        source = self.$compileSyntax(source, !!conf.strict)
+
+        var origin = source,
             requires = [],
             match
 
-        while(match = /<%\s*include\s*\(\s*(\'([^\']+)?\'|\"([^\"]+)?\")((,\s*([\w]+|\{[\w\W]+\})\s*)*)\s*\)\s*%>/.exec(_source)) {
+        while(match = /<%!?#?\s*include\s*\(\s*(\'([^\']+)?\'|\"([^\"]+)?\")(\s*,\s*([^\)]+)?)\)%>/.exec(source)) {
           requires.push(match[3])
-          _source = _source.replace(match[0], '')
+          source = source.replace(match[0], '')
         }
 
         var total = requires.length
@@ -662,7 +664,7 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
         }
 
         var __return = function() {
-          render = self.$compile(source)
+          render = self.$compile(origin)
           self.$$cache(filename, render)
           callback(render)
           total = undefined

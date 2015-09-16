@@ -211,7 +211,9 @@ OTemplate.prototype.block = function(var_query, callback) {
   if (1 < arguments.length) {
     if (isString(var_query) && isFunction(callback)) {
       this
-        .$registerSyntax(var_query + 'open', '(' + var_query + ')\\s*([\\w\\s,\\\"\\\']+)?\\s*(:\\s*([,\\w\\s]+)?)?', '$1($2, $append, function($4) {var $buffer="";')
+        .$registerSyntax(var_query + 'open', '(' + var_query + ')\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3, $4, $5) {
+          return '<%' + $1 + '(' + ($2 ? $2 + ',' : '') + '$append, function(' + $5 + ') {"use strict";var $buffer="";%>'
+        })
         .$registerSyntax(var_query + 'close', '/' + var_query, 'return $buffer;});')
         ._blockHelpers[var_query] = callback
     }

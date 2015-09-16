@@ -42,7 +42,7 @@ describe('Test OTemplate.', function() {
       expect(shell).toEqual('<div><%#include("/template/modal.html", data)%></div>')
 
       shell = oTemplate.$compileSyntax('<div>{{include "/template/modal.html"}}</div>', true)
-      expect(shell).toEqual('<div><%#include("/template/modal.html", $datas)%></div>')
+      expect(shell).toEqual('<div><%#include("/template/modal.html", $data)%></div>')
     })
 
     it('should allow compile `escape` syntax.', function() {
@@ -117,7 +117,7 @@ describe('Test OTemplate.', function() {
 
     it('should allow use block-helper for judgement.', function() {
       oTemplate.block('judge', function(yes, $append, blockShell) {
-        yes && $append(blockShell())
+        $append(yes ? blockShell() : '')
       })
 
       expect(oTemplate._blockHelpers.judge).toEqual(jasmine.any(Function))
