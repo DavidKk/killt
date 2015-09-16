@@ -20,21 +20,31 @@
       $(container).html(views[file])
     }
     else {
-      $.get(file)
-      .success(function(tpl) {
-        var view = views[file] = marked(tpl, {
-          highlight: function(code, lang) {
-            try {
-              return hljs.highlight(lang, code).value
-            }
-            catch(e) {
-              return hljs.highlightAuto(code).value
-            }
-          }
-        })
+      var match = /\.[\w]+$/.exec(file),
+          extname = match[0] || 'html'
 
-        $(container).html(view)
-      })
+      if ('.md' === extname) {
+        $.get(file)
+        .success(function(tpl) {
+          var view = views[file] = marked(tpl, {
+            highlight: function(code, lang) {
+              try {
+                return hljs.highlight(lang, code).value
+              }
+              catch(e) {
+                return hljs.highlightAuto(code).value
+              }
+            }
+          })
+
+          $(container).html(view)
+        })
+      }
+      else if ('.html' === extname) {
+        oTemplate.renderByAjax(file, function(view) {
+          $(container).html(view)
+        })
+      }
     }
   }
 
@@ -62,9 +72,7 @@
 
     $con.data('render')
       ? $con.show()
-      : render('markdowns/examples.md', $con.data('render', true).show())
-
-    oTemplate.render('')
+      : render('templates/examples.html', $con.data('render', true).show())
   })
 
   addRoute('docs', function() {
