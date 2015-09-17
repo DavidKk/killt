@@ -64,7 +64,7 @@ oTemplate.compileByAjax([String url], [Function callback], [Object options])
 oTemplate.renderByAjax([String url], [Object data], [Function callback], [Object options])
 ```
 
-####  by template
+#### Compiled by template
 ```
 var oTemplate = window.oTemplate
 var oTempalte = require('oTemplate')
