@@ -100,7 +100,7 @@ OTemplate.prototype.$$throw = function(message, options) {
       err = __throw(message, conf.env === OTemplate.ENV.UNIT && 'catch')
 
   forEach(this._listeners, function(listener) {
-    'error' === listener.type && handle(err)
+    'error' === listener.type && listener.handle(err)
   })
 }
 
@@ -116,6 +116,20 @@ OTemplate.prototype.on = function(type, handle) {
       type: type,
       handle: handle
     })
+  }
+
+  return this
+}
+
+/**
+ * @function off 撤销监听事件
+ * @param  {Function} handle 监听函数
+ * @return {OTemplate}
+ */
+OTemplate.prototype.off = function(handle) {
+  if (is('Function')(handle)) {
+    var index = inArrayBy(handle, this._listeners, 'handle')
+    -1 !== index && this._listeners.splice(index, 1)
   }
 
   return this

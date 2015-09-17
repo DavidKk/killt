@@ -263,6 +263,48 @@ function extend(a, b) {
 }
 
 /**
+ * @functioninArray 获取元素在数组中所在位置的键值
+ * @param  {Anything} value 要获取键值的元素
+ * @param  {Array}    array 数组
+ * @return {Integer}        键值，不存在返回 -1;
+ */
+function inArray(value, array) {
+  if (Array.prototype.indexOf && angular.isFunction(array.indexOf)) {
+    return array.indexOf(value)
+  }
+  else {
+    for (var i = 0; i < array.length; i ++) {
+      if (array[i] === value) return i
+    }
+
+    return -1
+  }
+}
+
+/**
+ * @function inArrayBy inArray 增强版，获取数组中元素拥有与要查询元素相同的属性值的键值
+ * @param  {Object|Integer} var_query 对象或数字(数字用于数组下标)
+ * @return {Integer}                  键值，不存在返回 -1;
+ */
+function inArrayBy(var_query, array, index_name) {
+  var index,
+      i = 0,
+      l = array.length
+
+  index = angular.isObject(var_query)
+    ? var_query[index_name]
+    : index = var_query
+
+  for (; i < l; i ++) {
+    if (index == array[i][index_name]) {
+      return i
+    }
+  }
+
+  return -1
+};
+
+/**
  * @function __throw 抛出异常
  * @param  {String|Object} error  错误异常
  * @param  {Boolean}       type   是否捕获事件
