@@ -40,11 +40,13 @@ var OTemplate = function(options) {
         : str
     },
     include: function(filename, data, options) {
-      var node = document.getElementById(filename)
+      var conf = self._defaults,
+          node = document.getElementById(filename)
+
       if (node) {
         __throw({
           message: '[Include Error]: Template ID `' + filename + '` is not found.'
-        })
+        }, conf.env)
 
         return ''
       }

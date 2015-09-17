@@ -41,11 +41,13 @@ var OTemplate = function(options) {
         : str
     },
     include: function(filename, data, options) {
-      var node = document.getElementById(filename)
+      var conf = self._defaults,
+          node = document.getElementById(filename)
+
       if (node) {
         __throw({
           message: '[Include Error]: Template ID `' + filename + '` is not found.'
-        })
+        }, conf.env)
 
         return ''
       }
@@ -1040,19 +1042,28 @@ function extend(a, b) {
  * @function __throw 抛出异常
  * @param  {String|Object} error 错误异常
  */
-function __throw(error) {
-  if (is('Defined')(console) && is('Function')(console.error)) {
-    var message = ''
-    if (is('Object')(error)) {
-      forEach(error, function(value, name) {
-        message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
-      })
-    }
-    else if (is('String')(error)) {
-      message = error
-    }
+function __throw(error, env) {
+  var message = ''
+  if (is('Object')(error)) {
+    forEach(error, function(value, name) {
+      message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
+    })
+  }
+  else if (is('String')(error)) {
+    message = error
+  }
 
-    console.error(message)
+  ~(env === OTemplate.ENV.PRODUCE || env === OTemplate.ENV.DEVELOP)
+    && (is('Defined')(console) && is('Function')(console.error))
+      ? console.error(message)
+      : _throw(message)
+
+  return message
+
+  function _throw(message) {
+    setTimeout(function() {
+      throw message
+    })
   }
 }
 
