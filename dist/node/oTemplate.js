@@ -55,7 +55,7 @@ var OTemplate = function(options) {
   })
 
   // set any syntax/设置语法
-  is('Array')(OTemplate._extends) && forEach(OTemplate._extends, function(_extends_) {
+  ~is('Array')(OTemplate._extends) && forEach(OTemplate._extends, function(_extends_) {
     self.extends(_extends_)
   })
 }
