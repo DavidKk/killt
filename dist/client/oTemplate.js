@@ -18,6 +18,7 @@ var OTemplate = function(options) {
   this._blocks = {}                   // block syntax/块状语法
   this._blockHelpers = {}             // block helpers/块状辅助函数
   this._helpers = {}                  // helpers/辅助函数
+  this._sourceHelpers = {}            // source helpers/资源辅助函数
   this._defaults = {}                 // defualt config/默认配置
 
   // set the config/设置配置
@@ -166,6 +167,7 @@ OTemplate.prototype.$compileShell = (function() {
         strip = isBoolean(options.compress) ? options.compress : conf.compress,
         _helpers_ = this._helpers,
         _blocks_ = this._blockHelpers,
+        _sources_ = this._sourceHelpers,
         helpers = [],
         blocks = [],
         variables = [],
@@ -177,13 +179,21 @@ OTemplate.prototype.$compileShell = (function() {
      * @param  {String} source HTML
      * @return {String}
      */
-    var blockToJs = function(source) {
-      // source 块
-      // <%source%><%/source%>
+    var sourceToJs = function(source) {
+      var helperName,
+          match,
+          str
 
-      var match
-      while(match = /<%source%>(.+?)<%\/source%>/igm.exec(source)) {
-        source = source.replace(match[0], '<%=unescape("' + escape(match[1]) + '");%>')
+      while(match = /<%source\\s*([\w\W]+?)?\\s*%>(.+?)<%\/source%>/igm.exec(source)) {
+        helperName = match[1]
+        str = match[2]
+
+        str = helperName && _sources_.hasOwnProperty(helperName)
+          ? _sources_[helperName](str)
+          : str
+
+        str = '<%=unescape("' + escape(str) + '");%>'
+        source = source.replace(match[0], str)
       }
 
       return source
@@ -266,12 +276,13 @@ OTemplate.prototype.$compileShell = (function() {
         source = '$buffer+=$helpers.$toString(' + source + ', ' + isEscape + ');'
       }
 
-      line += source.split(/\n/).length - 1
+      // save the running line
+      line += source.split(/\n|%0A/).length - 1
       source += (/\)$/.exec(source) ? ';' : '') + '$runtime=' + line +  ';'
       return source
     }
 
-    source = isString(source) ? blockToJs(source) : ''
+    source = isString(source) ? sourceToJs(source) : ''
 
     forEach(source.split('<%'), function(code) {
       code = code.split('%>')
@@ -798,10 +809,13 @@ OTemplate.prototype.block = function(var_query, callback) {
     if (isString(var_query) && isFunction(callback)) {
       this
         .$registerSyntax(var_query + 'open', '(' + var_query + ')\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3, $4, $5) {
-          return '<%' + $1 + '(' + ($2 ? $2 + ',' : '') + '$append, function(' + $5 + ') {"use strict";var $buffer="";%>'
+          return '<%' + $1 + '($append, ' + ($2 ? $2 + ', ' : '') + 'function(' + ($5 || '') + ') {"use strict";var $buffer="";%>'
         })
         .$registerSyntax(var_query + 'close', '/' + var_query, 'return $buffer;});')
-        ._blockHelpers[var_query] = callback
+        ._blockHelpers[var_query] = function($append) {
+          var args = Array.prototype.splice.call(arguments, 1)
+          $append(callback.apply(this, args))
+        }
     }
   }
   else {

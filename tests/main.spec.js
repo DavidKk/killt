@@ -121,8 +121,8 @@ describe('Test OTemplate.', function() {
     })
 
     it('should allow use block-helper for judgement.', function() {
-      oTemplate.block('judge', function(yes, $append, blockShell) {
-        $append(yes ? blockShell() : '')
+      oTemplate.block('judge', function(yes, blockShell) {
+        return yes ? blockShell() : ''
       })
 
       expect(oTemplate._blockHelpers.judge).toEqual(jasmine.any(Function))
@@ -132,10 +132,13 @@ describe('Test OTemplate.', function() {
     })
 
     it('should allow use block-helper for each.', function() {
-      oTemplate.block('foreach', function(times, $append, blockShell) {
+      oTemplate.block('foreach', function(times, blockShell) {
+        var str = ''
         for (var i = 0; i < times; i ++) {
-          $append(blockShell(i +1))
+          str += blockShell(i +1)
         }
+
+        return str
       })
 
       expect(oTemplate._blockHelpers.foreach).toEqual(jasmine.any(Function))
@@ -145,8 +148,8 @@ describe('Test OTemplate.', function() {
     })
 
     it('should allow use block-helper to replace the content.', function() {
-      oTemplate.block('like', function(who, $append) {
-        $append('<span>Like ' + who + '!!!</span>')
+      oTemplate.block('like', function(who) {
+        return '<span>Like ' + who + '!!!</span>'
       })
 
       expect(oTemplate._blockHelpers.like).toEqual(jasmine.any(Function))

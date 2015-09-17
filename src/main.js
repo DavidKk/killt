@@ -17,6 +17,7 @@ var OTemplate = function(options) {
   this._blocks = {}                   // block syntax/块状语法
   this._blockHelpers = {}             // block helpers/块状辅助函数
   this._helpers = {}                  // helpers/辅助函数
+  this._sourceHelpers = {}            // source helpers/资源辅助函数
   this._defaults = {}                 // defualt config/默认配置
 
   // set the config/设置配置
@@ -165,6 +166,7 @@ OTemplate.prototype.$compileShell = (function() {
         strip = isBoolean(options.compress) ? options.compress : conf.compress,
         _helpers_ = this._helpers,
         _blocks_ = this._blockHelpers,
+        _sources_ = this._sourceHelpers,
         helpers = [],
         blocks = [],
         variables = [],
@@ -176,11 +178,21 @@ OTemplate.prototype.$compileShell = (function() {
      * @param  {String} source HTML
      * @return {String}
      */
-    var blockToJs = function(source) {
-      // source 块，匹配<%source%>....<%/source%>
-      var match
-      while(match = /<%source%>(.+?)<%\/source%>/igm.exec(source)) {
-        source = source.replace(match[0], '<%=unescape("' + escape(match[1]) + '");%>')
+    var sourceToJs = function(source) {
+      var helperName,
+          match,
+          str
+
+      while(match = /<%source\\s*([\w\W]+?)?\\s*%>(.+?)<%\/source%>/igm.exec(source)) {
+        helperName = match[1]
+        str = match[2]
+
+        str = helperName && _sources_.hasOwnProperty(helperName)
+          ? _sources_[helperName](str)
+          : str
+
+        str = '<%=unescape("' + escape(str) + '");%>'
+        source = source.replace(match[0], str)
       }
 
       return source
@@ -263,12 +275,13 @@ OTemplate.prototype.$compileShell = (function() {
         source = '$buffer+=$helpers.$toString(' + source + ', ' + isEscape + ');'
       }
 
-      line += source.split(/\n/).length - 1
+      // save the running line
+      line += source.split(/\n|%0A/).length - 1
       source += (/\)$/.exec(source) ? ';' : '') + '$runtime=' + line +  ';'
       return source
     }
 
-    source = isString(source) ? blockToJs(source) : ''
+    source = isString(source) ? sourceToJs(source) : ''
 
     forEach(source.split('<%'), function(code) {
       code = code.split('%>')
