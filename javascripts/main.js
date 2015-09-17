@@ -72,7 +72,7 @@
 
     $con.data('render')
       ? $con.show()
-      : render('templates/examples.html', $con.data('render', true).show())
+      : render('markdowns/examples.md', $con.data('render', true).show())
   })
 
   addRoute('docs', function() {
