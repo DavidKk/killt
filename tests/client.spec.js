@@ -200,6 +200,33 @@ describe('Test OTemplate In Client.', function() {
 
       expect(view).toEqual('<h1>oTemplate</h1><h4>默认 escape = true</h4><p>&lt;div&gt;            Check it out!!!            &lt;ul&gt;              &lt;li&gt;check&lt;/li&gt;              &lt;li&gt;check&lt;/li&gt;              &lt;li&gt;check&lt;/li&gt;              &lt;li&gt;yoyoyo&lt;/li&gt;            &lt;/ul&gt;          &lt;/div&gt;</p><h4>不转义</h4><p><div>            Check it out!!!            <ul>              <li>check</li>              <li>check</li>              <li>check</li>              <li>yoyoyo</li>            </ul>          </div></p><h4>强制转义</h4><p>&lt;div&gt;            Check it out!!!            &lt;ul&gt;              &lt;li&gt;check&lt;/li&gt;              &lt;li&gt;check&lt;/li&gt;              &lt;li&gt;check&lt;/li&gt;              &lt;li&gt;yoyoyo&lt;/li&gt;            &lt;/ul&gt;          &lt;/div&gt;</p>')
     })
+
+    it('debug', function() {
+      document.body.innerHTML = 
+        '<script id="/template/debug/a.html" type="template/text">\
+          <h1>{{@title</h1>\
+          <p>{{#content}}</p>\
+        </script>\
+        <script id="/template/debug/b.html" type="template/text">\
+          {{helper}}\
+            <div>Hello world!!!</div>\
+          {{/helper}}\
+        </script>\
+        <script id="/template/debug/c.html" type="template/text">\
+          <div>{{"error helper" | helper}}</div>\
+        </script>'
+
+      // oTemplate.onError(function(message) {
+      //   console.log(message)
+      // })
+
+      // oTemplate.renderById('/template/debug/a.html')
+      // oTemplate.renderById('/template/debug/b.html')
+      // oTemplate.renderById('/template/debug/c.html')
+      // oTemplate.renderById('/template/debug/d.html')
+      // oTemplate.renderByAjax('/template/debug/e.html', function() {})
+      // oTemplate.renderByAjax('http://baidu.com', function() {})
+    })
   })
 
   // TODO: error issue should blew.

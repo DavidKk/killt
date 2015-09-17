@@ -370,9 +370,9 @@ OTemplate.prototype.$compileShell = (function() {
       +      '}'
       +      'catch(err) {'
       +        'throw {'
-      +          'Message: err.message,'
-      +          'Line: $runtime,'
-      +          'Shell: "' + escapeSymbol(this.$$table(origin)) + '"'
+      +          'message: err.message,'
+      +          'line: $runtime,'
+      +          'shell: "' + escapeSymbol(this.$$table(origin)) + '"'
       +        '};'
       +      '}'
 
