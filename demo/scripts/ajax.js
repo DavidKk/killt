@@ -1,5 +1,5 @@
 window.onload = function() {
-  oTemplate.renderByAjax('templates/ajax.html', {
+  oTemplate.renderByAjax('/oTemplate/demo/templates/ajax.html', {
     title: 'Keywords',
     list: ['Template', 'Template Engine', 'Javascript']
   },
