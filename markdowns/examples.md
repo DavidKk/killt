@@ -28,7 +28,7 @@ oTemplate.renderById('/template/basic.html', {
 
 ### Output
 
-<iframe data-src="/demo/basic.html"></iframe>
+<iframe data-src="demo/basic.html"></iframe>
 
 
 
@@ -59,7 +59,7 @@ render({
 
 ### Output
 
-<iframe data-src="/demo/compile.html"></iframe>
+<iframe data-src="demo/compile.html"></iframe>
 
 ## Include/引入
 
@@ -97,7 +97,7 @@ oTemplate.renderById('/template/include.html', {
 
 ### Output
 
-<iframe data-src="/demo/include.html"></iframe>
+<iframe data-src="demo/include.html"></iframe>
 
 
 ## Helper/辅助函数
@@ -126,7 +126,7 @@ document.body.innerHTML = oTemplate.renderById('/template/helper.html', {
 
 ### Output
 
-<iframe data-src="/demo/helper.html"></iframe>
+<iframe data-src="demo/helper.html"></iframe>
 
 
 ## Noescape/不转义
@@ -175,7 +175,7 @@ oTemplate.renderById('/template/noescape.html', {
 
 ### Output
 
-<iframe data-src="/demo/noescape.html"></iframe>
+<iframe data-src="demo/noescape.html"></iframe>
 
 
 ## AJAX/异步请求模板
@@ -211,7 +211,7 @@ function(html) {
 
 ### Output
 
-<iframe data-src="/demo/ajax.html"></iframe>
+<iframe data-src="demo/ajax.html"></iframe>
 
 
 ## Debug/异常处理
@@ -248,4 +248,4 @@ oTemplate.renderByAjax('http://baidu.com', function() {})
 
 ### Output
 
-<iframe data-src="/demo/debug.html"></iframe>
+<iframe data-src="demo/debug.html"></iframe>
