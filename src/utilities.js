@@ -202,15 +202,37 @@ function toString(value) {
 }
 
 /**
- * @function escape 转义
+ * @function escapeSymbol 转义标点符号
  * @param  {String} a 需要转义的字符串
  * @return {String}
  */
-function escape(a) {
+function escapeSymbol(a) {
   return a
     .replace(/("|'|\\)/g, '\\$1')
     .replace(/\r/g, '\\r')
     .replace(/\n/g, '\\n')
+}
+
+/**
+ * @function escapeHTML 转义HTML字符
+ * @param  {String} content HTML字符
+ * @return {String}
+ */
+function escapeHTML(content) {
+  return toString(content).replace(/&(?![\w#]+;)|[<>"']/g, escapeHTML.escapeFn)
+}
+
+escapeHTML.SOURCES = {
+  '<': '&lt;',
+  '>': '&gt;',
+  '&': '&amp;',
+  '"': '&quot;',
+  "'": '&#x27;',
+  '/': '&#x2f;'
+}
+
+escapeHTML.escapeFn = function(name) {
+  return escapeHTML.SOURCES[name]
 }
 
 /**

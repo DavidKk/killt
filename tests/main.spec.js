@@ -1,5 +1,5 @@
 describe('Test OTemplate.', function() {
-  oTemplate.config('env', 'unit')
+  oTemplate.config('env', oTemplate.ENV.UNIT)
 
   // lit version
   describe('oTemplate can parse templates.', function() {
@@ -16,7 +16,7 @@ describe('Test OTemplate.', function() {
       expect(view).toEqual('<div>Hello world</div>')
     })
   })
-  
+
   // syntax version
   describe('oTemplate can parse the syntax-template.', function() {
     it('should compile the `echo` syntax.', function() {
@@ -64,6 +64,11 @@ describe('Test OTemplate.', function() {
 
       shell = oTemplate.$compileSyntax('<div>{{#data | $h1:a_1,b_1,c_1 | h2:a2,b2,c2}}</div>')
       expect(shell).toEqual('<div><%#h2($h1(data,a_1,b_1,c_1),a2,b2,c2)%></div>')
+    })
+
+    it('should allow compile `source` syntax.', function() {
+      var view = oTemplate.$compileSyntax('<%source%><div><%= data %></div><%/source%><%source%><div><%= data %></div><%/source%>')
+      expect(view).toEqual('<%source%><div><%= data %></div><%/source%><%source%><div><%= data %></div><%/source%>')
     })
 
     it('should allow compile all syntax at the same time.', function() {

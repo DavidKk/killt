@@ -25,37 +25,17 @@ var OTemplate = function(options) {
 
   // set any helpers/设置基础辅助函数
   ~extend(this._helpers, {
-    $escape: (function() {
-      var escapeHTML = {}
-      escapeHTML.SOURCES = {
-        '<': '&lt;',
-        '>': '&gt;',
-        '&': '&amp;',
-        '"': '&quot;',
-        "'": '&#x27;',
-        '/': '&#x2f;'
-      }
-
-      escapeHTML.escapeFn = function(name) {
-        return escapeHTML.SOURCES[name]
-      }
-
-      escapeHTML.escape = function(content) {
-        return toString(content).replace(/&(?![\w#]+;)|[<>"']/g, escapeHTML.escapeFn)
-      }
-
-      return function() {
-        return escapeHTML.escape.apply(escapeHTML, arguments)
-      }
-    })(),
+    $escape: function() {
+      return escapeHTML.apply(escapeHTML, arguments)
+    },
     $noescape: function(str) {
       return toString(str || '')
     },
-    $toString: function(str, escape) {
+    $toString: function(str, isEscape) {
       var conf = self._defaults,
           str = toString(str)
 
-      return true === (isBoolean(escape) ? escape : conf.escape)
+      return true === (isBoolean(isEscape) ? isEscape : conf.escape)
         ? self.helper('$escape')(str)
         : str
     },
@@ -79,18 +59,24 @@ var OTemplate = function(options) {
   })
 }
 
-OTemplate._defaults = {             // default options/默认配置
-  env: 'produce',                   // current entironment/当前环境 [unit, develop, produce]
-  noSyntax: false,                  // is use native syntax/是否使用使用原生语法
-  strict: true,                     // compile syntax in strict mode/是否通过严格模式编译语法
-  compress: true,                   // compress the html code/压缩生成的HTML代码
-  escape: true,                     // escape the HTML/是否编码输出变量的 HTML 字符
-  openTag: '{{',                    // open tag for syntax/起始标识
-  closeTag: '}}',                   // close tag for syntax/结束标识
-  depends: []                       // addition render arguments (must be use `$` to define variable name)/追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量)
+OTemplate.ENV = OTemplate.prototype.ENV = {   // current envirment/配置环境
+  PRODUCE: 1,                                 // production env/生产环境
+  DEVELOP: 2,                                 // develop env/开发环境
+  UNIT: 3                                     // unit test env/单元测试环境
 }
 
-OTemplate._extends = []             // extens plugins/扩展集合
+OTemplate._defaults = {                       // default options/默认配置
+  env: OTemplate.ENV.PRODUCE,                 // current entironment/当前环境 [unit, develop, produce]
+  noSyntax: false,                            // is use native syntax/是否使用使用原生语法
+  strict: true,                               // compile syntax in strict mode/是否通过严格模式编译语法
+  compress: true,                             // compress the html code/压缩生成的HTML代码
+  escape: true,                               // escape the HTML/是否编码输出变量的 HTML 字符
+  openTag: '{{',                              // open tag for syntax/起始标识
+  closeTag: '}}',                             // close tag for syntax/结束标识
+  depends: []                                 // addition render arguments (must be use `$` to define variable name)/追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量)
+}
+
+OTemplate._extends = []                       // extens plugins/扩展集合
 
 /**
  * @function extend 扩展库
@@ -107,7 +93,7 @@ OTemplate.extend = function(_extends_) {
  * @param  {String} error
  */
 OTemplate.prototype.$$throw = function(message) {
-  'unit' !== this._defaults.env && __throw(message)
+  OTemplate.ENV.UNIT !== this._defaults.env && __throw(message)
 }
 
 /**
@@ -174,7 +160,8 @@ OTemplate.prototype.$compileShell = (function() {
   return function(source, options) {
     options = options || {}
 
-    var conf = this._defaults,
+    var origin = source,
+        conf = this._defaults,
         isEscape = isBoolean(options.escape) ? options.escape : conf.escape,
         strip = isBoolean(options.compress) ? options.compress : conf.compress,
         _helpers_ = this._helpers,
@@ -184,6 +171,23 @@ OTemplate.prototype.$compileShell = (function() {
         variables = [],
         line = 1,
         buffer = ''
+
+    /**
+     * @function sourceToJs 解析Source为JS字符串拼接
+     * @param  {String} source HTML
+     * @return {String}
+     */
+    var blockToJs = function(source) {
+      // source 块
+      // <%source%><%/source%>
+
+      var match
+      while(match = /<%source%>(.+?)<%\/source%>/igm.exec(source)) {
+        source = source.replace(match[0], '<%=unescape("' + escape(match[1]) + '");%>')
+      }
+
+      return source
+    }
 
     /**
      * @function htmlToJs 解析HTML为JS字符串拼接
@@ -267,7 +271,7 @@ OTemplate.prototype.$compileShell = (function() {
       return source
     }
 
-    source = (source || '')
+    source = isString(source) ? blockToJs(source) : ''
 
     forEach(source.split('<%'), function(code) {
       code = code.split('%>')
@@ -310,7 +314,7 @@ OTemplate.prototype.$compileShell = (function() {
       +        'throw {'
       +          'Message: err.message,'
       +          'Line: $runtime,'
-      +          'Shell: "' + escape(this.$$table(source)) + '"'
+      +          'Shell: "' + escapeSymbol(this.$$table(origin)) + '"'
       +        '};'
       +      '}'
 
@@ -961,15 +965,37 @@ function toString(value) {
 }
 
 /**
- * @function escape 转义
+ * @function escapeSymbol 转义标点符号
  * @param  {String} a 需要转义的字符串
  * @return {String}
  */
-function escape(a) {
+function escapeSymbol(a) {
   return a
     .replace(/("|'|\\)/g, '\\$1')
     .replace(/\r/g, '\\r')
     .replace(/\n/g, '\\n')
+}
+
+/**
+ * @function escapeHTML 转义HTML字符
+ * @param  {String} content HTML字符
+ * @return {String}
+ */
+function escapeHTML(content) {
+  return toString(content).replace(/&(?![\w#]+;)|[<>"']/g, escapeHTML.escapeFn)
+}
+
+escapeHTML.SOURCES = {
+  '<': '&lt;',
+  '>': '&gt;',
+  '&': '&amp;',
+  '"': '&quot;',
+  "'": '&#x27;',
+  '/': '&#x2f;'
+}
+
+escapeHTML.escapeFn = function(name) {
+  return escapeHTML.SOURCES[name]
 }
 
 /**

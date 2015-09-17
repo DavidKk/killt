@@ -6,6 +6,8 @@
  * `include`: {{include "/templates/index.html", data}}
  * `escape`:  {{# "<div></div>"}}
  * `helper`:  {{data | helperA:dataA,dataB,dataC | helperB:dataD,dataE,dataF}}
+ * `noescpe`: {{# data}}
+ * `escpe`:   {{!# data}}
  */
 OTemplate.extend(function() {
   var HELPER_SYNTAX = '(!?#?)\\s*([^\\|]+?)\\s*\\|\\s*([^:]+?)\\s*(:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?',
@@ -15,18 +17,18 @@ OTemplate.extend(function() {
 
   this
     .$registerSyntax('echo', '@\\s*([^|]+?)\\s*', '=$1')
-    .$registerSyntax('ifopen', 'if\\s*(.+)?\\s*', 'if($1) {')
+    .$registerSyntax('ifopen', 'if\\s*(.+?)\\s*', 'if($1) {')
     .$registerSyntax('else', 'else', '} else {')
-    .$registerSyntax('elseif', 'else\\s*if\\s*(.+)?\\s*', '} else if($1) {')
+    .$registerSyntax('elseif', 'else\\s*if\\s*(.+?)\\s*', '} else if($1) {')
     .$registerSyntax('ifclose', '\\/if', '}')
     .$registerSyntax('eachopen', 'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', function($all, $1, $2, $3, $4) {
         var str = 'each(' + $1 + ', function(' + ($3 || '$value') + ($4 || ', $index') + ') {'
         return '<%' + str + '%>'
       })
     .$registerSyntax('eachclose', '\\/each', '})')
-    .$registerSyntax('include', 'include\\s*([^\\s,]+)?\\s*(,\\s*[^\\s+]+)?\\s*', function($all, $1, $2) {
-      return '<%#include(' + $1 + ($2 ? $2 : ', $data') + ')%>'
-    })
+    .$registerSyntax('include', 'include\\s*([\\w\\W]+?)\\s*(,\\s*[\\w\\W]+?)?\\s*', function($all, $1, $2) {
+        return '<%#include(' + $1 + ($2 || ', $data') + ')%>'
+      })
     .$registerSyntax('noescape', '#\\s*([^|]+?)\\s*', '#$1')
     .$registerSyntax('escape', '!#\\s*([^|]+?)\\s*', '!#$1')
     .$registerSyntax('helper', HELPER_SYNTAX, (function() {

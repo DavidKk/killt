@@ -29,7 +29,7 @@ OTemplate._defaults = extend(OTemplate._defaults, {
  */
 OTemplate.prototype.$$compile = function(source, data) {
   data = isPlainObject(data) ? data : this._defaults
-  return source.replace(/<%=\s*([^\s]+)?\s*%>/igm, function(all, $1) {
+  return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, function(all, $1) {
     return namespace($1, data) || ''
   })
 }
