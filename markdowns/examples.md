@@ -238,6 +238,11 @@ function(html) {
 ### Javascript
 
 ```
+oTemplate.onError(function(message) {
+  message = oTemplate.helper('$escape')(message)
+  document.body.innerHTML += message.replace(/\n/g, '<br>')
+})
+
 oTemplate.renderById('/template/debug/a.html')
 oTemplate.renderById('/template/debug/b.html')
 oTemplate.renderById('/template/debug/c.html')
