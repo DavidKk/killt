@@ -28,7 +28,7 @@ OTemplate.prototype.compileById = function(id, options) {
   var node = document.getElementById(id)
   return node
     ? this.compile(node.innerHTML, conf)
-    : (__throw({
+    : (this.$$throw({
         message: '[Compile Template]: Template ID `' + id + '` is not found.'
       }),
       __render)
@@ -129,7 +129,9 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
     return
   }
 
-  var xhr = new XMLHttpRequest()
+  var self = this,
+      xhr = new XMLHttpRequest()
+
   xhr.onreadystatechange = function() {
     var status = this.status
     if (this.DONE === this.readyState) {
@@ -144,7 +146,7 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
       response: '[Reponse State]: ' + this.status
     }
 
-    __throw(err)
+    self.$$throw(err)
     is('Function')(errorCallback) && errorCallback(err)
     errorCallback = undefined
   }
@@ -155,7 +157,7 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
       filename: filename
     }
 
-    __throw(err)
+    self.$$throw(err)
     is('Function')(errorCallback) && errorCallback(err)
     errorCallback = undefined
   }
@@ -166,7 +168,7 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
       filename: filename
     }
 
-    __throw(err)
+    self.$$throw(err)
     is('Function')(errorCallback) && errorCallback(err)
     errorCallback = undefined
   }

@@ -264,9 +264,12 @@ function extend(a, b) {
 
 /**
  * @function __throw 抛出异常
- * @param  {String|Object} error 错误异常
+ * @param  {String|Object} error  错误异常
+ * @param  {Boolean}       type   是否捕获事件
  */
-function __throw(error, env) {
+function __throw(error, type) {
+  type = is('String')(type) ? type : 'log'
+
   var message = ''
   if (is('Object')(error)) {
     forEach(error, function(value, name) {
@@ -276,11 +279,15 @@ function __throw(error, env) {
   else if (is('String')(error)) {
     message = error
   }
-
-  ~(env === OTemplate.ENV.PRODUCE || env === OTemplate.ENV.DEVELOP)
-    && (is('Defined')(console) && is('Function')(console.error))
+  
+  if ('log' === type) {
+    is('Defined')(console) && is('Function')(console.error)
       ? console.error(message)
       : _throw(message)
+  }
+  else if ('catch' === type) {
+    _throw(message)
+  }
 
   return message
 

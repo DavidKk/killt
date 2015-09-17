@@ -20,6 +20,7 @@ var OTemplate = function(options) {
   this._sourceHelpers = {}            // source helpers/资源辅助函数
   this._helpers = {}                  // helpers/辅助函数
   this._defaults = {}                 // defualt config/默认配置
+  this._listeners = []                // event listener/事件监听方法
 
   // set the config/设置配置
   ~extend(this._defaults, OTemplate._defaults, options)
@@ -45,9 +46,9 @@ var OTemplate = function(options) {
           node = document.getElementById(filename)
 
       if (node) {
-        __throw({
+        self.$$throw({
           message: '[Include Error]: Template ID `' + filename + '` is not found.'
-        }, conf.env)
+        })
 
         return ''
       }
@@ -95,8 +96,39 @@ OTemplate.extend = function(_extends_) {
  * @function $$throw
  * @param  {String} error
  */
-OTemplate.prototype.$$throw = function(message) {
-  OTemplate.ENV.UNIT !== this._defaults.env && __throw(message)
+OTemplate.prototype.$$throw = function(message, options) {
+  var conf = extend({}, this._defaults, options),
+      err = __throw(message, conf.env === OTemplate.ENV.UNIT && 'catch')
+
+  forEach(this._listeners, function(listener) {
+    'error' === listener.type && handle(err)
+  })
+}
+
+/**
+ * @function on 添加监听事件
+ * @param  {String}   type   监听类型
+ * @param  {Function} handle 监听函数
+ * @return {OTemplate}
+ */
+OTemplate.prototype.on = function(type, handle) {
+  if (is('String')(type) && is('Function')(handle)) {
+    this._listeners.push({
+      type: type,
+      handle: handle
+    })
+  }
+
+  return this
+}
+
+/**
+ * @function onError 添加错误事件监听
+ * @param  {Function} handle 监听函数
+ * @return {OTempalte}
+ */
+OTemplate.prototype.onError = function(handle) {
+  return this.on('error', handle)
 }
 
 /**
@@ -436,7 +468,7 @@ OTemplate.prototype.$compile = (function() {
         render = new Function(_args_, shell)
       }
       catch(err) {
-        __throw({
+        self.$$throw({
           message: '[Compile Render]: ' + err.message,
           line: 'Javascript syntax occur error, it can not find out the error line.',
           syntax: origin,
@@ -456,7 +488,7 @@ OTemplate.prototype.$compile = (function() {
             source: self.$$table(scope.$source)
           })
 
-          __throw({
+          self.$$throw({
             message: '[Exec Render]: ' + err.message,
             line: err.line,
             template: err.source,
@@ -627,7 +659,7 @@ OTemplate.prototype.compileById = function(id, options) {
   var node = document.getElementById(id)
   return node
     ? this.compile(node.innerHTML, conf)
-    : (__throw({
+    : (this.$$throw({
         message: '[Compile Template]: Template ID `' + id + '` is not found.'
       }),
       __render)
@@ -728,7 +760,9 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
     return
   }
 
-  var xhr = new XMLHttpRequest()
+  var self = this,
+      xhr = new XMLHttpRequest()
+
   xhr.onreadystatechange = function() {
     var status = this.status
     if (this.DONE === this.readyState) {
@@ -743,7 +777,7 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
       response: '[Reponse State]: ' + this.status
     }
 
-    __throw(err)
+    self.$$throw(err)
     is('Function')(errorCallback) && errorCallback(err)
     errorCallback = undefined
   }
@@ -754,7 +788,7 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
       filename: filename
     }
 
-    __throw(err)
+    self.$$throw(err)
     is('Function')(errorCallback) && errorCallback(err)
     errorCallback = undefined
   }
@@ -765,7 +799,7 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
       filename: filename
     }
 
-    __throw(err)
+    self.$$throw(err)
     is('Function')(errorCallback) && errorCallback(err)
     errorCallback = undefined
   }
@@ -1040,9 +1074,12 @@ function extend(a, b) {
 
 /**
  * @function __throw 抛出异常
- * @param  {String|Object} error 错误异常
+ * @param  {String|Object} error  错误异常
+ * @param  {Boolean}       type   是否捕获事件
  */
-function __throw(error, env) {
+function __throw(error, type) {
+  type = is('String')(type) ? type : 'log'
+
   var message = ''
   if (is('Object')(error)) {
     forEach(error, function(value, name) {
@@ -1052,11 +1089,15 @@ function __throw(error, env) {
   else if (is('String')(error)) {
     message = error
   }
-
-  ~(env === OTemplate.ENV.PRODUCE || env === OTemplate.ENV.DEVELOP)
-    && (is('Defined')(console) && is('Function')(console.error))
+  
+  if ('log' === type) {
+    is('Defined')(console) && is('Function')(console.error)
       ? console.error(message)
       : _throw(message)
+  }
+  else if ('catch' === type) {
+    _throw(message)
+  }
 
   return message
 

@@ -19,6 +19,7 @@ var OTemplate = function(options) {
   this._sourceHelpers = {}            // source helpers/资源辅助函数
   this._helpers = {}                  // helpers/辅助函数
   this._defaults = {}                 // defualt config/默认配置
+  this._listeners = []                // event listener/事件监听方法
 
   // set the config/设置配置
   ~extend(this._defaults, OTemplate._defaults, options)
@@ -44,9 +45,9 @@ var OTemplate = function(options) {
           node = document.getElementById(filename)
 
       if (node) {
-        __throw({
+        self.$$throw({
           message: '[Include Error]: Template ID `' + filename + '` is not found.'
-        }, conf.env)
+        })
 
         return ''
       }
@@ -94,8 +95,39 @@ OTemplate.extend = function(_extends_) {
  * @function $$throw
  * @param  {String} error
  */
-OTemplate.prototype.$$throw = function(message) {
-  OTemplate.ENV.UNIT !== this._defaults.env && __throw(message)
+OTemplate.prototype.$$throw = function(message, options) {
+  var conf = extend({}, this._defaults, options),
+      err = __throw(message, conf.env === OTemplate.ENV.UNIT && 'catch')
+
+  forEach(this._listeners, function(listener) {
+    'error' === listener.type && handle(err)
+  })
+}
+
+/**
+ * @function on 添加监听事件
+ * @param  {String}   type   监听类型
+ * @param  {Function} handle 监听函数
+ * @return {OTemplate}
+ */
+OTemplate.prototype.on = function(type, handle) {
+  if (is('String')(type) && is('Function')(handle)) {
+    this._listeners.push({
+      type: type,
+      handle: handle
+    })
+  }
+
+  return this
+}
+
+/**
+ * @function onError 添加错误事件监听
+ * @param  {Function} handle 监听函数
+ * @return {OTempalte}
+ */
+OTemplate.prototype.onError = function(handle) {
+  return this.on('error', handle)
 }
 
 /**
@@ -435,7 +467,7 @@ OTemplate.prototype.$compile = (function() {
         render = new Function(_args_, shell)
       }
       catch(err) {
-        __throw({
+        self.$$throw({
           message: '[Compile Render]: ' + err.message,
           line: 'Javascript syntax occur error, it can not find out the error line.',
           syntax: origin,
@@ -455,7 +487,7 @@ OTemplate.prototype.$compile = (function() {
             source: self.$$table(scope.$source)
           })
 
-          __throw({
+          self.$$throw({
             message: '[Exec Render]: ' + err.message,
             line: err.line,
             template: err.source,
