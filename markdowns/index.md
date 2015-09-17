@@ -33,6 +33,7 @@ bower install oTemplate
 ```
 
 ### Default Syntax Version
+
 ```
 # Template In HTML
 <script id="templates/list/default.html" type="template/text">
