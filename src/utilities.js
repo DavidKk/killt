@@ -9,135 +9,67 @@ function inline(str, pos) {
 }
 
 /**
- * @function type 获取对象的类型
- * @param  {Anything} a 获取的对象
- * @return {String}
+ * @function is 判断对象是否为 type 类型
+ * @param  {String} type
+ * @return {Function}
+ *   @param {Anything} elem 要判断的对象
  */
-function type(a) {
-  return Object.prototype.toString.call(a);
-}
-
-/**
- * @function isDefined 是否不为 undefined
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isDefined(a) {
-  return 'undefined' !== typeof a
-}
-
-/**
- * @function isUndefined 是否为 undefined
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isUndefined(a) {
-  return 'undefined' === typeof a
-}
-
-
-/**
- * @function isObject 是否为对象
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isObject(a) {
-  return '[object Object]' === type(a)
-}
-
-/**
- * @function isFunction 是否为函数
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isFunction(a) {
-  return '[object Function]' === type(a)
-}
-
-/**
- * @function isNumber 是否为一个数字对象
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isNumber(a) {
-  return '[object Number]' === type(a)
-}
-
-/**
- * @function isBoolean 是否为一个布尔值
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isBoolean(a) {
-  return '[object Boolean]' === type(a)
-}
-
-/**
- * @function isString 是否为一个字符串
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isString(a) {
-  return '[object String]' === type(a)
-}
-
-/**
- * @function isRegExp 判断是否为正则
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isRegExp(a) {
-  return '[object RegExp]' === type(a)
-}
-
-/**
- * @function isArray 是否为数组
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isArray(a) {
-  return '[object Array]' === type(a)
-}
-
-/**
- * @function isInteger 是否为整数
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isInteger(a) {
-  var y = parseInt(a, 10)
-  return !isNaN(y) && a === y && a.toString() === y.toString()
-}
-
-/**
- * @function isPlainObject 是否为一个纯对象
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isPlainObject(o) {
-    var ctor,
-        prot
-
-    if (false === isObject(o) || isUndefined(o)) {
-        return false
+function is(type) {
+  // 是否未定义
+  if ('Undefined' === type) {
+    return function(o) {
+      return 'undefined' === typeof o
     }
+  }
 
-    ctor = o.constructor
-    if ('function' !== typeof ctor) {
-        return false
+  // 是否定义
+  if ('Defined' === type) {
+    return function(o) {
+      return 'undefined' !== typeof o
     }
-    
-    prot = ctor.prototype;
-    if (false === isObject(prot)) {
-        return false
+  }
+
+  // 是否为一个整数
+  if ('Integer' === type) {
+    return function(o) {
+      var y = parseInt(o, 10)
+      return !isNaN(y) && o === y && o.toString() === y.toString()
     }
-    
-    if (false === prot.hasOwnProperty('isPrototypeOf')) {
-        return false
+  }
+
+  // 是否为一个纯对象
+  if ('PlainObject' === type) {
+    return function(o) {
+      var ctor,
+          prot
+
+      if (false === is('Object')(o) || is('Undefined')(o)) {
+          return false
+      }
+
+      ctor = o.constructor
+      if ('function' !== typeof ctor) {
+          return false
+      }
+      
+      prot = ctor.prototype;
+      if (false === is('Object')(prot)) {
+          return false
+      }
+      
+      if (false === prot.hasOwnProperty('isPrototypeOf')) {
+          return false
+      }
+      
+      return true
     }
-    
-    return true
+  }
+
+  return function(o) {
+    return '[object ' + type + ']' === Object.prototype.toString.call(o)
+  }
 }
+
 
 /**
  * @trim 去除空格
@@ -160,7 +92,7 @@ function trim(str) {
  *     {a:1}             -> $.namespace('a.a.a.a') -> undefined
  */
 function namespace(query, space, token) {
-  if (!isString(query)) {
+  if (!is('String')(query)) {
     return undefined
   }
 
@@ -170,14 +102,14 @@ function namespace(query, space, token) {
       l = ns.length
 
   for (; i < l; i ++) {
-    if (isUndefined(re[ns[i]])) {
+    if (is('Undefined')(re[ns[i]])) {
         return undefined
     }
 
     re = re[ns[i]]
   }
 
-  return isUndefined(re) ? undefined : re
+  return is('Undefined')(re) ? undefined : re
 }
 
 /**
@@ -186,15 +118,15 @@ function namespace(query, space, token) {
  * @return {String}
  */
 function toString(value) {
-  if (isString(value)) {
+  if (is('String')(value)) {
     return value
   }
 
-  if (isNumber(value)) {
+  if (is('Number')(value)) {
     return value += ''
   }
 
-  if (isFunction(value)) {
+  if (is('Function')(value)) {
     return toString(value.call(value))
   }
 
@@ -241,9 +173,9 @@ escapeHTML.escapeFn = function(name) {
  * @param {Function}      callback 回调函数
  */
 function forEach(a, callback) {
-  if (isFunction(callback)) {
+  if (is('Function')(callback)) {
     var i
-    if (isArray(a)) {
+    if (is('Array')(a)) {
       if (Array.prototype.some) {
         a.some(callback)
       }
@@ -256,7 +188,7 @@ function forEach(a, callback) {
         }
       }
     }
-    else if (isObject(a)) {
+    else if (is('Object')(a)) {
       for (i in a) {
         if (true === callback(a[i], i)) {
           break
@@ -293,7 +225,7 @@ function unique(a) {
  * @return {Object|Array}
  */
 function filter(collection, callback) {
-  var isArr = isArray(collection),
+  var isArr = is('Array')(collection),
       res = isArr ? [] : {}
 
   forEach(collection, function(val, key) {
@@ -318,10 +250,10 @@ function extend(a, b) {
     return extend(a, next[0])
   }
 
-  if (isArray(a) && isArray(b)) {
+  if (is('Array')(a) && is('Array')(b)) {
     Array.prototype.splice.apply(a, [a.length, 0].concat(b))
   }
-  else if (isPlainObject(a) && isPlainObject(b)) {
+  else if (is('PlainObject')(a) && is('PlainObject')(b)) {
     for (var i in b) {
       a[i] = b[i]
     }
@@ -335,14 +267,14 @@ function extend(a, b) {
  * @param  {String|Object} error 错误异常
  */
 function __throw(error) {
-  if (isDefined(console) && isFunction(console.error)) {
+  if (is('Defined')(console) && is('Function')(console.error)) {
     var message = ''
-    if (isObject(error)) {
+    if (is('Object')(error)) {
       forEach(error, function(value, name) {
         message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
       })
     }
-    else if (isString(error)) {
+    else if (is('String')(error)) {
       message = error
     }
 

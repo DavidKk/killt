@@ -28,7 +28,7 @@ OTemplate._defaults = extend(OTemplate._defaults, {
  * the result is '{{hi}}'
  */
 OTemplate.prototype.$$compile = function(source, data) {
-  data = isPlainObject(data) ? data : this._defaults
+  data = is('PlainObject')(data) ? data : this._defaults
   return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, function(all, $1) {
     return namespace($1, data) || ''
   })
@@ -73,19 +73,19 @@ OTemplate.prototype.$registerSyntax = function(name, var_syntax, shell) {
 
   if (2 < arguments.length) {
     this._blocks[name] = {
-      syntax: isRegExp(var_syntax) ? var_syntax : this.$$compileRegexp('<%= openTag %>' + var_syntax + '<%= closeTag %>', 'igm'),
-      shell: isFunction(shell) ? shell : '<%' + this.$$compile(shell) + '%>'
+      syntax: is('RegExp')(var_syntax) ? var_syntax : this.$$compileRegexp('<%= openTag %>' + var_syntax + '<%= closeTag %>', 'igm'),
+      shell: is('Function')(shell) ? shell : '<%' + this.$$compile(shell) + '%>'
     }
   }
-  else if (isPlainObject(var_syntax)) {
+  else if (is('PlainObject')(var_syntax)) {
     forEach(var_syntax, function(shell, syntax) {
       self.$registerSyntax(name, syntax, shell)
     })
   }
-  else if (isArray(var_syntax)) {
+  else if (is('Array')(var_syntax)) {
     forEach(var_syntax, function(compiler) {
-      isString(compiler.syntax)
-      && isString(compiler.shell) || isFunction(compiler.shell)
+      is('String')(compiler.syntax)
+      && is('String')(compiler.shell) || is('Function')(compiler.shell)
       && self.$registerSyntax(name, compiler.syntax, compiler.shell)
     })
   }
@@ -209,7 +209,7 @@ OTemplate.prototype.$compileSyntax = function(source, strict) {
  */
 OTemplate.prototype.block = function(var_query, callback) {
   if (1 < arguments.length) {
-    if (isString(var_query) && isFunction(callback)) {
+    if (is('String')(var_query) && is('Function')(callback)) {
       this
         .$registerSyntax(var_query + 'open', '(' + var_query + ')\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3, $4, $5) {
           return '<%' + $1 + '($append, ' + ($2 ? $2 + ', ' : '') + 'function(' + ($5 || '') + ') {"use strict";var $buffer="";%>'
@@ -222,11 +222,11 @@ OTemplate.prototype.block = function(var_query, callback) {
     }
   }
   else {
-    if (isString(var_query)) {
+    if (is('String')(var_query)) {
       return this._blockHelpers[var_query]
     }
 
-    if (isPlainObject(var_query)) {
+    if (is('PlainObject')(var_query)) {
       var name
       for (name in var_query) {
         this.block(name, var_query[name])

@@ -6,7 +6,7 @@ var fs = require('fs')
  * @param  {Function} callback 回调函数
  */
 function readFile(filename, callback) {
-  if (isFunction(callback)) {
+  if (is('Function')(callback)) {
     fs.readFile(filename, function(err, buffer) {
       callback(buffer.toString())
     })

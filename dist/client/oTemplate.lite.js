@@ -17,8 +17,8 @@ var OTemplate = function(options) {
   this._caches = {}                   // render caches/编译器缓存
   this._blocks = {}                   // block syntax/块状语法
   this._blockHelpers = {}             // block helpers/块状辅助函数
-  this._helpers = {}                  // helpers/辅助函数
   this._sourceHelpers = {}            // source helpers/资源辅助函数
+  this._helpers = {}                  // helpers/辅助函数
   this._defaults = {}                 // defualt config/默认配置
 
   // set the config/设置配置
@@ -36,7 +36,7 @@ var OTemplate = function(options) {
       var conf = self._defaults,
           str = toString(str)
 
-      return true === (isBoolean(isEscape) ? isEscape : conf.escape)
+      return true === (is('Boolean')(isEscape) ? isEscape : conf.escape)
         ? self.helper('$escape')(str)
         : str
     },
@@ -55,7 +55,7 @@ var OTemplate = function(options) {
   })
 
   // set any syntax/设置语法
-  ~isArray(OTemplate._extends) && forEach(OTemplate._extends, function(_extends_) {
+  is('Array')(OTemplate._extends) && forEach(OTemplate._extends, function(_extends_) {
     self.extends(_extends_)
   })
 }
@@ -85,7 +85,7 @@ OTemplate._extends = []                       // extens plugins/扩展集合
  * @return {OTemplate}
  */
 OTemplate.extend = function(_extends_) {
-  isFunction(_extends_) && OTemplate._extends.push(_extends_)
+  is('Function')(_extends_) && OTemplate._extends.push(_extends_)
   return this
 }
 
@@ -163,8 +163,8 @@ OTemplate.prototype.$compileShell = (function() {
 
     var origin = source,
         conf = this._defaults,
-        isEscape = isBoolean(options.escape) ? options.escape : conf.escape,
-        strip = isBoolean(options.compress) ? options.compress : conf.compress,
+        isEscape = is('Boolean')(options.escape) ? options.escape : conf.escape,
+        strip = is('Boolean')(options.compress) ? options.compress : conf.compress,
         _helpers_ = this._helpers,
         _blocks_ = this._blockHelpers,
         _sources_ = this._sourceHelpers,
@@ -242,16 +242,16 @@ OTemplate.prototype.$compileShell = (function() {
         }
 
         var func = root[name]
-        if (isFunction(func) && func.toString().match(/^\s*?function \w+\(\) \{\s*?\[native code\]\s*?\}\s*?$/i)) {
+        if (is('Function')(func) && func.toString().match(/^\s*?function \w+\(\) \{\s*?\[native code\]\s*?\}\s*?$/i)) {
           return
         }
 
-        if (isFunction(_helpers_[name])) {
+        if (is('Function')(_helpers_[name])) {
           helpers.push(name)
           return
         }
 
-        if (isFunction(_blocks_[name])) {
+        if (is('Function')(_blocks_[name])) {
           blocks.push(name)
           return
         }
@@ -282,7 +282,7 @@ OTemplate.prototype.$compileShell = (function() {
       return source
     }
 
-    source = isString(source) ? sourceToJs(source) : ''
+    source = is('String')(source) ? sourceToJs(source) : ''
 
     forEach(source.split('<%'), function(code) {
       code = code.split('%>')
@@ -492,7 +492,7 @@ OTemplate.prototype.extends = function(callback) {
  */
 OTemplate.prototype.config = function(var_query, value) {
   if (1 < arguments.length) {
-    if (isString(var_query)) {
+    if (is('String')(var_query)) {
       if ((var_query === 'openTag' && var_query === '<%') || (var_query === 'closeTag' && var_query === '%>')) {
         return this
       }
@@ -503,7 +503,7 @@ OTemplate.prototype.config = function(var_query, value) {
   }
 
   var self = this
-  if (isPlainObject(var_query)) {
+  if (is('PlainObject')(var_query)) {
     forEach(options, function(name, value) {
       self.config(name, value)
     })
@@ -511,7 +511,7 @@ OTemplate.prototype.config = function(var_query, value) {
     return this
   }
 
-  if (isString(var_query)) {
+  if (is('String')(var_query)) {
     return this._defaults[var_query]
   }
 }
@@ -524,16 +524,16 @@ OTemplate.prototype.config = function(var_query, value) {
  */
 OTemplate.prototype.helper = function(var_query, callback) {
   if (1 < arguments.length) {
-    if (isString(var_query) && isFunction(callback)) {
+    if (is('String')(var_query) && is('Function')(callback)) {
       this._helpers[var_query] = callback
     }
   }
   else {
-    if (isString(var_query)) {
+    if (is('String')(var_query)) {
       return this._helpers[var_query]
     }
 
-    if (isPlainObject(var_query)) {
+    if (is('PlainObject')(var_query)) {
       var name
       for (name in var_query) {
         this.helper(name, var_query[name])
@@ -576,12 +576,12 @@ OTemplate.prototype.compile = function(source, options) {
       filename = conf.filename,
       render = true === conf.overwrite || this.$$cache(filename)
 
-  if (isFunction(render)) {
+  if (is('Function')(render)) {
     return render
   }
 
   render = this.$compile(source, conf)
-  isString(filename) && this.$$cache(filename, render)
+  is('String')(filename) && this.$$cache(filename, render)
   return render
 }
 
@@ -618,7 +618,7 @@ OTemplate.prototype.compileById = function(id, options) {
   var conf = extend({}, this._defaults, options, { filename: id }),
       render = true === conf.overwrite || this.$$cache(id)
 
-  if (isFunction(render)) {
+  if (is('Function')(render)) {
     return render
   }
 
@@ -651,7 +651,7 @@ OTemplate.prototype.renderById = function(id, data, options) {
  * @param  {Object}   options  配置
  */
 OTemplate.prototype.compileByAjax = function(filename, callback, options) {
-  if (!isFunction(callback)) {
+  if (!is('Function')(callback)) {
     return
   }
 
@@ -659,7 +659,7 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
       conf = extend({}, this._defaults, options),
       render = true === conf.overwrite || this.$$cache(filename)
 
-  isFunction(render)
+  is('Function')(render)
     ? callback(render)
     : this.readFile(filename, function(source) {
         source = self.$compileSyntax(source, !!conf.strict)
@@ -707,11 +707,11 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
  * @param  {Object}   options  配置
  */
 OTemplate.prototype.renderByAjax = function(filename, data, callback, options) {
-  if (isFunction(data)) {
+  if (is('Function')(data)) {
     return this.renderByAjax(filename, {}, data, callback)
   }
 
-  isFunction(callback) && this.compileByAjax(filename, function(render) {
+  is('Function')(callback) && this.compileByAjax(filename, function(render) {
     callback(render(data || {}))
   }, options)
 }
@@ -722,7 +722,7 @@ OTemplate.prototype.renderByAjax = function(filename, data, callback, options) {
  * @param  {Function} callback 回调函数
  */
 OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
-  if (!isFunction(callback)) {
+  if (!is('Function')(callback)) {
     return
   }
 
@@ -742,7 +742,7 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
     }
 
     __throw(err)
-    isFunction(errorCallback) && errorCallback(err)
+    is('Function')(errorCallback) && errorCallback(err)
     errorCallback = undefined
   }
 
@@ -753,7 +753,7 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
     }
 
     __throw(err)
-    isFunction(errorCallback) && errorCallback(err)
+    is('Function')(errorCallback) && errorCallback(err)
     errorCallback = undefined
   }
 
@@ -764,7 +764,7 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
     }
 
     __throw(err)
-    isFunction(errorCallback) && errorCallback(err)
+    is('Function')(errorCallback) && errorCallback(err)
     errorCallback = undefined
   }
 
@@ -783,135 +783,67 @@ function inline(str, pos) {
 }
 
 /**
- * @function type 获取对象的类型
- * @param  {Anything} a 获取的对象
- * @return {String}
+ * @function is 判断对象是否为 type 类型
+ * @param  {String} type
+ * @return {Function}
+ *   @param {Anything} elem 要判断的对象
  */
-function type(a) {
-  return Object.prototype.toString.call(a);
-}
-
-/**
- * @function isDefined 是否不为 undefined
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isDefined(a) {
-  return 'undefined' !== typeof a
-}
-
-/**
- * @function isUndefined 是否为 undefined
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isUndefined(a) {
-  return 'undefined' === typeof a
-}
-
-
-/**
- * @function isObject 是否为对象
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isObject(a) {
-  return '[object Object]' === type(a)
-}
-
-/**
- * @function isFunction 是否为函数
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isFunction(a) {
-  return '[object Function]' === type(a)
-}
-
-/**
- * @function isNumber 是否为一个数字对象
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isNumber(a) {
-  return '[object Number]' === type(a)
-}
-
-/**
- * @function isBoolean 是否为一个布尔值
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isBoolean(a) {
-  return '[object Boolean]' === type(a)
-}
-
-/**
- * @function isString 是否为一个字符串
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isString(a) {
-  return '[object String]' === type(a)
-}
-
-/**
- * @function isRegExp 判断是否为正则
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isRegExp(a) {
-  return '[object RegExp]' === type(a)
-}
-
-/**
- * @function isArray 是否为数组
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isArray(a) {
-  return '[object Array]' === type(a)
-}
-
-/**
- * @function isInteger 是否为整数
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isInteger(a) {
-  var y = parseInt(a, 10)
-  return !isNaN(y) && a === y && a.toString() === y.toString()
-}
-
-/**
- * @function isPlainObject 是否为一个纯对象
- * @param  {Anything} a 需要判断的对象
- * @return {Boolean}
- */
-function isPlainObject(o) {
-    var ctor,
-        prot
-
-    if (false === isObject(o) || isUndefined(o)) {
-        return false
+function is(type) {
+  // 是否未定义
+  if ('Undefined' === type) {
+    return function(o) {
+      return 'undefined' === typeof o
     }
+  }
 
-    ctor = o.constructor
-    if ('function' !== typeof ctor) {
-        return false
+  // 是否定义
+  if ('Defined' === type) {
+    return function(o) {
+      return 'undefined' !== typeof o
     }
-    
-    prot = ctor.prototype;
-    if (false === isObject(prot)) {
-        return false
+  }
+
+  // 是否为一个整数
+  if ('Integer' === type) {
+    return function(o) {
+      var y = parseInt(o, 10)
+      return !isNaN(y) && o === y && o.toString() === y.toString()
     }
-    
-    if (false === prot.hasOwnProperty('isPrototypeOf')) {
-        return false
+  }
+
+  // 是否为一个纯对象
+  if ('PlainObject' === type) {
+    return function(o) {
+      var ctor,
+          prot
+
+      if (false === is('Object')(o) || is('Undefined')(o)) {
+          return false
+      }
+
+      ctor = o.constructor
+      if ('function' !== typeof ctor) {
+          return false
+      }
+      
+      prot = ctor.prototype;
+      if (false === is('Object')(prot)) {
+          return false
+      }
+      
+      if (false === prot.hasOwnProperty('isPrototypeOf')) {
+          return false
+      }
+      
+      return true
     }
-    
-    return true
+  }
+
+  return function(o) {
+    return '[object ' + type + ']' === Object.prototype.toString.call(o)
+  }
 }
+
 
 /**
  * @trim 去除空格
@@ -934,7 +866,7 @@ function trim(str) {
  *     {a:1}             -> $.namespace('a.a.a.a') -> undefined
  */
 function namespace(query, space, token) {
-  if (!isString(query)) {
+  if (!is('String')(query)) {
     return undefined
   }
 
@@ -944,14 +876,14 @@ function namespace(query, space, token) {
       l = ns.length
 
   for (; i < l; i ++) {
-    if (isUndefined(re[ns[i]])) {
+    if (is('Undefined')(re[ns[i]])) {
         return undefined
     }
 
     re = re[ns[i]]
   }
 
-  return isUndefined(re) ? undefined : re
+  return is('Undefined')(re) ? undefined : re
 }
 
 /**
@@ -960,15 +892,15 @@ function namespace(query, space, token) {
  * @return {String}
  */
 function toString(value) {
-  if (isString(value)) {
+  if (is('String')(value)) {
     return value
   }
 
-  if (isNumber(value)) {
+  if (is('Number')(value)) {
     return value += ''
   }
 
-  if (isFunction(value)) {
+  if (is('Function')(value)) {
     return toString(value.call(value))
   }
 
@@ -1015,9 +947,9 @@ escapeHTML.escapeFn = function(name) {
  * @param {Function}      callback 回调函数
  */
 function forEach(a, callback) {
-  if (isFunction(callback)) {
+  if (is('Function')(callback)) {
     var i
-    if (isArray(a)) {
+    if (is('Array')(a)) {
       if (Array.prototype.some) {
         a.some(callback)
       }
@@ -1030,7 +962,7 @@ function forEach(a, callback) {
         }
       }
     }
-    else if (isObject(a)) {
+    else if (is('Object')(a)) {
       for (i in a) {
         if (true === callback(a[i], i)) {
           break
@@ -1067,7 +999,7 @@ function unique(a) {
  * @return {Object|Array}
  */
 function filter(collection, callback) {
-  var isArr = isArray(collection),
+  var isArr = is('Array')(collection),
       res = isArr ? [] : {}
 
   forEach(collection, function(val, key) {
@@ -1092,10 +1024,10 @@ function extend(a, b) {
     return extend(a, next[0])
   }
 
-  if (isArray(a) && isArray(b)) {
+  if (is('Array')(a) && is('Array')(b)) {
     Array.prototype.splice.apply(a, [a.length, 0].concat(b))
   }
-  else if (isPlainObject(a) && isPlainObject(b)) {
+  else if (is('PlainObject')(a) && is('PlainObject')(b)) {
     for (var i in b) {
       a[i] = b[i]
     }
@@ -1109,14 +1041,14 @@ function extend(a, b) {
  * @param  {String|Object} error 错误异常
  */
 function __throw(error) {
-  if (isDefined(console) && isFunction(console.error)) {
+  if (is('Defined')(console) && is('Function')(console.error)) {
     var message = ''
-    if (isObject(error)) {
+    if (is('Object')(error)) {
       forEach(error, function(value, name) {
         message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
       })
     }
-    else if (isString(error)) {
+    else if (is('String')(error)) {
       message = error
     }
 

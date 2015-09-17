@@ -21,7 +21,7 @@ OTemplate.prototype.compileById = function(id, options) {
   var conf = extend({}, this._defaults, options, { filename: id }),
       render = true === conf.overwrite || this.$$cache(id)
 
-  if (isFunction(render)) {
+  if (is('Function')(render)) {
     return render
   }
 
@@ -54,7 +54,7 @@ OTemplate.prototype.renderById = function(id, data, options) {
  * @param  {Object}   options  配置
  */
 OTemplate.prototype.compileByAjax = function(filename, callback, options) {
-  if (!isFunction(callback)) {
+  if (!is('Function')(callback)) {
     return
   }
 
@@ -62,7 +62,7 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
       conf = extend({}, this._defaults, options),
       render = true === conf.overwrite || this.$$cache(filename)
 
-  isFunction(render)
+  is('Function')(render)
     ? callback(render)
     : this.readFile(filename, function(source) {
         source = self.$compileSyntax(source, !!conf.strict)
@@ -110,11 +110,11 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
  * @param  {Object}   options  配置
  */
 OTemplate.prototype.renderByAjax = function(filename, data, callback, options) {
-  if (isFunction(data)) {
+  if (is('Function')(data)) {
     return this.renderByAjax(filename, {}, data, callback)
   }
 
-  isFunction(callback) && this.compileByAjax(filename, function(render) {
+  is('Function')(callback) && this.compileByAjax(filename, function(render) {
     callback(render(data || {}))
   }, options)
 }
@@ -125,7 +125,7 @@ OTemplate.prototype.renderByAjax = function(filename, data, callback, options) {
  * @param  {Function} callback 回调函数
  */
 OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
-  if (!isFunction(callback)) {
+  if (!is('Function')(callback)) {
     return
   }
 
@@ -145,7 +145,7 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
     }
 
     __throw(err)
-    isFunction(errorCallback) && errorCallback(err)
+    is('Function')(errorCallback) && errorCallback(err)
     errorCallback = undefined
   }
 
@@ -156,7 +156,7 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
     }
 
     __throw(err)
-    isFunction(errorCallback) && errorCallback(err)
+    is('Function')(errorCallback) && errorCallback(err)
     errorCallback = undefined
   }
 
@@ -167,7 +167,7 @@ OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
     }
 
     __throw(err)
-    isFunction(errorCallback) && errorCallback(err)
+    is('Function')(errorCallback) && errorCallback(err)
     errorCallback = undefined
   }
 

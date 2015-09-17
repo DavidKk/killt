@@ -16,8 +16,8 @@ var OTemplate = function(options) {
   this._caches = {}                   // render caches/编译器缓存
   this._blocks = {}                   // block syntax/块状语法
   this._blockHelpers = {}             // block helpers/块状辅助函数
-  this._helpers = {}                  // helpers/辅助函数
   this._sourceHelpers = {}            // source helpers/资源辅助函数
+  this._helpers = {}                  // helpers/辅助函数
   this._defaults = {}                 // defualt config/默认配置
 
   // set the config/设置配置
@@ -35,7 +35,7 @@ var OTemplate = function(options) {
       var conf = self._defaults,
           str = toString(str)
 
-      return true === (isBoolean(isEscape) ? isEscape : conf.escape)
+      return true === (is('Boolean')(isEscape) ? isEscape : conf.escape)
         ? self.helper('$escape')(str)
         : str
     },
@@ -54,7 +54,7 @@ var OTemplate = function(options) {
   })
 
   // set any syntax/设置语法
-  ~isArray(OTemplate._extends) && forEach(OTemplate._extends, function(_extends_) {
+  is('Array')(OTemplate._extends) && forEach(OTemplate._extends, function(_extends_) {
     self.extends(_extends_)
   })
 }
@@ -84,7 +84,7 @@ OTemplate._extends = []                       // extens plugins/扩展集合
  * @return {OTemplate}
  */
 OTemplate.extend = function(_extends_) {
-  isFunction(_extends_) && OTemplate._extends.push(_extends_)
+  is('Function')(_extends_) && OTemplate._extends.push(_extends_)
   return this
 }
 
@@ -162,8 +162,8 @@ OTemplate.prototype.$compileShell = (function() {
 
     var origin = source,
         conf = this._defaults,
-        isEscape = isBoolean(options.escape) ? options.escape : conf.escape,
-        strip = isBoolean(options.compress) ? options.compress : conf.compress,
+        isEscape = is('Boolean')(options.escape) ? options.escape : conf.escape,
+        strip = is('Boolean')(options.compress) ? options.compress : conf.compress,
         _helpers_ = this._helpers,
         _blocks_ = this._blockHelpers,
         _sources_ = this._sourceHelpers,
@@ -241,16 +241,16 @@ OTemplate.prototype.$compileShell = (function() {
         }
 
         var func = root[name]
-        if (isFunction(func) && func.toString().match(/^\s*?function \w+\(\) \{\s*?\[native code\]\s*?\}\s*?$/i)) {
+        if (is('Function')(func) && func.toString().match(/^\s*?function \w+\(\) \{\s*?\[native code\]\s*?\}\s*?$/i)) {
           return
         }
 
-        if (isFunction(_helpers_[name])) {
+        if (is('Function')(_helpers_[name])) {
           helpers.push(name)
           return
         }
 
-        if (isFunction(_blocks_[name])) {
+        if (is('Function')(_blocks_[name])) {
           blocks.push(name)
           return
         }
@@ -281,7 +281,7 @@ OTemplate.prototype.$compileShell = (function() {
       return source
     }
 
-    source = isString(source) ? sourceToJs(source) : ''
+    source = is('String')(source) ? sourceToJs(source) : ''
 
     forEach(source.split('<%'), function(code) {
       code = code.split('%>')
@@ -491,7 +491,7 @@ OTemplate.prototype.extends = function(callback) {
  */
 OTemplate.prototype.config = function(var_query, value) {
   if (1 < arguments.length) {
-    if (isString(var_query)) {
+    if (is('String')(var_query)) {
       if ((var_query === 'openTag' && var_query === '<%') || (var_query === 'closeTag' && var_query === '%>')) {
         return this
       }
@@ -502,7 +502,7 @@ OTemplate.prototype.config = function(var_query, value) {
   }
 
   var self = this
-  if (isPlainObject(var_query)) {
+  if (is('PlainObject')(var_query)) {
     forEach(options, function(name, value) {
       self.config(name, value)
     })
@@ -510,7 +510,7 @@ OTemplate.prototype.config = function(var_query, value) {
     return this
   }
 
-  if (isString(var_query)) {
+  if (is('String')(var_query)) {
     return this._defaults[var_query]
   }
 }
@@ -523,16 +523,16 @@ OTemplate.prototype.config = function(var_query, value) {
  */
 OTemplate.prototype.helper = function(var_query, callback) {
   if (1 < arguments.length) {
-    if (isString(var_query) && isFunction(callback)) {
+    if (is('String')(var_query) && is('Function')(callback)) {
       this._helpers[var_query] = callback
     }
   }
   else {
-    if (isString(var_query)) {
+    if (is('String')(var_query)) {
       return this._helpers[var_query]
     }
 
-    if (isPlainObject(var_query)) {
+    if (is('PlainObject')(var_query)) {
       var name
       for (name in var_query) {
         this.helper(name, var_query[name])
@@ -575,12 +575,12 @@ OTemplate.prototype.compile = function(source, options) {
       filename = conf.filename,
       render = true === conf.overwrite || this.$$cache(filename)
 
-  if (isFunction(render)) {
+  if (is('Function')(render)) {
     return render
   }
 
   render = this.$compile(source, conf)
-  isString(filename) && this.$$cache(filename, render)
+  is('String')(filename) && this.$$cache(filename, render)
   return render
 }
 
