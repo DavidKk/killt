@@ -216,16 +216,16 @@ describe('Test OTemplate In Client.', function() {
           <div>{{"error helper" | helper}}</div>\
         </script>'
 
-      // oTemplate.onError(function(message) {
-      //   console.log(message)
-      // })
+      oTemplate.onError(function(message) {
+        console.log(message)
+      })
 
-      // oTemplate.renderById('/template/debug/a.html')
-      // oTemplate.renderById('/template/debug/b.html')
-      // oTemplate.renderById('/template/debug/c.html')
-      // oTemplate.renderById('/template/debug/d.html')
-      // oTemplate.renderByAjax('/template/debug/e.html', function() {})
-      // oTemplate.renderByAjax('http://baidu.com', function() {})
+      oTemplate.renderById('/template/debug/a.html')
+      oTemplate.renderById('/template/debug/b.html')
+      oTemplate.renderById('/template/debug/c.html')
+      oTemplate.renderById('/template/debug/d.html')
+      oTemplate.renderByAjax('/template/debug/e.html', function() {})
+      oTemplate.renderByAjax('http://baidu.com', function() {})
     })
   })
 
