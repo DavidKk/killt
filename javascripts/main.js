@@ -1,23 +1,33 @@
 !(function() {
   // Helpers
-  var routes = {}
+  var routes = {},
+      readyHandle = []
   function addRoute(name, handle) {
     if ($.isFunction(handle)) {
       routes[name] = handle
     }
   }
 
+  function ready(callback) {
+    $.isFunction(callback) && readyHandle.push(callback)
+  }
+
   function digest() {
     var route = window.location.hash.replace('#', '')
     $.each(routes, function(name, handle) {
-      name === route && handle()
+      name === route && handle(function() {
+        $.each(readyHandle, function(k, func) {
+          func()
+        })
+      })
     })
   }
 
   var views = {}
-  function render(file, container) {
+  function render(file, container, callback) {
     if (views.hasOwnProperty(file)) {
       $(container).html(views[file])
+      $.isFunction(callback) && callback()
     }
     else {
       var match = /\.[\w]+$/.exec(file),
@@ -38,18 +48,20 @@
           })
 
           $(container).html(view)
+          $.isFunction(callback) && callback()
         })
       }
       else if ('.html' === extname) {
         oTemplate.renderByAjax(file, function(view) {
           $(container).html(view)
+          $.isFunction(callback) && callback()
         })
       }
     }
   }
 
   // Configure
-  addRoute('gettingstarted', function() {
+  addRoute('gettingstarted', function(callback) {
     var $con = $('#index-container')
     $('[data-role="nav"][href="#gettingstarted"]')
       .parent()
@@ -59,10 +71,10 @@
 
     $con.data('render')
       ? $con.show()
-      : render('markdowns/index.md', $con.data('render', true).show())
+      : render('markdowns/index.md', $con.data('render', true).show(), callback)
   })
 
-  addRoute('examples', function() {
+  addRoute('examples', function(callback) {
     var $con = $('#examples-container')
     $('[data-role="nav"][href="#examples"]')
       .parent()
@@ -72,10 +84,10 @@
 
     $con.data('render')
       ? $con.show()
-      : render('markdowns/examples.md', $con.data('render', true).show())
+      : render('markdowns/examples.md', $con.data('render', true).show(), callback)
   })
 
-  addRoute('docs', function() {
+  addRoute('docs', function(callback) {
     var $con = $('#docs-container')
     $('[data-role="nav"][href="#docs"]')
       .parent()
@@ -85,7 +97,20 @@
 
     $con.data('render')
       ? $con.show()
-      : render('markdowns/docs.md', $con.data('render', true).show())
+      : render('markdowns/docs.md', $con.data('render', true).show(), callback)
+  })
+
+  ready(function() {
+    $('iframe').each(function() {
+      var $this = $(this)
+
+      this.onload = function() {
+        var $inner = $(this.contentWindow)
+        $this.height($inner.height())
+      }
+
+      $this.attr('src', $this.data('src'))
+    })
   })
 
   // Ready

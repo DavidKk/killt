@@ -39,9 +39,6 @@ options {Object} 渲染配置 (optional)
 return  {Function} 渲染器
 ```
 
-[DEMO]()
-
-
 ### render/渲染资源
 
 ```
@@ -55,9 +52,6 @@ options {Object} 渲染配置 (optional)
 return  {String}
 ```
 
-[DEMO]()
-
-
 ### compileById/通过内联模板编译资源
 
 ```
@@ -69,9 +63,6 @@ options   {Object} 渲染配置 (optional)
   strict   {Boolean} 是否为严格模式，若语法出现错误则会返回空字符串，默认为 true
 return    {Function} 渲染器
 ```
-
-[DEMO]()
-
 
 ### renderById/通过内联模板渲染资源
 
@@ -86,9 +77,6 @@ options   {Object} 渲染配置 (optional)
 return    {String}
 ```
 
-[DEMO]()
-
-
 ### compileByAjax/通过AJAX渲染资源
 
 ```
@@ -100,9 +88,6 @@ options   {Object}   渲染配置 (optional)
   strict   {Boolean} 是否为严格模式，若语法出现错误则会返回空字符串，默认为 true
 return    {Function} 渲染器
 ```
-
-[DEMO]()
-
 
 ### renderByAjax/通过Ajax渲染资源
 
@@ -117,9 +102,6 @@ options   {Object}   渲染配置 (optional)
 return    {String}
 ```
 
-[DEMO]()
-
-
 ### helper/注册辅助函数
 
 helper 同时可以作为获取辅助函数的方法来使用，当没有传入 helper 的时候就会返回该辅助函数，但该函数必须是存在的。
@@ -132,9 +114,6 @@ helper  {Function}  辅助函数 (optional)
 return  {Self|Function}
 ```
 
-[DEMO]()
-
-
 ### unhelper/注销辅助函数
 
 ```
@@ -143,9 +122,6 @@ oTemplate.unhelper([String name])
 name    {String} 辅助函数的名称
 return  {Self}
 ```
-
-[DEMO]()
-
 
 ### block/注册块级辅助函数 (语法版本下才有用)
 
@@ -161,9 +137,6 @@ helper  {Function}  辅助函数
 return  {Self}
 ```
 
-[DEMO]()
-
-
 ### unblock/注销块级辅助函数 (语法版本下才有用)
 
 ```
@@ -172,8 +145,6 @@ oTemplate.unblock([String name])
 name    {String} 辅助函数的名称
 return  {Self}
 ```
-
-[DEMO]()
 
 
 ### config/设置配置
@@ -188,8 +159,6 @@ oTemplate.config([String name, Anything value])
 name  {String}    配置名称
 value {Anything}  配置的值
 ```
-
-[DEMO]()
 
 
 ## 高级用法
@@ -223,7 +192,6 @@ options {Array}           语法配置
     syntax  {String|Regexp}   语法匹配
     shell   {String|Function} 脚本替换
 ```
-[DEMO]()
 
 
 ### $unregisterSyntax/注销语法 (语法版本才能使用)
@@ -233,9 +201,6 @@ oTemplate.$unregisterSyntax([String name])
 
 name {String} 语法名称
 ```
-
-[DEMO]()
-
 
 ### $clearSyntax/清除语法 (语法版本才能使用)
 

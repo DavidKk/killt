@@ -4,6 +4,8 @@
 
 ## Basic/基本用法
 
+### HTML
+
 ```
 <script id="/template/basic.html" type="template/text">
   <h1>{{@title}}</h1>
@@ -15,6 +17,8 @@
 </script>
 ```
 
+### Javascript
+
 ```
 oTemplate.renderById('/template/basic.html', {
   title: 'Keywords',
@@ -22,7 +26,15 @@ oTemplate.renderById('/template/basic.html', {
 })
 ```
 
+### Output
+
+<iframe data-src="/demo/basic.html"></iframe>
+
+
+
 ## Compile/编译
+
+### HTML
 
 ```
 <script id="/template/compile.html" type="template/text">
@@ -35,6 +47,8 @@ oTemplate.renderById('/template/basic.html', {
 </script>
 ```
 
+### Javascript
+
 ```
 var render = oTemplate.compileById('/template/compile.html')
 render({
@@ -43,7 +57,13 @@ render({
 })
 ```
 
+### Output
+
+<iframe data-src="/demo/compile.html"></iframe>
+
 ## Include/引入
+
+### HTML
 
 ```
 <script id="/template/include.html" type="template/text">
@@ -65,6 +85,8 @@ render({
 </script>
 ```
 
+### Javascript
+
 ```
 oTemplate.renderById('/template/include.html', {
   title: 'oTemplate',
@@ -73,7 +95,14 @@ oTemplate.renderById('/template/include.html', {
 })
 ```
 
+### Output
+
+<iframe data-src="/demo/include.html"></iframe>
+
+
 ## Helper/辅助函数
+
+### HTML
 
 ```
 <script id="/template/helper.html" type="template/text">
@@ -82,6 +111,8 @@ oTemplate.renderById('/template/include.html', {
   <p>{{'U' | love}}</p>
 </script>
 ```
+
+### Javascript
 
 ```
 oTemplate.helper('love', function(who) {
@@ -93,7 +124,14 @@ document.body.innerHTML = oTemplate.renderById('/template/helper.html', {
 })
 ```
 
+### Output
+
+<iframe data-src="/demo/helper.html"></iframe>
+
+
 ## Noescape/不转义
+
+### HTML
 
 ```
 <script id="/template/noescape.html" type="template/text">
@@ -106,6 +144,8 @@ document.body.innerHTML = oTemplate.renderById('/template/helper.html', {
   <p>{{!#escapeContent}}</p>
 </script>
 ```
+
+### Javascript
 
 ```
 oTemplate.renderById('/template/noescape.html', {
@@ -133,16 +173,31 @@ oTemplate.renderById('/template/noescape.html', {
 })
 ```
 
+### Output
+
+<iframe data-src="/demo/noescape.html"></iframe>
+
+
 ## AJAX/异步请求模板
 
+### HTML
+
 ```
+<!-- /templates/ajax.html -->
+{{include "/demo/templates/ajax-1.html", $data}}
+```
+
+```
+<!-- /templates/ajax-1.html -->
 <h1>{{@title}}</h1>
 <ul>
     {{each list as value, index}}
         <li>{{@index}} ：{{@value}}</li>
-    {{/each}}
+    {{/each}}    
 </ul>
 ```
+
+### Javascript
 
 ```
 oTemplate.renderByAjax('templates/ajax.html', {
@@ -154,3 +209,43 @@ function(html) {
 })
 ```
 
+### Output
+
+<iframe data-src="/demo/ajax.html"></iframe>
+
+
+## Debug/异常处理
+
+### HTML
+
+```
+<script id="/template/debug/a.html" type="template/text">
+  <h1>{{@title</h1>
+  <p>{{#content}}</p>
+</script>
+
+<script id="/template/debug/b.html" type="template/text">
+  {{helper}}
+    <div>Hello world!!!</div>
+  {{/helper}}
+</script>
+
+<script id="/template/debug/c.html" type="template/text">
+  <div>{{"error helper" | helper}}</div>
+</script>
+```
+
+### Javascript
+
+```
+oTemplate.renderById('/template/debug/a.html')
+oTemplate.renderById('/template/debug/b.html')
+oTemplate.renderById('/template/debug/c.html')
+oTemplate.renderById('/template/debug/d.html')
+oTemplate.renderByAjax('/template/debug/e.html', function() {})
+oTemplate.renderByAjax('http://baidu.com', function() {})
+```
+
+### Output
+
+<iframe data-src="/demo/debug.html"></iframe>
