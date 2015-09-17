@@ -101,8 +101,8 @@ oTemplate.helper('hate', function(who) {
 ## Customize Block (full version, not in lite version)
 
 ```
-oTemplate.block('like', function(who, $append, blockShell) {
-  $append(who ? 'Like ' + who + '!!!' : blockShell())
+oTemplate.block('like', function(who, blockShell) {
+  return who ? 'Like ' + who + '!!!' : blockShell()
 })
 
 // HTML
