@@ -470,7 +470,7 @@ OTemplate.prototype.$compile = (function() {
 
     var shell = this.$compileShell(source, conf)
     return buildRender({
-      $source: source || '',
+      $source: origin || '',
       $helpers: this._helpers || {},
       $blocks: this._blockHelpers || {}
     })
