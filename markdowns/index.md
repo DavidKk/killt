@@ -115,7 +115,7 @@ oTemplate.block('like', function(who, blockShell) {
 ## Customize Syntax (full version, not in lite version)
 
 ```
-oTemplate.$registerSyntax('fuck', 'fuck\\s*([^<%= closeTag %>]+)?\\s*', 'fuck($1)')
+oTemplate.$registerSyntax('fuck', 'fuck\\s*([\\w\\W]+?)\\s*', 'fuck($1)')
 
 // HTML
 {{fuck 'Q'}}
