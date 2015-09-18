@@ -129,7 +129,7 @@ Note: `fuck` is a helper, so u must use `oTemplate.helper('fuck', function() {})
 
 ### Details
 
-[See the code and the detailed annotate...](https://github.com/DavidKk/oTemplate/blob/master/dist/oTemplate.js)
+[See the code and the detailed annotate...](https://github.com/DavidKk/oTemplate/blob/master/dist/client/oTemplate.js)
 
 ### Updates
 
