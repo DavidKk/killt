@@ -98,7 +98,7 @@ OTemplate.extend = function(_extends_) {
  */
 OTemplate.prototype.$$throw = function(message, options) {
   var conf = extend({}, this._defaults, options),
-      err = __throw(message, conf.env === OTemplate.ENV.UNIT && 'catch')
+      err = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
 
   forEach(this._listeners, function(listener) {
     'error' === listener.type && listener.handle(err)
