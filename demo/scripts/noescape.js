@@ -11,7 +11,7 @@ window.onload = function() {
         '     <li>yoyoyo</li>',
         '   </ul>',
         '</div>'
-      ].join('\n')
+      ].join('\n'),
     escapeContent: [
         '<div>',
         '   Check it out!!!',
