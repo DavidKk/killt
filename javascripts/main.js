@@ -2,6 +2,7 @@
   // Helpers
   var routes = {},
       readyHandle = []
+
   function addRoute(name, handle) {
     if ($.isFunction(handle)) {
       routes[name] = handle
