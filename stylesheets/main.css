@@ -1,7 +1,3 @@
-* {
-  box-sizing: border-box;
-}
-
 nav {
   display: block;
   *zoom: 1;
@@ -47,9 +43,14 @@ nav .nav > .active > a {
   margin-bottom: 0;
 }
 
+#main-content pre {
+  box-sizing: border-box;
+}
+
 #main-content iframe {
   border: solid 1px #f2f2f2;
   padding: 15px;
   width: 100%;
   background-color: #f7f7f7;
+  box-sizing: border-box;
 }
