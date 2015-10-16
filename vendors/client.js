@@ -90,9 +90,22 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
 
         if (total > 0) {
           forEach(unique(requires), function(file) {
-            self.$$cache(file)
-              ? __exec()
-              : self.compileByAjax(file, __exec, extend(conf, { overwrite: false }))
+            if (self.$$cache(file)) {
+              __exec()
+            }
+            else {
+              var source;
+              if (source = document.getElementById(file)) {
+                self.compile(source, {
+                    overwrite: false
+                })
+              }
+              else {
+                self.compileByAjax(file, __exec, extend(conf, {
+                  overwrite: false
+                }))
+              }
+            }
           })
         }
         else {
