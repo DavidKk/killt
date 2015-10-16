@@ -73,7 +73,7 @@ oTemplate.renderById('templates/list/default.html', {
   title: 'Customer Title',
   list: {
     Author: 'David Jones',
-    Gender: 'Male'e
+    Gender: 'Male'
   }
 })
 ```

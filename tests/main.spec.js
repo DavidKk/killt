@@ -195,5 +195,5 @@ describe('Test OTemplate.', function() {
     })
   })
 
-  // TODO: error issue should blew.
+  // TODO: error issue should below.
 })
