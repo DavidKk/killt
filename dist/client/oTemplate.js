@@ -1056,9 +1056,9 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
               __exec()
             }
             else {
-              var source;
-              if (source = document.getElementById(file)) {
-                self.compile(source, {
+              var node;
+              if (node = document.getElementById(file)) {
+                self.compile(node.innerHTML, {
                     overwrite: false
                 })
               }
