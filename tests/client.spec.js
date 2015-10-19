@@ -33,6 +33,22 @@ describe('Test OTemplate In Client.', function() {
         done()
       })
     })
+
+    it('should render the template file by AJAX and render nested templates in that AJAX file.', function(done) {
+      jasmine.Ajax
+      .stubRequest('/templates/b-1')
+      .andReturn({
+        status: 200,
+        statusText: 'HTTP/1.1 200 OK',
+        contentType: 'text/xml;charset=UTF-8',
+        responseText: '<%include("template/b-2")%><script id="template/b-2" type="text/template">Hello</script>'
+      })
+
+      oTemplate.renderByAjax('/templates/b-1', {}, function(view) {
+        expect(view).toEqual('Hello<script id="template/b-2" type="text/template">Hello</script>')
+        done()
+      })
+    })
   })
 
   describe('oTemplate can parse nested templates.', function() {

@@ -708,42 +708,55 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
       render = true === conf.overwrite || this.$$cache(filename)
 
   is('Function')(render)
-    ? callback(render)
-    : this.readFile(filename, function(source) {
-        source = self.$compileSyntax(source, !!conf.strict)
+  ? callback(render)
+  : this.readFile(filename, function(source) {
+      source = self.$compileSyntax(source, !!conf.strict)
 
-        var origin = source,
-            requires = [],
-            match
+      var origin = source,
+          requires = [],
+          match
 
-        while(match = /<%!?#?\s*include\s*\(\s*(\'([^\']+)?\'|\"([^\"]+)?\")(\s*,\s*([^\)]+)?)\)%>/.exec(source)) {
-          requires.push(match[3])
-          source = source.replace(match[0], '')
-        }
+      while(match = /<%!?#?\s*include\s*\(\s*(\'([^\']+)?\'|\"([^\"]+)?\")(\s*,\s*([^\)]+)?)?\)%>/.exec(source)) {
+        requires.push(match[3])
+        source = source.replace(match[0], '')
+      }
 
-        var total = requires.length
-        var __exec = function() {
-          0 >= (-- total) && __return()
-        }
+      var total = requires.length
+      var __exec = function() {
+        0 >= (-- total) && __return()
+      }
 
-        var __return = function() {
-          render = self.$compile(origin)
-          self.$$cache(filename, render)
-          callback(render)
-          total = undefined
-        }
+      var __return = function() {
+        render = self.$compile(origin)
+        self.$$cache(filename, render)
+        callback(render)
+        total = undefined
+      }
 
-        if (total > 0) {
-          forEach(unique(requires), function(file) {
-            if (self.$$cache(file)) {
+      if (total > 0) {
+        forEach(unique(requires), function(file) {
+          if (self.$$cache(file)) {
+            __exec()
+          }
+          else {
+            var childSource = findChildTpl(file, origin)
+            if (childSource) {
+              self.compile(childSource, {
+                filename: file,
+                overwrite: false
+              })
+
               __exec()
             }
             else {
-              var node;
-              if (node = document.getElementById(file)) {
+              var node = document.getElementById(file)
+              if (node) {
                 self.compile(node.innerHTML, {
-                    overwrite: false
+                  filename: file,
+                  overwrite: false
                 })
+
+                __exec()
               }
               else {
                 self.compileByAjax(file, __exec, extend(conf, {
@@ -751,12 +764,25 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
                 }))
               }
             }
-          })
-        }
-        else {
-          __return()
-        }
-      })
+          }
+        })
+      }
+      else {
+        __return()
+      }
+    })
+
+  function findChildTpl(id, source) {
+    var node = document.createElement('div')
+    node.innerHTML = source
+    
+    var tplNodes = node.getElementsByTagName('script')
+    for (var i = tplNodes.length; i --;) {
+      if (tplNodes[i].id === id) {
+        return tplNodes[i].innerHTML
+      }
+    }
+  }
 }
 
 /**
