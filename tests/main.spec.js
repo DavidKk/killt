@@ -24,6 +24,11 @@ describe('Test OTemplate.', function() {
       expect(shell).toEqual('<%="Hello world"%>')
     })
 
+    it('should compile the `@ aa || bb && cc` in syntax.', function() {
+      var shell = oTemplate.$compileSyntax('{{@ aa || bb && cc}}')
+      expect(shell).toEqual('<%=aa || bb && cc%>')
+    })
+
     it('should compile the `if` syntax.', function() {
       var shell = oTemplate.$compileSyntax('{{if 1}}\n<div></div>\n{{else if 1}}\n<div></div>\n{{else}}\n<div></div>\n{{/if}}')
       expect(shell).toEqual('<%if(1) {%>\n<div></div>\n<%} else if(1) {%>\n<div></div>\n<%} else {%>\n<div></div>\n<%}%>')
@@ -104,6 +109,11 @@ describe('Test OTemplate.', function() {
     it('should allow compile template which own syntax and shell.', function() {
       var shell = oTemplate.$compileSyntax('<%if(user.isLogin) {%>\n<div>{{include "/user/info.html", data}}</div>\n<%}%>')
       expect(shell).toEqual('<%if(user.isLogin) {%>\n<div><%#include("/user/info.html", data)%></div>\n<%}%>')
+    })
+
+    it('should allow compile `v1 && v2 || v3 | helper` in syntax version.', function() {
+      var shell = oTemplate.$compileSyntax('{{a || b | image}}{{b || c | image}}')
+      expect(shell).toEqual('<%image(a || b)%><%image(b || c)%>')
     })
   })
   
