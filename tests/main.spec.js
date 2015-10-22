@@ -19,6 +19,11 @@ describe('Test OTemplate.', function() {
 
   // syntax version
   describe('oTemplate can parse the syntax-template.', function() {
+    it('should compile the `logic` syntax.', function() {
+      var shell = oTemplate.$compileSyntax('{{- var i = 0;}}')
+      expect(shell).toEqual('<%var i = 0;%>')
+    })
+
     it('should compile the `echo` syntax.', function() {
       var shell = oTemplate.$compileSyntax('{{@ "Hello world"}}')
       expect(shell).toEqual('<%="Hello world"%>')

@@ -168,7 +168,7 @@ OTemplate.prototype.$$cache = function(name, render) {
  */
 OTemplate.prototype.$$table = (function() {
   return function(str) {
-    var line = 0,
+    var line  = 0,
         match = str.match(/([^\n]*)?\n|([^\n]+)$/g)
 
     if (!match) {
@@ -189,9 +189,9 @@ OTemplate.prototype.$$table = (function() {
    * @return {String}
    */
   function zeroize(num, max, zero) {
-    zero = zero || ' '
-    num = num.toString()
-    max = max.toString().replace(/\d/g, zero)
+    zero  = zero || ' '
+    num   = num.toString()
+    max   = max.toString().replace(/\d/g, zero)
 
     var res = max.split('')
     res.splice(- num.length, num.length, num)
@@ -209,18 +209,18 @@ OTemplate.prototype.$compileShell = (function() {
   return function(source, options) {
     options = options || {}
 
-    var origin = source,
-        conf = this._defaults,
-        isEscape = is('Boolean')(options.escape) ? options.escape : conf.escape,
-        strip = is('Boolean')(options.compress) ? options.compress : conf.compress,
+    var origin    = source,
+        conf      = this._defaults,
+        isEscape  = is('Boolean')(options.escape) ? options.escape : conf.escape,
+        strip     = is('Boolean')(options.compress) ? options.compress : conf.compress,
         _helpers_ = this._helpers,
-        _blocks_ = this._blockHelpers,
+        _blocks_  = this._blockHelpers,
         _sources_ = this._sourceHelpers,
-        helpers = [],
-        blocks = [],
+        helpers   = [],
+        blocks    = [],
         variables = [],
-        line = 1,
-        buffer = ''
+        line      = 1,
+        buffer    = ''
 
     /**
      * @function sourceToJs 解析Source为JS字符串拼接

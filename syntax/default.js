@@ -16,6 +16,7 @@ OTemplate.extend(function() {
       HELPER_INNER_REGEXP = this.$$compileRegexp(HELPER_INNER_SYNTAX)
 
   this
+  .$registerSyntax('logic', '-\\s*(.+?)\\s*', '$1')
   .$registerSyntax('echo', '@\\s*([\\w\\W]+?)\\s*', '=$1')
   .$registerSyntax('ifopen', 'if\\s*(.+?)\\s*', 'if($1) {')
   .$registerSyntax('else', 'else', '} else {')
