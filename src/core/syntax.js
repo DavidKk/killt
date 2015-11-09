@@ -130,10 +130,11 @@ OTemplate.prototype.$clearSyntax = function(source) {
  * @return {string|boolean}
  */
 OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
-  origin = origin || ''
+  origin  = origin || ''
   compile = !(false === compile)
 
   var tpl = source
+
   if (compile) {
     forEach(this._blocks, function(handle) {
       tpl = tpl.replace(handle.syntax, '')
@@ -141,12 +142,13 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
   }
 
   // error open or close tag - 语法错误，缺少闭合
-  var tagReg = this.$$compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
-      stripTpl = this.$clearSyntax(tpl)
-      pos = stripTpl.search(tagReg)
+  var tagReg   = this.$$compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
+      stripTpl = this.$clearSyntax(tpl),
+      pos      = stripTpl.search(tagReg),
+      line
 
   if (-1 !== pos) {
-    var line = inline(stripTpl, pos)
+    line = inline(stripTpl, pos)
 
     return {
       message: '[Syntax Error]: Syntax error in line ' + line + '.',
@@ -156,11 +158,11 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
 
   // not match any syntax or helper - 语法错误，没有匹配到相关语法
   var syntaxReg = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
-      match = source.match(syntaxReg)
+      match     = source.match(syntaxReg)
 
   if (match) {
-    var pos = tpl.search(syntaxReg),
-        line = inline(tpl, pos)
+    pos = tpl.search(syntaxReg)
+    line = inline(tpl, pos)
 
     return {
       message: '[Syntax Error]: `' + match[0] + '` did not match any syntax in line ' + line + '.',
@@ -254,7 +256,8 @@ OTemplate.prototype.block = function(var_query, callback) {
  * @return {this}
  */
 OTemplate.prototype.unblock = function(name) {
-  var blocks = this._blockHelpers
+  var helpers = this._blockHelpers,
+      blocks  = this._blocks
 
   if (helpers.hasOwnProperty(name)) {
     delete helpers[name]

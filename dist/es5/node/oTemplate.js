@@ -1,4 +1,4 @@
-~(function(root) {'use strict'
+~(function(root) {'use strict';
 /**
  * OTemplate A Template engine for Javascript
  * @class
@@ -70,8 +70,9 @@ var OTemplate = function(options) {
       return toString(str || '')
     },
     $toString: function(str, isEscape) {
-      var conf = self.DEFAULTS,
-          str = toString(str)
+      str = toString(str)
+
+      var conf = self.DEFAULTS
 
       return true === (is('Boolean')(isEscape) ? isEscape : conf.escape)
         ? self.helper('$escape')(str)
@@ -136,7 +137,7 @@ OTemplate.DEFAULTS = {
 }
 
 /**
- * extens plugins/扩展集合
+ * extens plugins - 扩展集合
  * @type {Array}
  */
 OTemplate._extends = []
@@ -309,7 +310,7 @@ OTemplate.prototype.$compileShell = (function() {
           ? _sources_[helperName](str)
           : str
 
-        str = '<%=unescape("' + escape(str) + '");%>'
+        str = '<%=unescape("' + window.escape(str) + '");%>'
         source = source.replace(match[0], str)
       }
 
@@ -628,7 +629,7 @@ OTemplate.prototype.config = function(var_query, value) {
 
   var self = this
   if (is('PlainObject')(var_query)) {
-    forEach(options, function(name, value) {
+    forEach(var_query, function(name, value) {
       self.config(name, value)
     })
 
@@ -854,10 +855,11 @@ OTemplate.prototype.$clearSyntax = function(source) {
  * @return {string|boolean}
  */
 OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
-  origin = origin || ''
+  origin  = origin || ''
   compile = !(false === compile)
 
   var tpl = source
+
   if (compile) {
     forEach(this._blocks, function(handle) {
       tpl = tpl.replace(handle.syntax, '')
@@ -865,12 +867,13 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
   }
 
   // error open or close tag - 语法错误，缺少闭合
-  var tagReg = this.$$compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
-      stripTpl = this.$clearSyntax(tpl)
-      pos = stripTpl.search(tagReg)
+  var tagReg   = this.$$compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
+      stripTpl = this.$clearSyntax(tpl),
+      pos      = stripTpl.search(tagReg),
+      line
 
   if (-1 !== pos) {
-    var line = inline(stripTpl, pos)
+    line = inline(stripTpl, pos)
 
     return {
       message: '[Syntax Error]: Syntax error in line ' + line + '.',
@@ -880,11 +883,11 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
 
   // not match any syntax or helper - 语法错误，没有匹配到相关语法
   var syntaxReg = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
-      match = source.match(syntaxReg)
+      match     = source.match(syntaxReg)
 
   if (match) {
-    var pos = tpl.search(syntaxReg),
-        line = inline(tpl, pos)
+    pos = tpl.search(syntaxReg)
+    line = inline(tpl, pos)
 
     return {
       message: '[Syntax Error]: `' + match[0] + '` did not match any syntax in line ' + line + '.',
@@ -978,7 +981,8 @@ OTemplate.prototype.block = function(var_query, callback) {
  * @return {this}
  */
 OTemplate.prototype.unblock = function(name) {
-  var blocks = this._blockHelpers
+  var helpers = this._blockHelpers,
+      blocks  = this._blocks
 
   if (helpers.hasOwnProperty(name)) {
     delete helpers[name]
@@ -1048,227 +1052,21 @@ OTemplate.extend(function() {
     }
   })
 });
-// 扩展新的 include 支持 ajax
-OTemplate.extend(function() {
-  var self = this
-
-  ~extend(this._helpers, {
-    include: function(filename, data, options) {
-      return self.renderById(filename, data, options)
-    }
-  })
-})
-
-/**
- * 编译内联模板
- * @function
- * @param  {string} id      模板ID
- * @param  {object} options 配置
- * @return {function}
- */
-OTemplate.prototype.compileById = function(id, options) {
-  id = id.toString()
-
-  var conf = extend({}, this._defaults, options, { filename: id }),
-      render = true === conf.overwrite || this.$$cache(id)
-
-  if (is('Function')(render)) {
-    return render
-  }
-
-  var node = document.getElementById(id)
-  return node
-    ? this.compile(node.innerHTML, conf)
-    : (this.$$throw({
-        message: '[Compile Template]: Template ID `' + id + '` is not found.'
-      }),
-      __render)
-}
-
-/**
- * 渲染内联模板
- * @function
- * @param  {string} id      模板ID
- * @param  {object} data    数据
- * @param  {object} options 配置
- * @return {string}
- */
-OTemplate.prototype.renderById = function(id, data, options) {
-  var render = this.compileById(id, options)
-  return render(data || {})
-}
-
-/**
- * 编译模板文件
- * @function
- * @param  {string}   filename 文件名
- * @param  {function} callback 回调函数
- * @param  {object}   options  配置
- */
-OTemplate.prototype.compileByAjax = function(filename, callback, options) {
-  if (!is('Function')(callback)) {
-    return
-  }
-
-  var self = this,
-      conf = extend({}, this._defaults, options),
-      render = true === conf.overwrite || this.$$cache(filename)
-
-  is('Function')(render)
-  ? callback(render)
-  : this.readFile(filename, function(source) {
-      source = self.$compileSyntax(source, !!conf.strict)
-
-      var origin = source,
-          requires = [],
-          match
-
-      while(match = /<%!?#?\s*include\s*\(\s*(\'([^\']+)?\'|\"([^\"]+)?\")(\s*,\s*([^\)]+)?)?\)%>/.exec(source)) {
-        requires.push(match[3])
-        source = source.replace(match[0], '')
-      }
-
-      var total = requires.length
-      var __exec = function() {
-        0 >= (-- total) && __return()
-      }
-
-      var __return = function() {
-        render = self.$compile(origin)
-        self.$$cache(filename, render)
-        callback(render)
-        total = undefined
-      }
-
-      if (total > 0) {
-        forEach(unique(requires), function(file) {
-          if (self.$$cache(file)) {
-            __exec()
-          }
-          else {
-            var childSource = findChildTpl(file, origin)
-            if (childSource) {
-              self.compile(childSource, {
-                filename: file,
-                overwrite: false
-              })
-
-              __exec()
-            }
-            else {
-              var node = document.getElementById(file)
-              if (node) {
-                self.compile(node.innerHTML, {
-                  filename: file,
-                  overwrite: false
-                })
-
-                __exec()
-              }
-              else {
-                self.compileByAjax(file, __exec, extend(conf, {
-                  overwrite: false
-                }))
-              }
-            }
-          }
-        })
-      }
-      else {
-        __return()
-      }
-    })
-
-  function findChildTpl(id, source) {
-    var node = document.createElement('div')
-    node.innerHTML = source
-    
-    var tplNodes = node.getElementsByTagName('script')
-    for (var i = tplNodes.length; i --;) {
-      if (tplNodes[i].id === id) {
-        return tplNodes[i].innerHTML
-      }
-    }
-  }
-}
-
-/**
- * 渲染模板文件
- * @function
- * @param  {string}   filename 文件名
- * @param  {object}   data     数据
- * @param  {function} callback 回调函数
- * @param  {object}   options  配置
- */
-OTemplate.prototype.renderByAjax = function(filename, data, callback, options) {
-  if (is('Function')(data)) {
-    return this.renderByAjax(filename, {}, data, callback)
-  }
-
-  is('Function')(callback) && this.compileByAjax(filename, function(render) {
-    callback(render(data || {}))
-  }, options)
-}
+var fs = require('fs')
 
 /**
  * 读取文件
  * @function
- * @param  {string}   filename 文件名
- * @param  {function} callback 回调函数
+ * @param  {String}   filename 文件名
+ * @param  {Function} callback 回调函数
  */
-OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
-  if (!is('Function')(callback)) {
-    return
+function readFile(filename, callback) {
+  if (is('Function')(callback)) {
+    fs.readFile(filename, function(err, buffer) {
+      callback(buffer.toString())
+    })
   }
-
-  var self = this,
-      xhr = new XMLHttpRequest()
-
-  xhr.onreadystatechange = function() {
-    var status = this.status
-    if (this.DONE === this.readyState) {
-      200 <= status && status < 400 && callback(this.responseText)
-    }
-  }
-
-  xhr.onerror = function() {
-    var err = {
-      message: '[Compile Template]: Request file `' + filename + '` some error occured.',
-      filename: filename,
-      response: '[Reponse State]: ' + this.status
-    }
-
-    self.$$throw(err)
-    is('Function')(errorCallback) && errorCallback(err)
-    errorCallback = undefined
-  }
-
-  xhr.ontimeout = function() {
-    var err = {
-      message: '[Request Template]: Request template file `' + filename + '` timeout.',
-      filename: filename
-    }
-
-    self.$$throw(err)
-    is('Function')(errorCallback) && errorCallback(err)
-    errorCallback = undefined
-  }
-
-  xhr.onabort = function() {
-    var err = {
-      message: '[Request Template]: Bowswer absort the request.',
-      filename: filename
-    }
-
-    self.$$throw(err)
-    is('Function')(errorCallback) && errorCallback(err)
-    errorCallback = undefined
-  }
-
-  xhr.open('GET', filename, true)
-  xhr.send(null)
-}
-;
+};
 /**
  * 获取所在行
  * @function
@@ -1559,7 +1357,7 @@ function extend(a, b) {
  * @return {Integer}        键值，不存在返回 -1;
  */
 function inArray(value, array) {
-  if (Array.prototype.indexOf && angular.isFunction(array.indexOf)) {
+  if (Array.prototype.indexOf && is('Function')(array.indexOf)) {
     return array.indexOf(value)
   }
   else {
@@ -1582,7 +1380,7 @@ function inArrayBy(var_query, array, index_name) {
       i = 0,
       l = array.length
 
-  index = angular.isObject(var_query)
+  index = is('Object')(var_query)
     ? var_query[index_name]
     : index = var_query
 
@@ -1648,16 +1446,22 @@ function __render() {
  * @param {function} factory
  */
 function UMD(name, factory, root) {
-  'function' === typeof define
-    // AMD & CMD
-    ? define(function() {
-        return factory(root)
-      })
-    : 'object' === typeof exports
-      // nodejs
-      ? module.exports = factory(root)
-      // no module definaction
-      : root[name] = factory(root)
+  var define = window.define
+
+  // AMD & CMD
+  if ('function' === typeof define) {
+    define(function() {
+      return factory(root)
+    })
+  }
+  // NodeJS
+  else if ('object' === typeof exports) {
+    module.exports = factory(root)
+  }
+  // no module definaction
+  else {
+    root[name] = factory(root)
+  }
 };
 // Exports
 UMD('oTemplate', function() {

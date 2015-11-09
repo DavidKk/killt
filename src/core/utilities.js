@@ -288,7 +288,7 @@ function extend(a, b) {
  * @return {Integer}        键值，不存在返回 -1;
  */
 function inArray(value, array) {
-  if (Array.prototype.indexOf && angular.isFunction(array.indexOf)) {
+  if (Array.prototype.indexOf && is('Function')(array.indexOf)) {
     return array.indexOf(value)
   }
   else {
@@ -311,7 +311,7 @@ function inArrayBy(var_query, array, index_name) {
       i = 0,
       l = array.length
 
-  index = angular.isObject(var_query)
+  index = is('Object')(var_query)
     ? var_query[index_name]
     : index = var_query
 
@@ -377,14 +377,20 @@ function __render() {
  * @param {function} factory
  */
 function UMD(name, factory, root) {
-  'function' === typeof define
-    // AMD & CMD
-    ? define(function() {
-        return factory(root)
-      })
-    : 'object' === typeof exports
-      // nodejs
-      ? module.exports = factory(root)
-      // no module definaction
-      : root[name] = factory(root)
+  var define = window.define
+
+  // AMD & CMD
+  if ('function' === typeof define) {
+    define(function() {
+      return factory(root)
+    })
+  }
+  // NodeJS
+  else if ('object' === typeof exports) {
+    module.exports = factory(root)
+  }
+  // no module definaction
+  else {
+    root[name] = factory(root)
+  }
 }

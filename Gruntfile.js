@@ -18,6 +18,10 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
+    es5Path: 'dist/es5/',
+    es6Path: 'dist/es6/',
+    srcPath: 'src/',
+
     clean: {
       dist: 'dist'
     },
@@ -27,6 +31,15 @@ module.exports = function(grunt) {
         separator: ';\n',
         banner: '~(function(root) {\'use strict\'\n',
         footer: '})(this);'
+      }
+    },
+
+    es6transpiler: {
+      dist: {
+        dest: '<%= es5Path %>',
+        cwd: '<%= es6Path %>',
+        src: ['client/*.js', 'node/*.js'],
+        expand: true
       }
     },
 
@@ -40,14 +53,6 @@ module.exports = function(grunt) {
     karma: {
       unit: {
         configFile: 'karma.conf.js'
-      }
-    },
-
-    es6transpiler: {
-      dist: {
-        files: {
-          'ww/app.js': 'qq/app.js'
-        }
       }
     },
 
@@ -72,7 +77,7 @@ module.exports = function(grunt) {
         defaultSyntax
 
     grunt.file
-    .expand('syntax/*')
+    .expand('src/syntax/*')
     .forEach(function(file) {
       var stats = fs.lstatSync(file),
           filename = file.split('/').splice(-1, 1).pop(),
@@ -90,7 +95,7 @@ module.exports = function(grunt) {
     defaultSyntax = syntax.splice(defaultIndex !== -1 ? defaultIndex : 0, 1).pop()
 
     grunt.file
-    .expand('vendors/*')
+    .expand('src/vendors/*')
     .forEach(function(file) {
       var stats = fs.lstatSync(file),
           filename = file.split('/').splice(-1, 1).pop(),
@@ -100,12 +105,12 @@ module.exports = function(grunt) {
       if (ext === '.js') {
         // Lit version
         grunt.config('concat.' + name + '@lite', {
-          dest: 'dist/' + name + '/<%= pkg.name %>.lite.js',
+          dest: '<%= es6Path %>' + name + '/<%= pkg.name %>.lite.js',
           src: [
-            'src/main.js',
+            'src/core/main.js',
             file,
-            'src/utilities.js',
-            'src/export.js'
+            'src/core/utilities.js',
+            'src/core/export.js'
           ]
         })
 
@@ -113,21 +118,21 @@ module.exports = function(grunt) {
           options: {
             banner: '// <%= pkg.name %>.lite.min.js#<%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd HH:MM:ss") %>'
           },
-          dest: 'dist/' + name + '/<%= pkg.name %>.lite.min.js',
-          src: 'dist/' + name + '/<%= pkg.name %>.lite.js'
+          dest: '<%= es6Path %>' + name + '/<%= pkg.name %>.lite.min.js',
+          src: '<%= es6Path %>' + name + '/<%= pkg.name %>.lite.js'
         })
 
         // Default syntax version
         if (defaultSyntax) {
           grunt.config('concat.' + name + '@syntax', {
-            dest: 'dist/' + name + '/<%= pkg.name %>.js',
+            dest: '<%= es6Path %>' + name + '/<%= pkg.name %>.js',
             src: [
-              'src/main.js',
-              'src/syntax.js',
+              'src/core/main.js',
+              'src/core/syntax.js',
               defaultSyntax.path,
               file,
-              'src/utilities.js',
-              'src/export.js'
+              'src/core/utilities.js',
+              'src/core/export.js'
             ]
           })
 
@@ -135,8 +140,8 @@ module.exports = function(grunt) {
             options: {
               banner: '// <%= pkg.name %>.min.js#<%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd HH:MM:ss") %>'
             },
-            dest: 'dist/' + name + '/<%= pkg.name %>.min.js',
-            src: 'dist/' + name + '/<%= pkg.name %>.js'
+            dest: '<%= es6Path %>' + name + '/<%= pkg.name %>.min.js',
+            src: '<%= es6Path %>' + name + '/<%= pkg.name %>.js'
           })
         }
 
@@ -144,7 +149,7 @@ module.exports = function(grunt) {
         if (syntax.length > 0) {
           syntax.forEach(function(syntax) {
             grunt.config('concat.' + name + '@syntax-' + syntax.name, {
-              dest: 'dist/' + name + '/<%= pkg.name %>.' + syntax.name + '.js',
+              dest: '<%= es6Path %>' + name + '/<%= pkg.name %>.' + syntax.name + '.js',
               src: [
                 'src/main.js',
                 'src/syntax.js',
@@ -159,15 +164,15 @@ module.exports = function(grunt) {
               options: {
                 banner: '// <%= pkg.name %>.' + syntax.name + '.min.js#<%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd HH:MM:ss") %>'
               },
-              dest: 'dist/' + name + '/<%= pkg.name %>.' + syntax.name + '.min.js',
-              src: 'dist/' + name + '/<%= pkg.name %>.' + syntax.name + '.js'
+              dest: '<%= es6Path %>' + name + '/<%= pkg.name %>.' + syntax.name + '.min.js',
+              src: '<%= es6Path %>' + name + '/<%= pkg.name %>.' + syntax.name + '.js'
             })
           })
         }
       }
     })
 
-    grunt.task.run(['concat', 'uglify'])
+    grunt.task.run(['concat', 'es6transpiler', 'uglify'])
   })
 
   grunt.registerTask('develop', ['clean', 'scripts', 'watch'])

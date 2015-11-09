@@ -69,8 +69,9 @@ var OTemplate = function(options) {
       return toString(str || '')
     },
     $toString: function(str, isEscape) {
-      var conf = self.DEFAULTS,
-          str = toString(str)
+      str = toString(str)
+
+      var conf = self.DEFAULTS
 
       return true === (is('Boolean')(isEscape) ? isEscape : conf.escape)
         ? self.helper('$escape')(str)
@@ -308,7 +309,7 @@ OTemplate.prototype.$compileShell = (function() {
           ? _sources_[helperName](str)
           : str
 
-        str = '<%=unescape("' + escape(str) + '");%>'
+        str = '<%=unescape("' + window.escape(str) + '");%>'
         source = source.replace(match[0], str)
       }
 
@@ -627,7 +628,7 @@ OTemplate.prototype.config = function(var_query, value) {
 
   var self = this
   if (is('PlainObject')(var_query)) {
-    forEach(options, function(name, value) {
+    forEach(var_query, function(name, value) {
       self.config(name, value)
     })
 
