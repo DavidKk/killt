@@ -1,30 +1,66 @@
 /**
- * @class OTemplate A Template engine for Javascript
- * @param {Object} options 配置
- *   @param {Menu}    env        [unit, develop, produce]
- *   @param {Boolean} noSyntax   是否使用使用原生语法
- *   @param {Boolean} strict     是否通过严格模式编译语法
- *   @param {Boolean} compress   压缩生成的HTML代码
- *   @param {String}  openTag    语法的起始标识
- *   @param {String}  closeTag   语法的结束标识
- *   @param {Array}   depends    追加渲染器的传值设定
+ * OTemplate A Template engine for Javascript
+ * @class
+ * @param {object}    options             配置
+ * @param {string}    options.env         [unit, develop, produce]
+ * @param {boolean}   options.noSyntax    是否使用使用原生语法
+ * @param {boolean}   options.strict      是否通过严格模式编译语法
+ * @param {boolean}   options.compress    压缩生成的HTML代码
+ * @param {string}    options.openTag     语法的起始标识
+ * @param {string}    options.closeTag    语法的结束标识
+ * @param {array}     options.depends     追加渲染器的传值设定
  */
 var OTemplate = function(options) {
   options = options || {}
+
   var self = this
 
-  this._caches = {}                   // render caches/编译器缓存
-  this._blocks = {}                   // block syntax/块状语法
-  this._blockHelpers = {}             // block helpers/块状辅助函数
-  this._sourceHelpers = {}            // source helpers/资源辅助函数
-  this._helpers = {}                  // helpers/辅助函数
-  this._defaults = {}                 // defualt config/默认配置
-  this._listeners = []                // event listener/事件监听方法
+  /**
+   * render caches - 编译器缓存
+   * @type {object}
+   */
+  this._caches = {}
 
-  // set the config/设置配置
-  ~extend(this._defaults, OTemplate._defaults, options)
+  /**
+   * block syntax - 块状语法
+   * @type {object}
+   */
+  this._blocks = {}
 
-  // set any helpers/设置基础辅助函数
+  /**
+   * block helpers - 块状辅助函数
+   * @type {object}
+   */
+  this._blockHelpers = {}
+
+  /**
+   * source helpers - 资源辅助函数
+   * @type {object}
+   */
+  this._sourceHelpers = {}
+
+  /**
+   * helpers - 辅助函数
+   * @type {object}
+   */
+  this._helpers       = {}
+
+  /**
+   * defualt config - 默认配置
+   * @type {object}
+   */
+  this.DEFAULTS      = {}
+
+  /**
+   * event listener - 事件监听方法
+   * @type {array}
+   */
+  this._listeners     = []
+
+  // set the config - 设置配置
+  ~extend(this.DEFAULTS, OTemplate.DEFAULTS, options)
+
+  // set any helpers - 设置基础辅助函数
   ~extend(this._helpers, {
     $escape: function() {
       return escapeHTML.apply(escapeHTML, arguments)
@@ -33,7 +69,7 @@ var OTemplate = function(options) {
       return toString(str || '')
     },
     $toString: function(str, isEscape) {
-      var conf = self._defaults,
+      var conf = self.DEFAULTS,
           str = toString(str)
 
       return true === (is('Boolean')(isEscape) ? isEscape : conf.escape)
@@ -41,7 +77,7 @@ var OTemplate = function(options) {
         : str
     },
     include: function(filename, data, options) {
-      var conf = self._defaults,
+      var conf = self.DEFAULTS,
           node = document.getElementById(filename)
 
       if (node) {
@@ -56,35 +92,59 @@ var OTemplate = function(options) {
     }
   })
 
-  // set any syntax/设置语法
+  // set any syntax - 设置语法
   ~is('Array')(OTemplate._extends) && forEach(OTemplate._extends, function(_extends_) {
     self.extends(_extends_)
   })
 }
 
-OTemplate.ENV = OTemplate.prototype.ENV = {   // current envirment/配置环境
-  PRODUCE: 1,                                 // production env/生产环境
-  DEVELOP: 2,                                 // develop env/开发环境
-  UNIT: 3                                     // unit test env/单元测试环境
+/**
+ * current envirment - 配置环境
+ * @type {Object}
+ */
+OTemplate.ENV = OTemplate.prototype.ENV = {
+  /** production env - 生产环境 */
+  PRODUCE : 1,
+  /** develop env - 开发环境 */
+  DEVELOP : 2,
+  /** unit test env - 单元测试环境 */
+  UNIT    : 3
 }
-
-OTemplate._defaults = {                       // default options/默认配置
-  env: OTemplate.ENV.PRODUCE,                 // current entironment/当前环境 [unit, develop, produce]
-  noSyntax: false,                            // is use native syntax/是否使用使用原生语法
-  strict: true,                               // compile syntax in strict mode/是否通过严格模式编译语法
-  compress: true,                             // compress the html code/压缩生成的HTML代码
-  escape: true,                               // escape the HTML/是否编码输出变量的 HTML 字符
-  openTag: '{{',                              // open tag for syntax/起始标识
-  closeTag: '}}',                             // close tag for syntax/结束标识
-  depends: []                                 // addition render arguments (must be use `$` to define variable name)/追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量)
-}
-
-OTemplate._extends = []                       // extens plugins/扩展集合
 
 /**
- * @function extend 扩展库
- * @param  {Function}   _extends_ 扩展方法
- * @return {OTemplate}
+ * default options - 默认配置
+ * @type {Object}
+ */
+OTemplate.DEFAULTS = {
+  /** current entironment - 当前环境 [unit, develop, produce] */
+  env       : OTemplate.ENV.PRODUCE,
+  /** is use native syntax/是否使用使用原生语法 */
+  noSyntax  : false,
+  /** compile syntax in strict mode - 是否通过严格模式编译语法 */
+  strict    : true,
+  /** compress the html code - 压缩生成的HTML代码 */
+  compress  : true,
+  /** escape the HTML - 是否编码输出变量的 HTML 字符 */
+  escape    : true,
+  /** open tag for syntax - 起始标识 */
+  openTag   : '{{',
+  /** close tag for syntax - 结束标识 */
+  closeTag  : '}}',
+  /** addition render arguments (must be use `$` to define variable name) - 追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量) */
+  depends   : []
+}
+
+/**
+ * extens plugins - 扩展集合
+ * @type {Array}
+ */
+OTemplate._extends = []
+
+/**
+ * 扩展库
+ * @function
+ * @param  {function} _extends_ 扩展方法
+ * @return {this}
  */
 OTemplate.extend = function(_extends_) {
   is('Function')(_extends_) && OTemplate._extends.push(_extends_)
@@ -92,11 +152,12 @@ OTemplate.extend = function(_extends_) {
 }
 
 /**
- * @function $$throw
- * @param  {String} error
+ * 掏出错误
+ * @function
+ * @param {string} error
  */
 OTemplate.prototype.$$throw = function(message, options) {
-  var conf = extend({}, this._defaults, options),
+  var conf = extend({}, this.DEFAULTS, options),
       err = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
 
   forEach(this._listeners, function(listener) {
@@ -105,10 +166,11 @@ OTemplate.prototype.$$throw = function(message, options) {
 }
 
 /**
- * @function on 添加监听事件
- * @param  {String}   type   监听类型
- * @param  {Function} handle 监听函数
- * @return {OTemplate}
+ * 添加监听事件
+ * @function
+ * @param  {string}   type   监听类型
+ * @param  {function} handle 监听函数
+ * @return {this}
  */
 OTemplate.prototype.on = function(type, handle) {
   if (is('String')(type) && is('Function')(handle)) {
@@ -122,9 +184,10 @@ OTemplate.prototype.on = function(type, handle) {
 }
 
 /**
- * @function off 撤销监听事件
- * @param  {Function} handle 监听函数
- * @return {OTemplate}
+ * 撤销监听事件
+ * @function
+ * @param  {function} handle 监听函数
+ * @return {this}
  */
 OTemplate.prototype.off = function(handle) {
   if (is('Function')(handle)) {
@@ -136,8 +199,9 @@ OTemplate.prototype.off = function(handle) {
 }
 
 /**
- * @function onError 添加错误事件监听
- * @param  {Function} handle 监听函数
+ * 添加错误事件监听
+ * @function
+ * @param  {function} handle 监听函数
  * @return {OTempalte}
  */
 OTemplate.prototype.onError = function(handle) {
@@ -145,9 +209,10 @@ OTemplate.prototype.onError = function(handle) {
 }
 
 /**
- * @function $$cache 缓存方法
- * @param  {String}   name   名称
- * @param  {Function} render 函数
+ * 缓存方法
+ * @function
+ * @param  {string}   name   名称
+ * @param  {function} render 函数
  * @return {Function|OTemplate}
  */
 OTemplate.prototype.$$cache = function(name, render) {
@@ -161,9 +226,10 @@ OTemplate.prototype.$$cache = function(name, render) {
 }
 
 /**
- * @function $$table 给每行开头添加序列号/add the line number to the string
- * @param  {String} str 需要添加序列号的字符串
- * @return {String}
+ * add the line number to the string - 给每行开头添加序列号
+ * @function
+ * @param  {string} str 需要添加序列号的字符串
+ * @return {string}
  */
 OTemplate.prototype.$$table = (function() {
   return function(str) {
@@ -181,11 +247,12 @@ OTemplate.prototype.$$table = (function() {
   }
 
   /**
-   * @function zeroize 补零
-   * @param  {Integer} num  需要补零的数字
-   * @param  {Integer} max  补零参考数字易为最大补零数字
-   * @param  {String}  zero 需要填补的 "零"
-   * @return {String}
+   * 补零
+   * @function
+   * @param  {integer} num  需要补零的数字
+   * @param  {integer} max  补零参考数字易为最大补零数字
+   * @param  {string}  zero 需要填补的 "零"
+   * @return {string}
    */
   function zeroize(num, max, zero) {
     zero  = zero || ' '
@@ -199,17 +266,18 @@ OTemplate.prototype.$$table = (function() {
 })()
 
 /**
- * @function $compileShell 编译脚本
- * @param  {String}   source 脚本模板
- * @param  {Object}   options 配置
- * @return {String}
+ * 编译脚本
+ * @function
+ * @param  {string} source  脚本模板
+ * @param  {object} options 配置
+ * @return {string}
  */
 OTemplate.prototype.$compileShell = (function() {
   return function(source, options) {
     options = options || {}
 
     var origin    = source,
-        conf      = this._defaults,
+        conf      = this.DEFAULTS,
         isEscape  = is('Boolean')(options.escape) ? options.escape : conf.escape,
         strip     = is('Boolean')(options.compress) ? options.compress : conf.compress,
         _helpers_ = this._helpers,
@@ -222,9 +290,10 @@ OTemplate.prototype.$compileShell = (function() {
         buffer    = ''
 
     /**
-     * @function sourceToJs 解析Source为JS字符串拼接
-     * @param  {String} source HTML
-     * @return {String}
+     * 解析Source为JS字符串拼接
+     * @function
+     * @param  {string} source HTML
+     * @return {string}
      */
     var sourceToJs = function(source) {
       var helperName,
@@ -247,9 +316,10 @@ OTemplate.prototype.$compileShell = (function() {
     }
 
     /**
-     * @function htmlToJs 解析HTML为JS字符串拼接
-     * @param  {String} source HTML
-     * @return {String}
+     * 解析HTML为JS字符串拼接
+     * @function
+     * @param  {string} source HTML
+     * @return {string}
      */
     var htmlToJs = function(source) {
       source = source
@@ -275,9 +345,10 @@ OTemplate.prototype.$compileShell = (function() {
     }
 
     /**
-     * @function shellToJs 解析脚本为JS字符串拼接
-     * @param  {String} source JS shell
-     * @return {String}
+     * 解析脚本为JS字符串拼接
+     * @function
+     * @param  {string} source JS shell
+     * @return {string}
      */
     var shellToJs = function(source) {
       source = trim(source || '')
@@ -384,9 +455,10 @@ OTemplate.prototype.$compileShell = (function() {
   }
 
   /**
-   * @function getVariables 获取变量名
-   * @param  {String} source Shell
-   * @return {Array}
+   * 获取变量名
+   * @function
+   * @param  {string} source Shell
+   * @return {array}
    */
   function getVariables(source) {
     var KEYWORDS = [
@@ -415,10 +487,10 @@ OTemplate.prototype.$compileShell = (function() {
     ]
 
     var variables = source
-      .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
-      .replace(/[^\w$]+/g, ',')
-      .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
-      .split(/^$|,+/)
+        .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
+        .replace(/[^\w$]+/g, ',')
+        .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
+        .split(/^$|,+/)
 
     return filter(variables, function(variable) {
       return -1 === KEYWORDS.indexOf(variable)
@@ -427,10 +499,11 @@ OTemplate.prototype.$compileShell = (function() {
 })()
 
 /**
- * @function $compile 编译模板为函数
- * @param   {String}    tpl      模板
- * @param   {Object}    options  编译配置
- * @return  {Function}
+ * 编译模板为函数
+ * @function
+ * @param   {string}    tpl      模板
+ * @param   {object}    options  编译配置
+ * @return  {function}
  * @description
  * 
  * Render and it's options will be cached together,
@@ -447,7 +520,7 @@ OTemplate.prototype.$compile = (function() {
   return function(source, options) {
     var self = this,
         origin = source,
-        conf = extend({}, this._defaults, options),
+        conf = extend({}, this.DEFAULTS, options),
         deps = conf.depends,
         _args_ = ['$data'].concat(deps).join(','),
         args = []
@@ -514,18 +587,20 @@ OTemplate.prototype.$compile = (function() {
 })()
 
 /**
- * @function OTemplate 生成一个新的 OTemplate 制作对象
- * @param  {Object} options 配置
- * @return {OTemplate}
+ * 生成一个新的 OTemplate 制作对象
+ * @function
+ * @param  {object} options 配置
+ * @return {this}
  */
 OTemplate.prototype.OTemplate = function(options) {
   return new OTemplate(options)
 }
 
 /**
- * @function extends 扩展 OTemplate
- * @param  {Function} callback 回调
- * @return {OTemplate}
+ * 扩展 OTemplate
+ * @function
+ * @param  {function} callback 回调
+ * @return {this}
  */
 OTemplate.prototype.extends = function(callback) {
   callback.call(this, this)
@@ -533,9 +608,10 @@ OTemplate.prototype.extends = function(callback) {
 }
 
 /**
- * @function config 查询与设置配置
- * @param {String|Object} var_query 设置/获取的配置值名称
- * @param {Anything}      value     需要配置的值 (optional)
+ * 查询与设置配置
+ * @function
+ * @param {string|object} var_query 设置/获取的配置值名称
+ * @param {anything}      value     需要配置的值 (optional)
  */
 OTemplate.prototype.config = function(var_query, value) {
   if (1 < arguments.length) {
@@ -544,7 +620,7 @@ OTemplate.prototype.config = function(var_query, value) {
         return this
       }
 
-      this._defaults[var_query] = value
+      this.DEFAULTS[var_query] = value
       return this
     }
   }
@@ -559,15 +635,16 @@ OTemplate.prototype.config = function(var_query, value) {
   }
 
   if (is('String')(var_query)) {
-    return this._defaults[var_query]
+    return this.DEFAULTS[var_query]
   }
 }
 
 /**
- * @function helper 查找/设置辅助函数
- * @param  {String|Object}  var_query 需要查找或设置的函数名|需要设置辅助函数集合
- * @param  {Function}       callback  回调函数
- * @return {OTemplate|Function}
+ * 查找/设置辅助函数
+ * @function
+ * @param  {string|object}  var_query 需要查找或设置的函数名|需要设置辅助函数集合
+ * @param  {function}       callback  回调函数
+ * @return {this|function}
  */
 OTemplate.prototype.helper = function(var_query, callback) {
   if (1 < arguments.length) {
@@ -592,9 +669,10 @@ OTemplate.prototype.helper = function(var_query, callback) {
 }
 
 /**
- * @function unhelper 注销辅助函数
- * @param  {String} name 名称
- * @return {OTemplate}
+ * 注销辅助函数
+ * @function
+ * @param  {string} name 名称
+ * @return {this}
  */
 OTemplate.prototype.unhelper = function(name) {
   var helpers = this._helpers
@@ -606,12 +684,12 @@ OTemplate.prototype.unhelper = function(name) {
 }
 
 /**
- * @function compile 编译模板
- * @param  {String} source  模板
- * @param  {Object} options 配置
- * @return {Function}
+ * 编译模板
+ * @function
+ * @param  {string} source  模板
+ * @param  {object} options 配置
+ * @return {function}
  * @description
- * 
  * 当渲染器已经被缓存的情况下，options 除 overwrite 外的所有属性均不会
  * 对渲染器造成任何修改；当 overwrite 为 true 的时候，缓存将被刷新，此
  * 时才能真正修改渲染器的配置
@@ -619,7 +697,7 @@ OTemplate.prototype.unhelper = function(name) {
 OTemplate.prototype.compile = function(source, options) {
   source = source.toString()
 
-  var conf = extend({}, this._defaults, options),
+  var conf = extend({}, this.DEFAULTS, options),
       filename = conf.filename,
       render = true === conf.overwrite || this.$$cache(filename)
 
@@ -633,11 +711,12 @@ OTemplate.prototype.compile = function(source, options) {
 }
 
 /**
- * @function render 渲染模板
- * @param  {String} source  模板
- * @param  {Object} data    数据
- * @param  {Object} options 配置
- * @return {String}
+ * 渲染模板
+ * @function
+ * @param  {string} source  模板
+ * @param  {object} data    数据
+ * @param  {object} options 配置
+ * @return {string}
  */
 OTemplate.prototype.render = function(source, data, options) {
   return this.compile(source, options)(data || {})

@@ -1,5 +1,5 @@
 /**
- * Simple Syntax Defination/定义简单语法
+ * Simple Syntax Defination - 定义简单语法
  * @description
  * `if`:      {{if true}}...{{elseif}}...{{else}}...{{/if}}
  * `each`:    {{each data as value,key}}...{{/each}}
@@ -10,13 +10,12 @@
  * `escpe`:   {{!# data}}
  */
 OTemplate.extend(function() {
-  var HELPER_SYNTAX = '(!?#?)\\s*([^|]+?(?:\\s*(?:\\|\\||\\&\\&)\\s*[^|]+?)*)\\s*\\|\\s*([^:\\|]+?)\\s*(?:\\:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?',
-      HELPER_REGEXP = this.$$compileRegexp(HELPER_SYNTAX),
+  var HELPER_SYNTAX       = '(!?#?)\\s*([^|]+?(?:\\s*(?:\\|\\||\\&\\&)\\s*[^|]+?)*)\\s*\\|\\s*([^:\\|]+?)\\s*(?:\\:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?',
+      HELPER_REGEXP       = this.$$compileRegexp(HELPER_SYNTAX),
       HELPER_INNER_SYNTAX = '\\s*([\\w\\W]+?\\s*\\\([\\w\\W]+?\\\))\\s*\\|\\s*([^:]+?)\\s*(:\\s*([^\\|]+?))?$',
       HELPER_INNER_REGEXP = this.$$compileRegexp(HELPER_INNER_SYNTAX)
 
   this
-  .$registerSyntax('logic', '-\\s*(.+?)\\s*', '$1')
   .$registerSyntax('echo', '@\\s*([\\w\\W]+?)\\s*', '=$1')
   .$registerSyntax('ifopen', 'if\\s*(.+?)\\s*', 'if($1) {')
   .$registerSyntax('else', 'else', '} else {')
@@ -50,6 +49,7 @@ OTemplate.extend(function() {
       return $2 + '(' + $1 + ',' + $4 + ')'
     }
   })())
+  .$registerSyntax('logic', '-\\s*(.+?)\\s*', '$1')
 
   ~extend(this._helpers, {
     each: function(data, callback) {

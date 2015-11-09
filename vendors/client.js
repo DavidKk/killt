@@ -10,10 +10,11 @@ OTemplate.extend(function() {
 })
 
 /**
- * @function compileById 编译内联模板
- * @param  {String} id      模板ID
- * @param  {Object} options 配置
- * @return {Function}
+ * 编译内联模板
+ * @function
+ * @param  {string} id      模板ID
+ * @param  {object} options 配置
+ * @return {function}
  */
 OTemplate.prototype.compileById = function(id, options) {
   id = id.toString()
@@ -35,11 +36,12 @@ OTemplate.prototype.compileById = function(id, options) {
 }
 
 /**
- * @function renderById 渲染内联模板
- * @param  {String} id      模板ID
- * @param  {Object} data    数据
- * @param  {Object} options 配置
- * @return {String}
+ * 渲染内联模板
+ * @function
+ * @param  {string} id      模板ID
+ * @param  {object} data    数据
+ * @param  {object} options 配置
+ * @return {string}
  */
 OTemplate.prototype.renderById = function(id, data, options) {
   var render = this.compileById(id, options)
@@ -47,11 +49,11 @@ OTemplate.prototype.renderById = function(id, data, options) {
 }
 
 /**
- * @function compileByAjax 编译模板文件
- * @param  {String}   filename 文件名
- * @param  {Function} callback 回调函数
- *   @param {Function} render  渲染函数
- * @param  {Object}   options  配置
+ * 编译模板文件
+ * @function
+ * @param  {string}   filename 文件名
+ * @param  {function} callback 回调函数
+ * @param  {object}   options  配置
  */
 OTemplate.prototype.compileByAjax = function(filename, callback, options) {
   if (!is('Function')(callback)) {
@@ -141,12 +143,12 @@ OTemplate.prototype.compileByAjax = function(filename, callback, options) {
 }
 
 /**
- * @function renderByAjax 渲染模板文件
- * @param  {String}   filename 文件名
- * @param  {Object}   data     数据
- * @param  {Function} callback 回调函数
- *   @param {String} html 渲染结果HTML
- * @param  {Object}   options  配置
+ * 渲染模板文件
+ * @function
+ * @param  {string}   filename 文件名
+ * @param  {object}   data     数据
+ * @param  {function} callback 回调函数
+ * @param  {object}   options  配置
  */
 OTemplate.prototype.renderByAjax = function(filename, data, callback, options) {
   if (is('Function')(data)) {
@@ -159,9 +161,10 @@ OTemplate.prototype.renderByAjax = function(filename, data, callback, options) {
 }
 
 /**
- * @function readFile 读取文件
- * @param  {String}   filename 文件名
- * @param  {Function} callback 回调函数
+ * 读取文件
+ * @function
+ * @param  {string}   filename 文件名
+ * @param  {function} callback 回调函数
  */
 OTemplate.prototype.readFile = function(filename, callback, errorCallback) {
   if (!is('Function')(callback)) {

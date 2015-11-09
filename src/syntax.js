@@ -1,5 +1,6 @@
 /**
  * Syntax Module - 语法模块
+ * @type {Object}
  * @description
  * 该模块主要提供一系列方法和基础语法供使用者更为简洁编写模板和自定义扩展语法
  * 你可以通过 `$registerSyntax` 方法来扩展自己所需求的语法；
@@ -12,15 +13,16 @@
  * 1. 正则表达式之间最好不要具有优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
-OTemplate._defaults = extend(OTemplate._defaults, {
+OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
   noSyntax: false
 })
 
 /**
- * @function $$compile 通过配置作为数据来替换模板
- * @param  {String} source  模板
+ * 通过配置作为数据来替换模板
+ * @function
+ * @param  {string} source  模板
  * @param  {Object} data    数据 (optional)，若数据不为 object 则设为默认配置数据
- * @return {String}
+ * @return {string}
  * @description
  * 
  * '<%= openTag %>hi<%= closeTag %>'
@@ -28,17 +30,18 @@ OTemplate._defaults = extend(OTemplate._defaults, {
  * the result is '{{hi}}'
  */
 OTemplate.prototype.$$compile = function(source, data) {
-  data = is('PlainObject')(data) ? data : this._defaults
+  data = is('PlainObject')(data) ? data : this.DEFAULTS
   return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, function(all, $1) {
     return namespace($1, data) || ''
   })
 }
 
 /**
- * @function $$compileRegexp 通过配置作为数据和模板生成 RegExp
- * @param   {String}  patternTpl regexp 模板
- * @param   {Menu}    attributes {igm}
- * @return  {RegExp}
+ * 通过配置作为数据和模板生成 RegExp
+ * @function
+ * @param   {string}  patternTpl regexp 模板
+ * @param   {menu}    attributes {igm}
+ * @return  {regexp}
  * @description
  *
  * '<%= openTag %>hi<%= closeTag %>'
@@ -52,13 +55,13 @@ OTemplate.prototype.$$compileRegexp = function(patternTpl, attributes) {
 }
 
 /**
- * @function $registerSyntax 注册语法
- * @param  {String}                      name         语法名称
- * @param  {String|Array|Object|RegExp}  var_syntax   语法正则 (请注意贪婪与贪婪模式)，当为 RegExp时，记得用 openTag 和 closeTag 包裹
- * @param  {String|Function}             shell        元脚本, 当为 Function 时记得加上 `<%` 和 `%>` 包裹
- * @return {OTemplate}
+ * 注册语法
+ * @function
+ * @param  {string}                      name         语法名称
+ * @param  {string|array|object|regexp}  var_syntax   语法正则 (请注意贪婪与贪婪模式)，当为 RegExp时，记得用 openTag 和 closeTag 包裹
+ * @param  {string|function}             shell        元脚本, 当为 Function 时记得加上 `<%` 和 `%>` 包裹
+ * @return {this}
  * @description
- *
  * '(\\\w+)' will be compiled to /{{(\\\w+)}}/igm
  * but please use the non-greedy regex, and modify it to'(\\\w+)?'
  * eg. when it wants to match '{{aaa}}{{aaa}}', it will match whole string
@@ -94,9 +97,10 @@ OTemplate.prototype.$registerSyntax = function(name, var_syntax, shell) {
 }
 
 /**
- * @function $unregisterSyntax 销毁语法
- * @param  {String}     name 语法名称
- * @return {OTemplate}
+ * 销毁语法
+ * @function
+ * @param  {string}     name 语法名称
+ * @return {this}
  */
 OTemplate.prototype.$unregisterSyntax = function(name) {
   var blocks = this._blocks
@@ -108,9 +112,10 @@ OTemplate.prototype.$unregisterSyntax = function(name) {
 }
 
 /**
- * @function $clearSyntax 清除所有语法
- * @param  {String} source 语法模板
- * @return {String}
+ * 清除所有语法
+ * @function
+ * @param  {string} source 语法模板
+ * @return {string}
  */
 OTemplate.prototype.$clearSyntax = function(source) {
   var regexp = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
@@ -118,10 +123,11 @@ OTemplate.prototype.$clearSyntax = function(source) {
 }
 
 /**
- * @function $analyzeSyntax 分析语法是否合格
- * @param  {String}   source    语法模板
- * @param  {Boolean}  compile   是否需要编译
- * @return {String|Boolean}
+ * 分析语法是否合格
+ * @function
+ * @param  {string}   source    语法模板
+ * @param  {boolean}  compile   是否需要编译
+ * @return {string|boolean}
  */
 OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
   origin = origin || ''
@@ -134,7 +140,7 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
     })
   }
 
-  // error open or close tag/语法错误，缺少闭合
+  // error open or close tag - 语法错误，缺少闭合
   var tagReg = this.$$compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
       stripTpl = this.$clearSyntax(tpl)
       pos = stripTpl.search(tagReg)
@@ -148,7 +154,7 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
     }
   }
 
-  // not match any syntax or helper/语法错误，没有匹配到相关语法
+  // not match any syntax or helper - 语法错误，没有匹配到相关语法
   var syntaxReg = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
       match = source.match(syntaxReg)
 
@@ -166,13 +172,14 @@ OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
 }
 
 /**
- * @function $compileSyntax 编译语法模板
- * @param  {String}   source  语法模板
- * @param  {Boolean}  strict  是否为严格模式,
+ * 编译语法模板
+ * @function
+ * @param  {string}   source  语法模板
+ * @param  {boolean}  strict  是否为严格模式,
  *                            若不为 false 编译时会验证语法正确性若不正确则返回空字符串;
  *                            若为 false 模式则会去除所有没有匹配到的语法,
  *                            默认为 true，除 false 之外所有均看成 true
- * @return {String}
+ * @return {string}
  * @example
  * 
  * Strict Mode
@@ -190,7 +197,7 @@ OTemplate.prototype.$compileSyntax = function(source, strict) {
   strict = !(false === strict)
 
   var origin = source,
-      conf = this._defaults,
+      conf = this.DEFAULTS,
       valid
 
   forEach(this._blocks, function(handle) {
@@ -202,12 +209,12 @@ OTemplate.prototype.$compileSyntax = function(source, strict) {
 }
 
 /**
- * @function block 查询/设置块级辅助函数
- * @param  {String|Object}  var_query 需要查找或设置的函数名|需要设置辅助函数集合
- * @param  {Function}       callback  回调函数
- * @return {OTemplate|Function}
+ * 查询/设置块级辅助函数
+ * @function
+ * @param  {string|object}  var_query 需要查找或设置的函数名|需要设置辅助函数集合
+ * @param  {function}       callback  回调函数
+ * @return {this|function}
  * @description
- *
  * 只有语法版本才拥有 block 这个概念，原生版本可以通过各种函数达到目的
  */
 OTemplate.prototype.block = function(var_query, callback) {
@@ -241,9 +248,10 @@ OTemplate.prototype.block = function(var_query, callback) {
 }
 
 /**
- * @function $unregisterSyntax 注销块级辅助函数
- * @param  {String} name 名称
- * @return {OTemplate}
+ * 注销块级辅助函数
+ * @function
+ * @param  {string} name 名称
+ * @return {this}
  */
 OTemplate.prototype.unblock = function(name) {
   var blocks = this._blockHelpers

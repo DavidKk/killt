@@ -12,6 +12,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch')
   grunt.loadNpmTasks('grunt-karma')
 
+  grunt.loadNpmTasks('grunt-es6-transpiler');
+
   // Configure
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -38,6 +40,14 @@ module.exports = function(grunt) {
     karma: {
       unit: {
         configFile: 'karma.conf.js'
+      }
+    },
+
+    es6transpiler: {
+      dist: {
+        files: {
+          'ww/app.js': 'qq/app.js'
+        }
       }
     },
 

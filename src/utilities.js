@@ -1,18 +1,19 @@
 /**
- * @function inline 所在行
- * @param  {String} str
- * @param  {Number} pos
- * @return {Number}
+ * 获取所在行
+ * @function
+ * @param  {string} str
+ * @param  {number} pos
+ * @return {number}
  */
 function inline(str, pos) {
   return (str.substr(0, pos).match(/\n/g) || []).length +1
 }
 
 /**
- * @function is 判断对象是否为 type 类型
- * @param  {String} type
- * @return {Function}
- *   @param {Anything} elem 要判断的对象
+ * 判断对象是否为 type 类型
+ * @function
+ * @param  {string} type
+ * @return {function}
  */
 function is(type) {
   // 是否未定义
@@ -72,24 +73,25 @@ function is(type) {
 
 
 /**
- * @trim 去除空格
- * @param  {String}     str
- * @return {String}
+ * 去除空格
+ * @trim
+ * @param  {string}     str
+ * @return {string}
  */
 function trim(str) {
   return str.replace(/^\s+|\s+$/, '')
 }
 
 /**
- * @function namespace 查找对象中的属性
- * @param  {String}     query
- * @param  {Object}     space 获取的对象
- * @param  {String}     token 分割 token
- * @return {Anything} 若不存在返回 undefined，若存在则返回该指向的值
- * 
+ * 查找对象中的属性
+ * @function
+ * @param  {string}     query
+ * @param  {object}     space 获取的对象
+ * @param  {string}     token 分割 token
+ * @return {anything}         若不存在返回 undefined，若存在则返回该指向的值
  * @example
- *     {a:{a:{a:{a:1}}}} -> $.namespace('a.a.a.a') -> 1
- *     {a:1}             -> $.namespace('a.a.a.a') -> undefined
+ * {a:{a:{a:{a:1}}}} -> $.namespace('a.a.a.a') -> 1
+ * {a:1}             -> $.namespace('a.a.a.a') -> undefined
  */
 function namespace(query, space, token) {
   if (!is('String')(query)) {
@@ -113,9 +115,10 @@ function namespace(query, space, token) {
 }
 
 /**
- * @function toString 强制转化成字符串
- * @param  {Anything} value 传入的值
- * @return {String}
+ * 强制转化成字符串
+ * @function
+ * @param  {anything} value 传入的值
+ * @return {string}
  */
 function toString(value) {
   if (is('String')(value)) {
@@ -134,9 +137,10 @@ function toString(value) {
 }
 
 /**
- * @function escapeSymbol 转义标点符号
- * @param  {String} a 需要转义的字符串
- * @return {String}
+ * 转义标点符号
+ * @function
+ * @param  {string} a 需要转义的字符串
+ * @return {string}
  */
 function escapeSymbol(a) {
   return a
@@ -146,14 +150,19 @@ function escapeSymbol(a) {
 }
 
 /**
- * @function escapeHTML 转义HTML字符
- * @param  {String} content HTML字符
- * @return {String}
+ * 转义HTML字符
+ * @function
+ * @param  {string} content HTML字符
+ * @return {string}
  */
 function escapeHTML(content) {
   return toString(content).replace(/&(?![\w#]+;)|[<>"']/g, escapeHTML.escapeFn)
 }
 
+/**
+ * 转义资源
+ * @type {Object}
+ */
 escapeHTML.SOURCES = {
   '<': '&lt;',
   '>': '&gt;',
@@ -163,14 +172,20 @@ escapeHTML.SOURCES = {
   '/': '&#x2f;'
 }
 
+/**
+ * 转义函数
+ * @param  {string} name 转义字符
+ * @return {string}
+ */
 escapeHTML.escapeFn = function(name) {
   return escapeHTML.SOURCES[name]
 }
 
 /**
- * @function forEach 遍历数组或对象
- * @param {Array|Object}  a        数组或对象
- * @param {Function}      callback 回调函数
+ * 遍历数组或对象
+ * @function
+ * @param {array|object}  a        数组或对象
+ * @param {function}      callback 回调函数
  */
 function forEach(a, callback) {
   if (is('Function')(callback)) {
@@ -199,9 +214,10 @@ function forEach(a, callback) {
 }
 
 /**
- * @function unique 去重
- * @param  {Array} a 需要去重数组
- * @return {Array}
+ * 去重
+ * @function
+ * @param  {array} a 需要去重数组
+ * @return {array}
  */
 function unique(a) {
   var n = {},
@@ -219,10 +235,11 @@ function unique(a) {
 }
 
 /**
- * @function filter 过滤
- * @param  {Object|Array}   collection  需要过滤的元素
- * @param  {Function}       callback    回调函数
- * @return {Object|Array}
+ * 过滤
+ * @function
+ * @param  {object|Array}   collection  需要过滤的元素
+ * @param  {function}       callback    回调函数
+ * @return {object|Array}
  */
 function filter(collection, callback) {
   var isArr = is('Array')(collection),
@@ -238,10 +255,11 @@ function filter(collection, callback) {
 }
 
 /**
- * @function extend 合并数组或对象
- * @param  {Array|Object} a 数组或对象
- * @param  {Array|Object} b 数组或对象
- * @return {Array|Object} 返回 a 元素
+ * 合并数组或对象
+ * @function
+ * @param  {array|object} a 数组或对象
+ * @param  {array|object} b 数组或对象
+ * @return {array|object} 返回 a 元素
  */
 function extend(a, b) {
   if (arguments.length > 2) {
@@ -263,9 +281,10 @@ function extend(a, b) {
 }
 
 /**
- * @functioninArray 获取元素在数组中所在位置的键值
- * @param  {Anything} value 要获取键值的元素
- * @param  {Array}    array 数组
+ * 获取元素在数组中所在位置的键值
+ * @function
+ * @param  {anything} value 要获取键值的元素
+ * @param  {array}    array 数组
  * @return {Integer}        键值，不存在返回 -1;
  */
 function inArray(value, array) {
@@ -282,8 +301,9 @@ function inArray(value, array) {
 }
 
 /**
- * @function inArrayBy inArray 增强版，获取数组中元素拥有与要查询元素相同的属性值的键值
- * @param  {Object|Integer} var_query 对象或数字(数字用于数组下标)
+ * inArray 增强版，获取数组中元素拥有与要查询元素相同的属性值的键值
+ * @function
+ * @param  {object|Integer} var_query 对象或数字(数字用于数组下标)
  * @return {Integer}                  键值，不存在返回 -1;
  */
 function inArrayBy(var_query, array, index_name) {
@@ -305,9 +325,10 @@ function inArrayBy(var_query, array, index_name) {
 };
 
 /**
- * @function __throw 抛出异常
- * @param  {String|Object} error  错误异常
- * @param  {Boolean}       type   是否捕获事件
+ * 抛出异常
+ * @function
+ * @param  {string|object} error  错误异常
+ * @param  {boolean}       type   是否捕获事件
  */
 function __throw(error, type) {
   type = is('String')(type) ? type : 'log'
@@ -341,17 +362,19 @@ function __throw(error, type) {
 }
 
 /**
- * @function __render 伪渲染函数
- * @return {String}
+ * 伪渲染函数
+ * @function
+ * @return {string}
  */
 function __render() {
   return ''
 }
 
 /**
- * @function UMD
+ * UMD 模块定义
+ * @function
  * @param {windows|global} root
- * @param {Function} factory
+ * @param {function} factory
  */
 function UMD(name, factory, root) {
   'function' === typeof define

@@ -1,7 +1,8 @@
 var fs = require('fs')
 
 /**
- * @function readFile 读取文件
+ * 读取文件
+ * @function
  * @param  {String}   filename 文件名
  * @param  {Function} callback 回调函数
  */
