@@ -25,12 +25,12 @@ describe('Test OTemplate.', function() {
     })
 
     it('should compile the `echo` syntax.', function() {
-      var shell = oTemplate.$compileSyntax('{{@ "Hello world"}}')
+      var shell = oTemplate.$compileSyntax('{{= "Hello world"}}')
       expect(shell).toEqual('<%="Hello world"%>')
     })
 
     it('should compile the `@ aa || bb && cc` in syntax.', function() {
-      var shell = oTemplate.$compileSyntax('{{@ aa || bb && cc}}')
+      var shell = oTemplate.$compileSyntax('{{= aa || bb && cc}}')
       expect(shell).toEqual('<%=aa || bb && cc%>')
     })
 
@@ -158,7 +158,7 @@ describe('Test OTemplate.', function() {
 
       expect(oTemplate._blockHelpers.foreach).toEqual(jasmine.any(Function))
 
-      var view = oTemplate.render('<div>{{foreach 3 : times}}<span>{{@times}} Times.</span>{{/foreach}}</div>')
+      var view = oTemplate.render('<div>{{foreach 3 : times}}<span>{{=times}} Times.</span>{{/foreach}}</div>')
       expect(view).toEqual('<div><span>1 Times.</span><span>2 Times.</span><span>3 Times.</span></div>')
     })
 

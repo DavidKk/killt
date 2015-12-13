@@ -132,6 +132,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    */
   $analyzeSyntax: function (source, compile, origin = '') {
     let tpl = source
+
     if (compile) {
       forEach(this._blocks, function (handle) {
         tpl = tpl.replace(handle.syntax, '')
@@ -141,15 +142,14 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
     // error open or close tag - 语法错误，缺少闭合
     let tagReg   = this.$$compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
         stripTpl = this.$clearSyntax(tpl),
-        pos      = stripTpl.search(tagReg),
-        line
+        pos      = stripTpl.search(tagReg)
 
     if (-1 !== pos) {
-      line = inline(stripTpl, pos)
+      let line = inline(stripTpl, pos)
 
       return {
-        message : '[Syntax Error]: Syntax error in line ' + line + '.',
-        syntax  : this.$$table(origin)
+        message : `[Syntax Error]: Syntax error in line ${line}.`,
+        syntax  : this.$$table(origin, line)
       }
     }
 
@@ -158,12 +158,13 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
         match     = source.match(syntaxReg)
 
     if (match) {
-      pos  = tpl.search(syntaxReg)
-      line = inline(tpl, pos)
+      pos = tpl.search(syntaxReg)
+
+      let line = inline(tpl, pos)
 
       return {
         message : `[Syntax Error]: ${match[0]} did not match any syntax in line ${line}.`,
-        syntax  : this.$$table(tpl)
+        syntax  : this.$$table(tpl, line)
       }
     }
 

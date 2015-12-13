@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>OTemplate</title>
+  <script src="../dist/es5/client/oTemplate.js"></script>
+</head>
+<body>
+<script id="oTemplate" type="text/template">
+{{if title}}
+  <div>{{= title}}</div>
+{{/if}}
+</script>
+<script>
+  var template = oTemplate.renderById('oTemplate', { title: 'Hello World' });
+  console.log(template)
+</script>
+</body>
+</html>

@@ -1,15 +1,15 @@
 ~(function(root) {'use strict'
 /**
- * OTemplate A Template engine for Javascript
+ * A Template engine for Javascript
  * @class
- * @param {Object}    options             配置
- * @param {string}    options.env         [unit, develop, produce]
- * @param {boolean}   options.noSyntax    是否使用使用原生语法
- * @param {boolean}   options.strict      是否通过严格模式编译语法
- * @param {boolean}   options.compress    压缩生成的HTML代码
- * @param {string}    options.openTag     语法的起始标识
- * @param {string}    options.closeTag    语法的结束标识
- * @param {array}     options.depends     追加渲染器的传值设定
+ * @param {Object} options 配置
+ * @param {string} options.env [unit, develop, produce]
+ * @param {boolean} options.noSyntax 是否使用使用原生语法
+ * @param {boolean} options.strict 是否通过严格模式编译语法
+ * @param {boolean} options.compress 压缩生成的HTML代码
+ * @param {string} options.openTag 语法的起始标识
+ * @param {string} options.closeTag 语法的结束标识
+ * @param {Array} options.depends 追加渲染器的传值设定
  */
 class OTemplate {
   /**
@@ -17,7 +17,7 @@ class OTemplate {
    * @function
    * @param {Object} options 配置 (optional)
    */
-  constructor(options = {}) {
+  constructor (options = {}) {
     let self = this
 
     /**
@@ -58,7 +58,7 @@ class OTemplate {
 
     /**
      * event listener - 事件监听方法
-     * @type {array}
+     * @type {Array}
      */
     this._listeners = []
 
@@ -111,7 +111,7 @@ class OTemplate {
    * @param {string} message 错误信息
    * @param {Object} options 配置 (optional)
    */
-  $$throw(message, options = {}) {
+  $$throw (message, options = {}) {
     let conf = extend({}, this.DEFAULTS, options),
         err  = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
 
@@ -127,7 +127,7 @@ class OTemplate {
    * @param {Function} render 渲染函数
    * @returns {Function|OTemplate}
    */
-  $$cache(name, render) {
+  $$cache (name, render) {
     let caches = this._caches
     if (arguments.length > 1) {
       caches[name] = render
@@ -144,7 +144,7 @@ class OTemplate {
    * @param {Function} handle 监听函数
    * @returns {OTemplate}
    */
-  on(type, handle) {
+  on (type, handle) {
     if (is('String')(type) && is('Function')(handle)) {
       this._listeners.push({
         type: type,
@@ -161,7 +161,7 @@ class OTemplate {
    * @param {Function} handle 监听函数
    * @returns {OTemplate}
    */
-  off(handle) {
+  off (handle) {
     if (is('Function')(handle)) {
       let index = inArrayBy(this._listeners, handle, 'handle')
       -1 !== index && this._listeners.splice(index, 1)
@@ -176,7 +176,7 @@ class OTemplate {
    * @param {Function} handle 监听函数
    * @returns {OTempalte}
    */
-  onError(handle) {
+  onError (handle) {
     return this.on('error', handle)
   }
 
@@ -186,7 +186,7 @@ class OTemplate {
    * @param  {Object} options 配置
    * @returns {OTemplate} 新的 OTemplate
    */
-  OTemplate(options) {
+  OTemplate (options) {
     return new OTemplate(options)
   }
 
@@ -196,7 +196,7 @@ class OTemplate {
    * @param {Function} callback 回调
    * @returns {OTemplate}
    */
-  extends(callback) {
+  extends (callback) {
     callback.call(this, this)
     return this
   }
@@ -208,7 +208,7 @@ class OTemplate {
    * @param {*} value 需要配置的值 (optional)
    * @returns {OTemplate|*} 设置则返回 OTemplate,获取则返回相应的配置
    */
-  config(query, value) {
+  config (query, value) {
     if (1 < arguments.length) {
       if (is('String')(query)) {
         if ((query === 'openTag' && query === '<%') || (query === 'closeTag' && query === '%>')) {
@@ -241,7 +241,7 @@ class OTemplate {
    * @param {Function} callback 回调函数
    * @returns {OTemplate|Function}
    */
-  helper(query, callback) {
+  helper (query, callback) {
     if (1 < arguments.length) {
       if (is('String')(query) && is('Function')(callback)) {
         this._helpers[query] = callback
@@ -268,7 +268,7 @@ class OTemplate {
    * @param {string} name 名称
    * @returns {OTemplate}
    */
-  unhelper(name) {
+  unhelper (name) {
     let helpers = this._helpers
     if (helpers.hasOwnProperty(name)) {
       delete helpers[name]
@@ -288,7 +288,7 @@ class OTemplate {
    * 对渲染器造成任何修改；当 overwrite 为 true 的时候，缓存将被刷新，此
    * 时才能真正修改渲染器的配置
    */
-  compile(source, options = {}) {
+  compile (source, options = {}) {
     source = toString(source)
 
     let conf     = extend({}, this.DEFAULTS, options),
@@ -312,8 +312,19 @@ class OTemplate {
    * @param {Object} options 配置 (optional)
    * @returns {string}
    */
-  render(source, data = {}, options = {}) {
+  render (source, data = {}, options = {}) {
     return this.compile(source, options)(data)
+  }
+
+  /**
+   * 扩展库
+   * @function
+   * @param  {Function} _extends_ 扩展方法
+   * @return {OTemplate}
+   */
+  static extend (_extends_) {
+    is('Function')(_extends_) && OTemplate._extends.push(_extends_)
+    return this
   }
 }
 
@@ -321,7 +332,7 @@ class OTemplate {
  * current envirment - 配置环境
  * @type {Object}
  */
-OTemplate.ENV = OTemplate.prototype.ENV = {
+OTemplate.ENV = {
   /** production env - 生产环境 */
   PRODUCE : 1,
   /** develop env - 开发环境 */
@@ -350,7 +361,7 @@ OTemplate.DEFAULTS = {
   /** close tag for syntax - 结束标识 */
   closeTag  : '}}',
   /** addition render arguments (must be use `$` to define variable name) - 追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量) */
-  depends   : []
+  depends   : [],
 }
 
 /**
@@ -359,36 +370,35 @@ OTemplate.DEFAULTS = {
  */
 OTemplate._extends = []
 
-/**
- * 扩展库
- * @function
- * @param  {Function} _extends_ 扩展方法
- * @return {OTemplate}
- */
-OTemplate.extend = function(_extends_) {
-  is('Function')(_extends_) && OTemplate._extends.push(_extends_)
-  return this
-}
-
 ~extend(OTemplate.prototype, {
+  /**
+   * current envirment - 配置环境
+   * @type {Object}
+   */
+  ENV: OTemplate.ENV,
+
   /**
    * add the line number to the string - 给每行开头添加序列号
    * @function
    * @param  {string} str 需要添加序列号的字符串
    * @returns {string}
    */
-  $$table: (function() {
-    return function(string) {
+  $$table: (function () {
+    return function (string, direction, start = direction -3, end = direction +3) {
       let line  = 0,
           match = string.match(/([^\n]*)?\n|([^\n]+)$/g)
 
       if (!match) {
-        return line + ' | ' + string
+        return `${line}|${string}`
       }
 
       let max = match.length
-      return string.replace(/([^\n]*)?\n|([^\n]+)$/g, function($all) {
-        return zeros(++ line, max) + ' | ' + $all
+      return string.replace(/([^\n]*)?\n|([^\n]+)$/g, function ($all) {
+        if (start <= line && line <= end) {
+          return `${line +1 === direction ? '>' : ' '} ${zeros(++ line, max)}|${$all}`
+        }
+
+        return ''
       })
     }
 
@@ -417,7 +427,7 @@ OTemplate.extend = function(_extends_) {
    * @param {Object} options 配置
    * @returns {string}
    */
-  $compileShell: (function() {
+  $compileShell: (function () {
     /**
      * 获取变量名
      * @function
@@ -437,9 +447,7 @@ OTemplate.extend = function(_extends_) {
     }
 
     getVariables.KEYWORDS = [
-      '$scope', '$helpers', '$blocks',
-      '$data', '$buffer', '$runtime',
-      '$append',
+      '$scope', '$helpers', '$blocks', '$data', '$buffer', '$runtime', '$append',
 
       'abstract', 'arguments',
       'break', 'boolean', 'byte',
@@ -461,7 +469,7 @@ OTemplate.extend = function(_extends_) {
       'yield'
     ]
 
-    return function(source, options = {}) {
+    return function (source, options = {}) {
       let origin    = source,
           conf      = this.DEFAULTS,
           isEscape  = is('Boolean')(options.escape) ? options.escape : conf.escape,
@@ -481,7 +489,7 @@ OTemplate.extend = function(_extends_) {
        * @param {string} source HTML
        * @returns {string}
        */
-      let sourceToJs = function(source) {
+      let sourceToJs = function (source) {
         let match
         while (match = /<%source\\s*([\w\W]+?)?\\s*%>(.+?)<%\/source%>/igm.exec(source)) {
           let helperName = match[1]
@@ -491,7 +499,7 @@ OTemplate.extend = function(_extends_) {
             ? _sources_[helperName](str)
             : str
 
-          str = '<%=unescape("' + window.escape(str) + '");%>'
+          str = `<%=unescape('${window.escape(str)}')%>`
           source = source.replace(match[0], str)
         }
 
@@ -504,7 +512,7 @@ OTemplate.extend = function(_extends_) {
        * @param {string} source HTML
        * @returns {string}
        */
-      let htmlToJs = function(source) {
+      let htmlToJs = function (source) {
         source = source
           .replace(/<!--[\w\W]*?-->/g, '')
           .replace(/^ +$/, '')
@@ -524,7 +532,7 @@ OTemplate.extend = function(_extends_) {
             .replace(/\r/g, '\\r')
             .replace(/\n/g, '\\n')
 
-        return '$buffer+="' + source + '";'
+        return `$buffer+='${source}';`
       }
 
       /**
@@ -533,7 +541,7 @@ OTemplate.extend = function(_extends_) {
        * @param {string} source JS shell
        * @returns {string}
        */
-      let shellToJs = function(source) {
+      let shellToJs = function (source) {
         source = trim(source || '')
 
         // analyze and define variables
@@ -562,24 +570,29 @@ OTemplate.extend = function(_extends_) {
 
         // echo
         if (/^=\s*[\w\W]+?\s*$/.exec(source)) {
-          source = '$buffer+=$helpers.$toString(' + source.replace(/[=\s;]/g, '') + ', ' + isEscape + ');'
+          source = `$buffer+=$helpers.$toString(${source.replace(/[=\s;]/g, '')}, ${isEscape});`
         }
         // no escape HTML code
         else if (/^#\s*[\w\W]+?\s*$/.exec(source)) {
-          source = '$buffer+=$helpers.$noescape(' + source.replace(/[#\s;]/g, '') + ');'
+          source = `$buffer+=$helpers.$noescape(${source.replace(/[#\s;]/g, '')});`
         }
         // escape HTML code
         else if (/^!#\s*[\w\W]+?\s*$/.exec(source)) {
-          source = '$buffer+=$helpers.$escape(' + source.replace(/[!#\s;]/g, '') + ');'
+          source = `$buffer+=$helpers.$escape(${source.replace(/[!#\s;]/g, '')});`
         }
         // echo helper
         else if (/^\s*([\w\W]+)\s*\([^\)]*?\)\s*$/.exec(source)) {
-          source = '$buffer+=$helpers.$toString(' + source + ', ' + isEscape + ');'
+          source = `$buffer+=$helpers.$toString(${source}, ${isEscape});`
+        }
+        else {
+          source += ';'
         }
 
-        // save the running line
+        // Save the running line
         line += source.split(/\n|%0A/).length - 1
-        source += (/\)$/.exec(source) ? ';' : '') + '$runtime=' + line +  ';'
+
+        // Must be save the line at first, otherwise the error will break the execution.
+        source = `$runtime=${line};${source}${(/\)$/.exec(source) ? ';' : '')}`
         return source
       }
 
@@ -618,19 +631,21 @@ OTemplate.extend = function(_extends_) {
       buffer = `
         try {
           'use strict';
-          var $scope=this,
-              $helpers=$scope.$helpers,
-              $blocks=$scope.$blocks,
-              $buffer='',
-              $runtime=0;
-          ${buffer};
+          var $scope    = this,
+              $helpers  = $scope.$helpers,
+              $blocks   = $scope.$blocks,
+              $buffer   = '',
+              $runtime  = 0;
+
+          ${buffer}
+
           return $buffer;
         }
         catch (err) {
           throw {
             message : err.message,
             line    : $runtime,
-            shell   : '${escapeSymbol(this.$$table(origin))}'
+            shell   : '${escapeSymbol(origin)}'
           };
         }
 
@@ -660,7 +675,7 @@ OTemplate.extend = function(_extends_) {
    * 外界影响，若要修改 options，则必须重新生成渲染器，
    * 可以设置 options.overwrite 为 true 来覆盖
    */
-  $compile: (function() {
+  $compile: (function () {
     return function(source = '', options = {}) {
       let self    = this,
           origin  = source,
@@ -697,11 +712,11 @@ OTemplate.extend = function(_extends_) {
         try {
           render = new Function(_args_, shell)
         }
-        catch(err) {
+        catch (err) {
           self.$$throw({
             message   : `[Compile Render]: ${err.message}`,
             line      : `Javascript syntax occur error, it can not find out the error line.`,
-            syntax    : origin,
+            syntax    : self.$$table(origin),
             template  : source,
             shell     : shell
           })
@@ -713,17 +728,19 @@ OTemplate.extend = function(_extends_) {
           try {
             return render.apply(scope, [data].concat(args))
           }
-          catch(err) {
+          catch (err) {
             err = extend({}, err, {
-              source: self.$$table(scope.$source)
+              source: self.$$table(scope.$source, err.line)
             })
 
             self.$$throw({
               message   : `[Exec Render]: ${err.message}`,
               line      : err.line,
               template  : err.source,
-              shell     : err.shell
+              shell     : self.$$table(err.shell, err.line)
             })
+
+            return ''
           }
         }
       }
