@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>DocStrap Source: core/utilities.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.paper.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">DocStrap</a>
+	</div>
+	<div class="navbar-collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="OTemplate.html">OTemplate</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#__render">__render</a></li><li><a href="global.html#__throw">__throw</a></li><li><a href="global.html#escapeHTML">escapeHTML</a></li><li><a href="global.html#escapeSymbol">escapeSymbol</a></li><li><a href="global.html#extend">extend</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEach">forEach</a></li><li><a href="global.html#inArray">inArray</a></li><li><a href="global.html#inArrayBy">inArrayBy</a></li><li><a href="global.html#inline">inline</a></li><li><a href="global.html#is">is</a></li><li><a href="global.html#namespace">namespace</a></li><li><a href="global.html#readFile">readFile</a></li><li><a href="global.html#toString">toString</a></li><li><a href="global.html#trim">trim</a></li><li><a href="global.html#UMD">UMD</a></li><li><a href="global.html#unique">unique</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+		<div class="col-sm-3 col-md-3">
+            <form class="navbar-form" role="search">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                    <div class="input-group-btn">
+                        <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+	</div>
+
+</div>
+</div>
+
+
+<div class="container">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: core/utilities.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript linenums">/**
+ * 获取所在行
+ * @function
+ * @param  {string} str
+ * @param  {number} pos
+ * @return {number}
+ */
+function inline(str, pos) {
+  return (str.substr(0, pos).match(/\n/g) || []).length +1
+}
+
+/**
+ * 判断对象是否为 type 类型
+ * @function
+ * @param  {string} type
+ * @return {function}
+ */
+function is(type) {
+  // 是否未定义
+  if ('Undefined' === type) {
+    return function(o) {
+      return 'undefined' === typeof o
+    }
+  }
+
+  // 是否定义
+  if ('Defined' === type) {
+    return function(o) {
+      return 'undefined' !== typeof o
+    }
+  }
+
+  // 是否为一个整数
+  if ('Integer' === type) {
+    return function(o) {
+      var y = parseInt(o, 10)
+      return !isNaN(y) &amp;&amp; o === y &amp;&amp; o.toString() === y.toString()
+    }
+  }
+
+  // 是否为一个纯对象
+  if ('PlainObject' === type) {
+    return function(o) {
+      var ctor,
+          prot
+
+      if (false === is('Object')(o) || is('Undefined')(o)) {
+          return false
+      }
+
+      ctor = o.constructor
+      if ('function' !== typeof ctor) {
+          return false
+      }
+      
+      prot = ctor.prototype;
+      if (false === is('Object')(prot)) {
+          return false
+      }
+      
+      if (false === prot.hasOwnProperty('isPrototypeOf')) {
+          return false
+      }
+      
+      return true
+    }
+  }
+
+  return function(o) {
+    return '[object ' + type + ']' === Object.prototype.toString.call(o)
+  }
+}
+
+
+/**
+ * 去除空格
+ * @trim
+ * @param  {string}     str
+ * @return {string}
+ */
+function trim(str) {
+  return str.replace(/^\s+|\s+$/, '')
+}
+
+/**
+ * 查找对象中的属性
+ * @function
+ * @param  {string}     query
+ * @param  {object}     space 获取的对象
+ * @param  {string}     token 分割 token
+ * @return {anything}         若不存在返回 undefined，若存在则返回该指向的值
+ * @example
+ * {a:{a:{a:{a:1}}}} -> $.namespace('a.a.a.a') -> 1
+ * {a:1}             -> $.namespace('a.a.a.a') -> undefined
+ */
+function namespace(query, space, token) {
+  if (!is('String')(query)) {
+    return undefined
+  }
+
+  var re = space,
+      ns = query.split(token || '.'),
+      i = 0,
+      l = ns.length
+
+  for (; i &lt; l; i ++) {
+    if (is('Undefined')(re[ns[i]])) {
+        return undefined
+    }
+
+    re = re[ns[i]]
+  }
+
+  return is('Undefined')(re) ? undefined : re
+}
+
+/**
+ * 强制转化成字符串
+ * @function
+ * @param  {anything} value 传入的值
+ * @return {string}
+ */
+function toString(value) {
+  if (is('String')(value)) {
+    return value
+  }
+
+  if (is('Number')(value)) {
+    return value += ''
+  }
+
+  if (is('Function')(value)) {
+    return toString(value.call(value))
+  }
+
+  return ''
+}
+
+/**
+ * 转义标点符号
+ * @function
+ * @param  {string} a 需要转义的字符串
+ * @return {string}
+ */
+function escapeSymbol(a) {
+  return a
+    .replace(/("|'|\\)/g, '\\$1')
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n')
+}
+
+/**
+ * 转义HTML字符
+ * @function
+ * @param  {string} content HTML字符
+ * @return {string}
+ */
+function escapeHTML(content) {
+  return toString(content).replace(/&amp;(?![\w#]+;)|[&lt;>"']/g, escapeHTML.escapeFn)
+}
+
+/**
+ * 转义资源
+ * @type {Object}
+ */
+escapeHTML.SOURCES = {
+  '&lt;': '&amp;lt;',
+  '>': '&amp;gt;',
+  '&amp;': '&amp;amp;',
+  '"': '&amp;quot;',
+  "'": '&amp;#x27;',
+  '/': '&amp;#x2f;'
+}
+
+/**
+ * 转义函数
+ * @param  {string} name 转义字符
+ * @return {string}
+ */
+escapeHTML.escapeFn = function(name) {
+  return escapeHTML.SOURCES[name]
+}
+
+/**
+ * 遍历数组或对象
+ * @function
+ * @param {array|object}  a        数组或对象
+ * @param {function}      callback 回调函数
+ */
+function forEach(a, callback) {
+  if (is('Function')(callback)) {
+    var i
+    if (is('Array')(a)) {
+      if (Array.prototype.some) {
+        a.some(callback)
+      }
+      else {
+        var l = a.length
+        for (i = 0; i &lt; l; i ++) {
+          if (true === callback(a[i], i)) {
+            break
+          }
+        }
+      }
+    }
+    else if (is('Object')(a)) {
+      for (i in a) {
+        if (true === callback(a[i], i)) {
+          break
+        }
+      }
+    }
+  }
+}
+
+/**
+ * 去重
+ * @function
+ * @param  {array} a 需要去重数组
+ * @return {array}
+ */
+function unique(a) {
+  var n = {},
+      r = [],
+      i = a.length
+
+  for (;i --;) {
+    if (!n.hasOwnProperty(a[i])) {
+      r.push(a[i])
+      n[a[i]] = 1
+    }
+  }
+
+  return r
+}
+
+/**
+ * 过滤
+ * @function
+ * @param  {object|Array}   collection  需要过滤的元素
+ * @param  {function}       callback    回调函数
+ * @return {object|Array}
+ */
+function filter(collection, callback) {
+  var isArr = is('Array')(collection),
+      res = isArr ? [] : {}
+
+  forEach(collection, function(val, key) {
+    if (callback(val, key)) {
+      res[isArr ? res.length : key] = val
+    }
+  })
+
+  return res
+}
+
+/**
+ * 合并数组或对象
+ * @function
+ * @param  {array|object} a 数组或对象
+ * @param  {array|object} b 数组或对象
+ * @return {array|object} 返回 a 元素
+ */
+function extend(a, b) {
+  if (arguments.length > 2) {
+    a = extend(a, b)
+    var next = Array.prototype.slice.call(arguments, 2, arguments.length)
+    return extend(a, next[0])
+  }
+
+  if (is('Array')(a) &amp;&amp; is('Array')(b)) {
+    Array.prototype.splice.apply(a, [a.length, 0].concat(b))
+  }
+  else if (is('PlainObject')(a) &amp;&amp; is('PlainObject')(b)) {
+    for (var i in b) {
+      a[i] = b[i]
+    }
+  }
+
+  return a
+}
+
+/**
+ * 获取元素在数组中所在位置的键值
+ * @function
+ * @param  {anything} value 要获取键值的元素
+ * @param  {array}    array 数组
+ * @return {Integer}        键值，不存在返回 -1;
+ */
+function inArray(value, array) {
+  if (Array.prototype.indexOf &amp;&amp; is('Function')(array.indexOf)) {
+    return array.indexOf(value)
+  }
+  else {
+    for (var i = 0; i &lt; array.length; i ++) {
+      if (array[i] === value) return i
+    }
+
+    return -1
+  }
+}
+
+/**
+ * inArray 增强版，获取数组中元素拥有与要查询元素相同的属性值的键值
+ * @function
+ * @param  {object|Integer} var_query 对象或数字(数字用于数组下标)
+ * @return {Integer}                  键值，不存在返回 -1;
+ */
+function inArrayBy(var_query, array, index_name) {
+  var index,
+      i = 0,
+      l = array.length
+
+  index = is('Object')(var_query)
+    ? var_query[index_name]
+    : index = var_query
+
+  for (; i &lt; l; i ++) {
+    if (index == array[i][index_name]) {
+      return i
+    }
+  }
+
+  return -1
+};
+
+/**
+ * 抛出异常
+ * @function
+ * @param  {string|object} error  错误异常
+ * @param  {boolean}       type   是否捕获事件
+ */
+function __throw(error, type) {
+  type = is('String')(type) ? type : 'log'
+
+  var message = ''
+  if (is('Object')(error)) {
+    forEach(error, function(value, name) {
+      message += '&lt;' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
+    })
+  }
+  else if (is('String')(error)) {
+    message = error
+  }
+  
+  if ('log' === type) {
+    is('Defined')(console) &amp;&amp; is('Function')(console.error)
+      ? console.error(message)
+      : _throw(message)
+  }
+  else if ('catch' === type) {
+    _throw(message)
+  }
+
+  return message
+
+  function _throw(message) {
+    setTimeout(function() {
+      throw message
+    })
+  }
+}
+
+/**
+ * 伪渲染函数
+ * @function
+ * @return {string}
+ */
+function __render() {
+  return ''
+}
+
+/**
+ * UMD 模块定义
+ * @function
+ * @param {windows|global} root
+ * @param {function} factory
+ */
+function UMD(name, factory, root) {
+  var define = window.define
+
+  // AMD &amp; CMD
+  if ('function' === typeof define) {
+    define(function() {
+      return factory(root)
+    })
+  }
+  // NodeJS
+  else if ('object' === typeof exports) {
+    module.exports = factory(root)
+  }
+  // no module definaction
+  else {
+    root[name] = factory(root)
+  }
+}</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+<div class="modal fade" id="searchResults">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Search results</h4>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>
+
+<footer>
+
+
+	<span class="copyright">
+	DocStrap Copyright © 2012-2015 The contributors to the JSDoc3 and DocStrap projects.
+	</span>
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a>
+	on Sat Dec 12th 2015 using the <a
+	href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+<script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			var id = $( heading ).attr( "id" );
+			return id && id.replace(/\~/g, '-inner-').replace(/\./g, '-static-') || ( prefix + i );
+		},
+		selectors   : "h1,h2,h3,h4",
+		showAndHide : false,
+                navbarOffset: 10,
+		smoothScrolling: true
+	} );
+
+	$( "#toc>ul" ).addClass( "nav nav-pills nav-stacked" );
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		SearcherDisplay.init();
+	});
+</script>
+
+</body>
+</html>

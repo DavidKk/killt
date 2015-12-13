@@ -9,10 +9,10 @@ module.exports = function(config) {
     autoWatch: false,
     singleRun: true,
     frameworks: ['jasmine'],
-    browsers: ['Chrome'],
+    browsers: ['PhantomJS'],
     plugins: [
       'karma-jasmine',
-      'karma-chrome-launcher'
+      'karma-phantomjs-launcher'
     ]
   })
 }

@@ -17,253 +17,254 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
   noSyntax: false
 })
 
-/**
- * 通过配置作为数据来替换模板
- * @function
- * @param  {string} source  模板
- * @param  {Object} data    数据 (optional)，若数据不为 object 则设为默认配置数据
- * @return {string}
- * @description
- * 
- * '<%= openTag %>hi<%= closeTag %>'
- * if my defauts is { openTag: '{{', closeTag: '}}' }
- * the result is '{{hi}}'
- */
-OTemplate.prototype.$$compile = function(source, data) {
-  data = is('PlainObject')(data) ? data : this.DEFAULTS
-  return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, function(all, $1) {
-    return namespace($1, data) || ''
-  })
-}
+~extend(OTemplate.prototype, {
+  /**
+   * 通过配置作为数据来替换模板
+   * @function
+   * @param {string} source 模板
+   * @param {Object} data 数据 (optional)，若数据不为 object 则设为默认配置数据
+   * @returns {string}
+   * @description
+   * 
+   * '<%= openTag %>hi<%= closeTag %>'
+   * if my defauts is { openTag: '{{', closeTag: '}}' }
+   * the result is '{{hi}}'
+   */
+  $$compile: function (source, data) {
+    data = is('PlainObject')(data) ? data : this.DEFAULTS
 
-/**
- * 通过配置作为数据和模板生成 RegExp
- * @function
- * @param   {string}  patternTpl regexp 模板
- * @param   {menu}    attributes {igm}
- * @return  {regexp}
- * @description
- *
- * '<%= openTag %>hi<%= closeTag %>'
- * if my defauts is { openTag: '{{', closeTag: '}}' }
- * replace string to '{{hi}}'
- * the return result is /{{hi}}/
- */
-OTemplate.prototype.$$compileRegexp = function(patternTpl, attributes) {
-  var pattern = this.$$compile(patternTpl)
-  return new RegExp(pattern, attributes)
-}
-
-/**
- * 注册语法
- * @function
- * @param  {string}                      name         语法名称
- * @param  {string|array|object|regexp}  var_syntax   语法正则 (请注意贪婪与贪婪模式)，当为 RegExp时，记得用 openTag 和 closeTag 包裹
- * @param  {string|function}             shell        元脚本, 当为 Function 时记得加上 `<%` 和 `%>` 包裹
- * @return {this}
- * @description
- * '(\\\w+)' will be compiled to /{{(\\\w+)}}/igm
- * but please use the non-greedy regex, and modify it to'(\\\w+)?'
- * eg. when it wants to match '{{aaa}}{{aaa}}', it will match whole string
- * not '{{aaa}}'
- *
- * '(\\\w+)' 将会编译成 /{{\\\w+}}/igm
- * 但是这个正则是贪婪匹配，这样会造成很多匹配错误，我们必须将其改成 '(\\\w+)?'
- * 例如匹配 '{{aaa}}{{aaa}}' 的是否，贪婪匹配会将整个字符串匹配完成，而不是 '{{aaa}}'
- */
-OTemplate.prototype.$registerSyntax = function(name, var_syntax, shell) {
-  var self = this
-
-  if (2 < arguments.length) {
-    this._blocks[name] = {
-      syntax: is('RegExp')(var_syntax) ? var_syntax : this.$$compileRegexp('<%= openTag %>' + var_syntax + '<%= closeTag %>', 'igm'),
-      shell: is('Function')(shell) ? shell : '<%' + this.$$compile(shell) + '%>'
-    }
-  }
-  else if (is('PlainObject')(var_syntax)) {
-    forEach(var_syntax, function(shell, syntax) {
-      self.$registerSyntax(name, syntax, shell)
+    return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, function (all, $1) {
+      return get(data, $1) || ''
     })
-  }
-  else if (is('Array')(var_syntax)) {
-    forEach(var_syntax, function(compiler) {
-      is('String')(compiler.syntax)
-      && is('String')(compiler.shell) || is('Function')(compiler.shell)
-      && self.$registerSyntax(name, compiler.syntax, compiler.shell)
-    })
-  }
+  },
 
-  return this
-}
+  /**
+   * 通过配置作为数据和模板生成 RegExp
+   * @function
+   * @param {string} patternTemplate regexp 模板
+   * @param {menu} attributes {igm}
+   * @returns {regexp}
+   * @description
+   * '<%= openTag %>hi<%= closeTag %>'
+   * if my defauts is { openTag: '{{', closeTag: '}}' }
+   * replace string to '{{hi}}'
+   * the return result is /{{hi}}/
+   */
+  $$compileRegexp: function (patternTemplate, attributes) {
+    let pattern = this.$$compile(patternTemplate)
+    return new RegExp(pattern, attributes)
+  },
 
-/**
- * 销毁语法
- * @function
- * @param  {string}     name 语法名称
- * @return {this}
- */
-OTemplate.prototype.$unregisterSyntax = function(name) {
-  var blocks = this._blocks
-  if (blocks.hasOwnProperty(name)) {
-    delete blocks[name]
-  }
+  /**
+   * 注册语法
+   * @function
+   * @param {string} name 语法名称
+   * @param {string|array|object|regexp} syntax 语法正则 (请注意贪婪与贪婪模式)，当为 RegExp时，记得用 openTag 和 closeTag 包裹
+   * @param {string|function} shell 元脚本, 当为 Function 时记得加上 `<%` 和 `%>` 包裹
+   * @returns {OTemplate}
+   * @description
+   * '(\\\w+)' will be compiled to /{{(\\\w+)}}/igm
+   * but please use the non-greedy regex, and modify it to'(\\\w+)?'
+   * eg. when it wants to match '{{aaa}}{{aaa}}', it will match whole string
+   * not '{{aaa}}'
+   *
+   * '(\\\w+)' 将会编译成 /{{\\\w+}}/igm
+   * 但是这个正则是贪婪匹配，这样会造成很多匹配错误，我们必须将其改成 '(\\\w+)?'
+   * 例如匹配 '{{aaa}}{{aaa}}' 的是否，贪婪匹配会将整个字符串匹配完成，而不是 '{{aaa}}'
+   */
+  $registerSyntax: function (name, syntax, shell) {
+    let self = this
 
-  return this
-}
-
-/**
- * 清除所有语法
- * @function
- * @param  {string} source 语法模板
- * @return {string}
- */
-OTemplate.prototype.$clearSyntax = function(source) {
-  var regexp = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
-  return source.replace(regexp, '')
-}
-
-/**
- * 分析语法是否合格
- * @function
- * @param  {string}   source    语法模板
- * @param  {boolean}  compile   是否需要编译
- * @return {string|boolean}
- */
-OTemplate.prototype.$analyzeSyntax = function(source, compile, origin) {
-  origin  = origin || ''
-  compile = !(false === compile)
-
-  var tpl = source
-
-  if (compile) {
-    forEach(this._blocks, function(handle) {
-      tpl = tpl.replace(handle.syntax, '')
-    })
-  }
-
-  // error open or close tag - 语法错误，缺少闭合
-  var tagReg   = this.$$compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
-      stripTpl = this.$clearSyntax(tpl),
-      pos      = stripTpl.search(tagReg),
-      line
-
-  if (-1 !== pos) {
-    line = inline(stripTpl, pos)
-
-    return {
-      message: '[Syntax Error]: Syntax error in line ' + line + '.',
-      syntax: this.$$table(origin)
-    }
-  }
-
-  // not match any syntax or helper - 语法错误，没有匹配到相关语法
-  var syntaxReg = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
-      match     = source.match(syntaxReg)
-
-  if (match) {
-    pos = tpl.search(syntaxReg)
-    line = inline(tpl, pos)
-
-    return {
-      message: '[Syntax Error]: `' + match[0] + '` did not match any syntax in line ' + line + '.',
-      syntax: this.$$table(tpl)
-    }
-  }
-
-  return true
-}
-
-/**
- * 编译语法模板
- * @function
- * @param  {string}   source  语法模板
- * @param  {boolean}  strict  是否为严格模式,
- *                            若不为 false 编译时会验证语法正确性若不正确则返回空字符串;
- *                            若为 false 模式则会去除所有没有匹配到的语法,
- *                            默认为 true，除 false 之外所有均看成 true
- * @return {string}
- * @example
- * 
- * Strict Mode
- * =============
- * 
- * Template:
- *   {{no-register}}
- *     <div></div>
- *   {{/no-register}}
- *
- * when strict not equal false, it will return '',
- * when strict equal false, it will return '<div></div>'
- */
-OTemplate.prototype.$compileSyntax = function(source, strict) {
-  strict = !(false === strict)
-
-  var origin = source,
-      conf = this.DEFAULTS,
-      valid
-
-  forEach(this._blocks, function(handle) {
-    source = source.replace(handle.syntax, handle.shell)
-  })
-
-  // 检测一下是否存在未匹配语法
-  return strict ? (true === (valid = this.$analyzeSyntax(source, false, origin)) ? source : (this.$$throw(valid) || '')) : this.$clearSyntax(source)
-}
-
-/**
- * 查询/设置块级辅助函数
- * @function
- * @param  {string|object}  var_query 需要查找或设置的函数名|需要设置辅助函数集合
- * @param  {function}       callback  回调函数
- * @return {this|function}
- * @description
- * 只有语法版本才拥有 block 这个概念，原生版本可以通过各种函数达到目的
- */
-OTemplate.prototype.block = function(var_query, callback) {
-  if (1 < arguments.length) {
-    if (is('String')(var_query) && is('Function')(callback)) {
-      this
-        .$registerSyntax(var_query + 'open', '(' + var_query + ')\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3, $4, $5) {
-          return '<%' + $1 + '($append, ' + ($2 ? $2 + ', ' : '') + 'function(' + ($5 || '') + ') {"use strict";var $buffer="";%>'
-        })
-        .$registerSyntax(var_query + 'close', '/' + var_query, 'return $buffer;});')
-        ._blockHelpers[var_query] = function($append) {
-          var args = Array.prototype.splice.call(arguments, 1)
-          $append(callback.apply(this, args))
-        }
-    }
-  }
-  else {
-    if (is('String')(var_query)) {
-      return this._blockHelpers[var_query]
-    }
-
-    if (is('PlainObject')(var_query)) {
-      var name
-      for (name in var_query) {
-        this.block(name, var_query[name])
+    if (2 < arguments.length) {
+      this._blocks[name] = {
+        syntax  : is('RegExp')(syntax) ? syntax : this.$$compileRegexp(`<%= openTag %>${syntax}<%= closeTag %>`, 'igm'),
+        shell   : is('Function')(shell) ? shell : `<%${this.$$compile(shell)}%>`
       }
     }
-  }
+    else if (is('PlainObject')(syntax)) {
+      forEach(syntax, function (shell, syntax) {
+        self.$registerSyntax(name, syntax, shell)
+      })
+    }
+    else if (is('Array')(syntax)) {
+      forEach(syntax, function (compiler) {
+        is('String')(compiler.syntax)
+        && is('String')(compiler.shell) || is('Function')(compiler.shell)
+        && self.$registerSyntax(name, compiler.syntax, compiler.shell)
+      })
+    }
 
-  return this
-}
+    return this
+  },
 
-/**
- * 注销块级辅助函数
- * @function
- * @param  {string} name 名称
- * @return {this}
- */
-OTemplate.prototype.unblock = function(name) {
-  var helpers = this._blockHelpers,
-      blocks  = this._blocks
+  /**
+   * 销毁语法
+   * @function
+   * @param {string} name 语法名称
+   * @returns {OTemplate}
+   */
+  $unregisterSyntax: function (name) {
+    let blocks = this._blocks
+    if (blocks.hasOwnProperty(name)) {
+      delete blocks[name]
+    }
 
-  if (helpers.hasOwnProperty(name)) {
-    delete helpers[name]
-    delete blocks[name + 'open']
-    delete blocks[name + 'close']
-  }
+    return this
+  },
 
-  return this
-}
+  /**
+   * 清除所有语法
+   * @function
+   * @param {string} source 语法模板
+   * @returns {string}
+   */
+  $clearSyntax: function (source) {
+    let regexp = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
+    return source.replace(regexp, '')
+  },
+
+  /**
+   * 分析语法是否合格
+   * @function
+   * @param {string} source 语法模板
+   * @param {boolean} compile 是否需要编译
+   * @returns {string|boolean}
+   */
+  $analyzeSyntax: function (source, compile, origin = '') {
+    let tpl = source
+    if (compile) {
+      forEach(this._blocks, function (handle) {
+        tpl = tpl.replace(handle.syntax, '')
+      })
+    }
+
+    // error open or close tag - 语法错误，缺少闭合
+    let tagReg   = this.$$compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
+        stripTpl = this.$clearSyntax(tpl),
+        pos      = stripTpl.search(tagReg),
+        line
+
+    if (-1 !== pos) {
+      line = inline(stripTpl, pos)
+
+      return {
+        message : '[Syntax Error]: Syntax error in line ' + line + '.',
+        syntax  : this.$$table(origin)
+      }
+    }
+
+    // not match any syntax or helper - 语法错误，没有匹配到相关语法
+    let syntaxReg = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
+        match     = source.match(syntaxReg)
+
+    if (match) {
+      pos  = tpl.search(syntaxReg)
+      line = inline(tpl, pos)
+
+      return {
+        message : `[Syntax Error]: ${match[0]} did not match any syntax in line ${line}.`,
+        syntax  : this.$$table(tpl)
+      }
+    }
+
+    return true
+  },
+
+  /**
+   * 编译语法模板
+   * @function
+   * @param  {string}   source  语法模板
+   * @param  {boolean}  strict  是否为严格模式,
+   *                            若不为 false 编译时会验证语法正确性若不正确则返回空字符串;
+   *                            若为 false 模式则会去除所有没有匹配到的语法,
+   *                            默认为 true，除 false 之外所有均看成 true
+   * @return {string}
+   * @example
+   * 
+   * Strict Mode
+   * =============
+   * 
+   * Template:
+   *   {{no-register}}
+   *     <div></div>
+   *   {{/no-register}}
+   *
+   * when strict not equal false, it will return '',
+   * when strict equal false, it will return '<div></div>'
+   */
+  $compileSyntax: function (source, strict) {
+    strict = !(false === strict)
+
+    var origin  = source,
+        conf    = this.DEFAULTS,
+        valid
+
+    forEach(this._blocks, function (handle) {
+      source = source.replace(handle.syntax, handle.shell)
+    })
+
+    // 检测一下是否存在未匹配语法
+    return strict
+      ? (true === (valid = this.$analyzeSyntax(source, false, origin))
+          ? source
+          : (this.$$throw(valid) || ''))
+      : this.$clearSyntax(source)
+  },
+
+  /**
+   * 查询/设置块级辅助函数
+   * @function
+   * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
+   * @param {function} callback 回调函数
+   * @returns {this|function}
+   * @description
+   * 只有语法版本才拥有 block 这个概念，原生版本可以通过各种函数达到目的
+   */
+  block: function (query, callback) {
+    if (1 < arguments.length) {
+      if (is('String')(query) && is('Function')(callback)) {
+        this
+          .$registerSyntax(`${query}open`, `(${query})\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*`, function ($all, $1, $2, $3, $4, $5) {
+            return `<%${$1}($append, ${$2 ? $2 + ', ' : ''}function (${$5 || ''}) {'use strict';var $buffer='';%>`
+          })
+          .$registerSyntax(`${query}close`, `/${query}`, `return $buffer;});`)
+          ._blockHelpers[query] = function ($append) {
+            let args = Array.prototype.splice.call(arguments, 1)
+            $append(callback.apply(this, args))
+          }
+      }
+    }
+    else {
+      if (is('String')(query)) {
+        return this._blockHelpers[query]
+      }
+
+      if (is('PlainObject')(query)) {
+        for (let name in query) {
+          this.block(name, query[name])
+        }
+      }
+    }
+
+    return this
+  },
+
+  /**
+   * 注销块级辅助函数
+   * @function
+   * @param {string} name 名称
+   * @returns {OTemplate}
+   */
+  unblock: function (name) {
+    let helpers = this._blockHelpers,
+        blocks  = this._blocks
+
+    if (helpers.hasOwnProperty(name)) {
+      delete helpers[name]
+      delete blocks[`${name}open`]
+      delete blocks[`${name}close`]
+    }
+
+    return this
+  },
+})
