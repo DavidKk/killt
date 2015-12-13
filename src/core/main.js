@@ -569,15 +569,15 @@ OTemplate._extends = []
 
         // echo
         if (/^=\s*[\w\W]+?\s*$/.exec(source)) {
-          source = `$buffer+=$helpers.$toString(${source.replace(/[=\s;]/g, '')}, ${isEscape});`
+          source = `$buffer+=$helpers.$toString(${source.replace(/^=|;$/g, '')}, ${isEscape});`
         }
         // no escape HTML code
         else if (/^#\s*[\w\W]+?\s*$/.exec(source)) {
-          source = `$buffer+=$helpers.$noescape(${source.replace(/[#\s;]/g, '')});`
+          source = `$buffer+=$helpers.$noescape(${source.replace(/^#|;$/g, '')});`
         }
         // escape HTML code
         else if (/^!#\s*[\w\W]+?\s*$/.exec(source)) {
-          source = `$buffer+=$helpers.$escape(${source.replace(/[!#\s;]/g, '')});`
+          source = `$buffer+=$helpers.$escape(${source.replace(/^!#|;$/g, '')});`
         }
         // echo helper
         else if (/^\s*([\w\W]+)\s*\([^\)]*?\)\s*$/.exec(source)) {
@@ -629,7 +629,11 @@ OTemplate._extends = []
       // use strict
       buffer = 'try {'
         +        '"use strict";'
-        +        'var $scope=this,$helpers=$scope.$helpers,$blocks=$scope.$blocks,$buffer="",$runtime=0;'
+        +        'var $scope=this,'
+        +        '$helpers=$scope.$helpers,'
+        +        '$blocks=$scope.$blocks,'
+        +        '$buffer="",'
+        +        '$runtime=0;'
         +        buffer
         +        'return $buffer;'
         +      '}'

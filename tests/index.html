@@ -7,12 +7,14 @@
 </head>
 <body>
 <script id="oTemplate" type="text/template">
-{{if title}}
-  <div>{{= title}}</div>
+{{- var action = "Hello"}}
+{{- var name = "World"}}
+{{if action}}
+  <div>{{= action + ' ' + name}}</div>
 {{/if}}
 </script>
 <script>
-  var template = oTemplate.renderById('oTemplate', { title: 'Hello World' });
+  var template = oTemplate.renderById('oTemplate');
   console.log(template)
 </script>
 </body>
