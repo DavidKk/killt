@@ -29,8 +29,8 @@ OTemplate.extend(function() {
   .$registerSyntax('include',   'include\\s*([\\w\\W]+?)\\s*(,\\s*[\\w\\W]+?)?\\s*', function($all, $1, $2) {
     return `<%#include(${$1}${$2 || ', $data'})%>`
   })
-  .$registerSyntax('noescape',  '#\\s*([^|]+?)\\s*', '#$1')
-  .$registerSyntax('escape',    '!#\\s*([^|]+?)\\s*', '!#$1')
+  .$registerSyntax('noescape',  '#\\s*([\\w\\W]+?)\\s*', '#$1')
+  .$registerSyntax('escape',    '!#\\s*([\\w\\W]+?)\\s*', '!#$1')
   .$registerSyntax('helper',    HELPER_SYNTAX, (function() {
     return function($all, $1, $2, $3, $4, $5) {
       let str = format.apply(this, arguments)
@@ -49,7 +49,7 @@ OTemplate.extend(function() {
       return `${$2}(${$1},${$4})`
     }
   })())
-  .$registerSyntax('logic',     '-\\s*(.+?)\\s*', '$1')
+  .$registerSyntax('logic',     '-\\s*([\\w\\W]+?)\\s*', '$1')
 
   ~extend(this._helpers, {
     each: function(data, callback) {

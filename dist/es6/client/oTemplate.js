@@ -384,18 +384,27 @@ OTemplate._extends = []
    * @returns {string}
    */
   $$table: (function () {
-    return function (string, direction, start = direction -3, end = direction +3) {
+    return function (string, direction) {
       let line  = 0,
           match = string.match(/([^\n]*)?\n|([^\n]+)$/g)
 
       if (!match) {
-        return `${line}|${string}`
+        return `> ${line}|${string}`
       }
 
-      let max = match.length
+      let max = match.length,
+          [start, end] = [0, max]
+
+      if (0 < direction && direction < max) {
+        start = direction -3
+        end   = direction +3
+      }
+
       return string.replace(/([^\n]*)?\n|([^\n]+)$/g, function ($all) {
+        ++ line
+
         if (start <= line && line <= end) {
-          return `${line +1 === direction ? '>' : ' '} ${zeros(++ line, max)}|${$all}`
+          return `${line === direction ? '>' : ' '} ${zeros(line, max)}|${$all}`
         }
 
         return ''
@@ -642,7 +651,7 @@ OTemplate._extends = []
         +        'throw {'
         +          'message: err.message,'
         +          'line: $runtime,'
-        +          `shell: '${escapeSymbol(this.$$table(origin))}'`
+        +          `shell: '${escapeSymbol(origin)}'`
         +        '};'
         +      '}'
 
@@ -674,6 +683,8 @@ OTemplate._extends = []
    */
   $compile: (function () {
     return function(source = '', options = {}) {
+      source = trim(source)
+
       let self    = this,
           origin  = source,
           conf    = extend({}, this.DEFAULTS, options),
@@ -1047,8 +1058,8 @@ OTemplate.extend(function() {
   .$registerSyntax('include',   'include\\s*([\\w\\W]+?)\\s*(,\\s*[\\w\\W]+?)?\\s*', function($all, $1, $2) {
     return `<%#include(${$1}${$2 || ', $data'})%>`
   })
-  .$registerSyntax('noescape',  '#\\s*([^|]+?)\\s*', '#$1')
-  .$registerSyntax('escape',    '!#\\s*([^|]+?)\\s*', '!#$1')
+  .$registerSyntax('noescape',  '#\\s*([\\w\\W]+?)\\s*', '#$1')
+  .$registerSyntax('escape',    '!#\\s*([\\w\\W]+?)\\s*', '!#$1')
   .$registerSyntax('helper',    HELPER_SYNTAX, (function() {
     return function($all, $1, $2, $3, $4, $5) {
       let str = format.apply(this, arguments)
@@ -1067,7 +1078,7 @@ OTemplate.extend(function() {
       return `${$2}(${$1},${$4})`
     }
   })())
-  .$registerSyntax('logic',     '-\\s*(.+?)\\s*', '$1')
+  .$registerSyntax('logic',     '-\\s*([\\w\\W]+?)\\s*', '$1')
 
   ~extend(this._helpers, {
     each: function(data, callback) {

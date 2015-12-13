@@ -9,9 +9,18 @@
 <script id="oTemplate" type="text/template">
 {{- var action = "Hello"}}
 {{- var name = "World"}}
+{{- var datas = [
+      { name: 'David' },
+      { name: 'Jones'}
+    ]
+}}
 {{if action}}
   <div>{{= action + ' ' + name}}</div>
 {{/if}}
+
+{{each datas as author}}
+  <div>{{= author.name}}</div>
+{{/each}}
 </script>
 <script>
   var template = oTemplate.renderById('oTemplate');

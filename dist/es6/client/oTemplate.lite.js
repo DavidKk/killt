@@ -384,18 +384,27 @@ OTemplate._extends = []
    * @returns {string}
    */
   $$table: (function () {
-    return function (string, direction, start = direction -3, end = direction +3) {
+    return function (string, direction) {
       let line  = 0,
           match = string.match(/([^\n]*)?\n|([^\n]+)$/g)
 
       if (!match) {
-        return `${line}|${string}`
+        return `> ${line}|${string}`
       }
 
-      let max = match.length
+      let max = match.length,
+          [start, end] = [0, max]
+
+      if (0 < direction && direction < max) {
+        start = direction -3
+        end   = direction +3
+      }
+
       return string.replace(/([^\n]*)?\n|([^\n]+)$/g, function ($all) {
+        ++ line
+
         if (start <= line && line <= end) {
-          return `${line +1 === direction ? '>' : ' '} ${zeros(++ line, max)}|${$all}`
+          return `${line === direction ? '>' : ' '} ${zeros(line, max)}|${$all}`
         }
 
         return ''
@@ -642,7 +651,7 @@ OTemplate._extends = []
         +        'throw {'
         +          'message: err.message,'
         +          'line: $runtime,'
-        +          `shell: '${escapeSymbol(this.$$table(origin))}'`
+        +          `shell: '${escapeSymbol(origin)}'`
         +        '};'
         +      '}'
 
@@ -674,6 +683,8 @@ OTemplate._extends = []
    */
   $compile: (function () {
     return function(source = '', options = {}) {
+      source = trim(source)
+
       let self    = this,
           origin  = source,
           conf    = extend({}, this.DEFAULTS, options),
