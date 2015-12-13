@@ -628,30 +628,23 @@ OTemplate._extends = []
       })
 
       // use strict
-      buffer = (("\
-\n        try {\
-\n          'use strict';\
-\n          var $scope    = this,\
-\n              $helpers  = $scope.$helpers,\
-\n              $blocks   = $scope.$blocks,\
-\n              $buffer   = '',\
-\n              $runtime  = 0;\
-\n\
-\n          " + buffer) + ("\
-\n\
-\n          return $buffer;\
-\n        }\
-\n        catch (err) {\
-\n          throw {\
-\n            message : err.message,\
-\n            line    : $runtime,\
-\n            shell   : '" + (escapeSymbol(origin))) + "'\
-\n          };\
-\n        }\
-\n\
-\n        function $append(buffer) {\
-\n          $buffer+=buffer;\
-\n        }")
+      buffer = 'try {'
+        +        '"use strict";'
+        +        'var $scope=this,$helpers=$scope.$helpers,$blocks=$scope.$blocks,$buffer="",$runtime=0;'
+        +        buffer
+        +        'return $buffer;'
+        +      '}'
+        +      'catch(err) {'
+        +        'throw {'
+        +          'message: err.message,'
+        +          'line: $runtime,'
+        +          (("shell: '" + (escapeSymbol(this.$$table(origin)))) + "'")
+        +        '};'
+        +      '}'
+
+        +      'function $append(buffer) {'
+        +        '$buffer += buffer;'
+        +      '}'
 
       return buffer
     }

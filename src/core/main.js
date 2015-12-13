@@ -627,30 +627,23 @@ OTemplate._extends = []
       })
 
       // use strict
-      buffer = `
-        try {
-          'use strict';
-          var $scope    = this,
-              $helpers  = $scope.$helpers,
-              $blocks   = $scope.$blocks,
-              $buffer   = '',
-              $runtime  = 0;
+      buffer = 'try {'
+        +        '"use strict";'
+        +        'var $scope=this,$helpers=$scope.$helpers,$blocks=$scope.$blocks,$buffer="",$runtime=0;'
+        +        buffer
+        +        'return $buffer;'
+        +      '}'
+        +      'catch(err) {'
+        +        'throw {'
+        +          'message: err.message,'
+        +          'line: $runtime,'
+        +          `shell: '${escapeSymbol(this.$$table(origin))}'`
+        +        '};'
+        +      '}'
 
-          ${buffer}
-
-          return $buffer;
-        }
-        catch (err) {
-          throw {
-            message : err.message,
-            line    : $runtime,
-            shell   : '${escapeSymbol(origin)}'
-          };
-        }
-
-        function $append(buffer) {
-          $buffer+=buffer;
-        }`
+        +      'function $append(buffer) {'
+        +        '$buffer += buffer;'
+        +      '}'
 
       return buffer
     }
