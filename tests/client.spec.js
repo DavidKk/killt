@@ -233,7 +233,7 @@ describe('Test OTemplate In Client.', function() {
         </script>'
 
       oTemplate.onError(function(error, message) {
-        console.log(error)
+        console.log(message)
       })
 
       oTemplate.renderById('/template/debug/a.html')

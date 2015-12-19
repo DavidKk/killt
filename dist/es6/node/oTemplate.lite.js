@@ -114,7 +114,7 @@ class OTemplate {
    */
   _throw (error, options = {}) {
     let conf    = extend({}, this.DEFAULTS, options),
-        message = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
+        message = __throw(error, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
 
     forEach(this._listeners, function(listener) {
       'error' === listener.type && listener.handle(error, message)
