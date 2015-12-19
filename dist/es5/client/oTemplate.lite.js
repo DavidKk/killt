@@ -443,7 +443,7 @@ OTemplate._extends = []
      * @param {string} source Shell
      * @returns {Array}
      */
-    function getVariables (source) {
+    var getVariables = function (source) {
       var variables = source
             .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
             .replace(/[^\w$]+/g, ',')
@@ -478,7 +478,7 @@ OTemplate._extends = []
       'yield'
     ]
 
-    return function (source) {var options = arguments[1];if(options === void 0)options = {};
+    return function () {var source = arguments[0];if(source === void 0)source = '';var options = arguments[1];if(options === void 0)options = {};
       var origin    = source,
           conf      = this.DEFAULTS,
           isEscape  = is('Boolean')(options.escape) ? options.escape : conf.escape,
@@ -513,6 +513,25 @@ OTemplate._extends = []
         }
 
         return source
+      }
+
+      /**
+       * 删除所有字符串中的标签
+       * @function
+       * @param  {string} source HTML
+       * @return {string}
+       */
+      var cleanTagsFromString = function (source) {
+        var cleanTags = function ($all, $1, $2, $3) {
+          return (("" + $1) + ("" + ($2.replace(new RegExp(("<%|%>"), 'gim'), function ($all) {
+            return $all.replace(new RegExp((("(" + ($all.split('').join('|'))) + ")"), 'gim'), '\\$1')
+          }))) + ("" + $3) + "")
+        }
+
+        return source
+          .replace(new RegExp(("(\')([\\w\\W]+?)(\')"), 'gim'), cleanTags)
+          .replace(new RegExp(("(\")([\\w\\W]+?)(\")"), 'gim'), cleanTags)
+          .replace(new RegExp(("(`)([\\w\\W]+?)(`)"), 'gim'), cleanTags)
       }
 
       /**
@@ -605,7 +624,8 @@ OTemplate._extends = []
         return source
       }
 
-      source = is('String')(source) ? sourceToJs(source) : ''
+      source = sourceToJs(source)
+      source = cleanTagsFromString(source)
 
       forEach(source.split('<%'), function(code) {
         code = code.split('%>')

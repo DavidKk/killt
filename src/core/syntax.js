@@ -196,12 +196,54 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
   $compileSyntax: function (source, strict) {
     strict = !(false === strict)
 
-    var origin  = source,
-        conf    = this.DEFAULTS,
-        valid
+    let [origin, conf, blocks, valid] = [source, this.DEFAULTS, this._blocks]
 
-    forEach(this._blocks, function (handle) {
-      source = source.replace(handle.syntax, handle.shell)
+    /**
+     * 删除所有字符串中的标签
+     * @function
+     * @param  {string} source HTML
+     * @return {string}
+     */
+    let clearTagsFromString = function (source) {
+      let clearTags = function ($all, $1, $2, $3) {
+        return `${$1}${$2.replace(new RegExp(`${conf.openTag}|${conf.closeTag}`, 'gim'), function ($all) {
+          return $all.replace(new RegExp(`(${$all.split('').join('|')})`, 'gim'), '\\$1')
+        })}${$3}`
+      }
+
+      return source
+        .replace(new RegExp(`(\')([\\w\\W]+?)(\')`, 'gim'), clearTags)
+        .replace(new RegExp(`(\")([\\w\\W]+?)(\")`, 'gim'), clearTags)
+        .replace(new RegExp(`(\`)([\\w\\W]+?)(\`)`, 'gim'), clearTags)
+    }
+
+    source = clearTagsFromString(source)
+
+    /**
+     * 分割标签，这样可以将所有正则都匹配每一个标签而不是整个字符串。
+     * 若匹配整个字符串容易出现多余匹配问题。
+     *
+     * split tags, because regexp may match all the string.
+     * it can make every regexp match each string between tags(openTag & closeTag)
+     */
+    forEach(source.split(conf.openTag), function(code) {
+      let codes = code.split(conf.closeTag)
+
+      if (1 !== codes.length) {
+        source = source.replace(`${conf.openTag}${codes[0]}${conf.closeTag}`, function($all) {
+          let string = $all
+
+          forEach(blocks, function (handle) {
+            let str = string.replace(handle.syntax, handle.shell)
+            if (str !== string) {
+              string = str
+              return true
+            }
+          })
+
+          return string
+        })
+      }
     })
 
     // 检测一下是否存在未匹配语法
