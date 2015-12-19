@@ -1128,7 +1128,7 @@ function __throw (error, type) {
 
   if (is('Object')(error)) {
     forEach(error, function (value, name) {
-      message += (("<" + (name.substr(0, 1).toUpperCase())) + ("" + (name.substr(1))) + (">\n" + value) + "\n\n")
+      message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
     })
   }
   else if (is('String')(error)) {

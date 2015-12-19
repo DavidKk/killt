@@ -48,11 +48,11 @@
     "engine",
     "javascript"
   ],
-  "_release": "072ff513d8",
+  "_release": "8f49e1158a",
   "_resolution": {
     "type": "branch",
     "branch": "master",
-    "commit": "072ff513d8d7974d4b7cc6a35bbcd88034c398c6"
+    "commit": "8f49e1158a45b6b62fa6db48d4044c68ef0c23af"
   },
   "_source": "git://github.com/DavidKk/oTemplate.git",
   "_target": "master",
