@@ -8,10 +8,10 @@
 
 ```
 <script id="/template/basic.html" type="template/text">
-  <h1>{{@title}}</h1>
+  <h1>{{= title}}</h1>
   <ul>
       {{each list as value, index}}
-          <li>{{@index}} ：{{@value}}</li>
+          <li>{{= index}} ：{{= value}}</li>
       {{/each}}
   </ul>
 </script>
@@ -38,10 +38,10 @@ oTemplate.renderById('/template/basic.html', {
 
 ```
 <script id="/template/compile.html" type="template/text">
-  <h1>{{@title}}</h1>
+  <h1>{{= title}}</h1>
   <ul>
       {{each list as value, index}}
-          <li>{{@index}} ：{{@value}}</li>
+          <li>{{= index}} ：{{= value}}</li>
       {{/each}}
   </ul>
 </script>
@@ -67,19 +67,19 @@ render({
 
 ```
 <script id="/template/include.html" type="template/text">
-  <h1>{{@title}}</h1>
+  <h1>{{= title}}</h1>
   {{include "/template/include/a.html", $data}}
 </script>
 
 <script id="/template/include/a.html" type="template/text">
-  <h3>{{@subTitle}}</h3>
+  <h3>{{= subTitle}}</h3>
   {{include "/template/include/b.html", $data}}
 </script>
 
 <script id="/template/include/b.html" type="template/text">
   <ul>
       {{each list as value, index}}
-          <li>{{@index}} ：{{@value}}</li>
+          <li>{{= index}} ：{{= value}}</li>
       {{/each}}
   </ul>
 </script>
@@ -106,7 +106,7 @@ oTemplate.renderById('/template/include.html', {
 
 ```
 <script id="/template/helper.html" type="template/text">
-  <h1>{{@title}}</h1>
+  <h1>{{= title}}</h1>
   <p>{{'Me?' | love}}</p>
   <p>{{'U' | love}}</p>
 </script>
@@ -135,9 +135,9 @@ document.body.innerHTML = oTemplate.renderById('/template/helper.html', {
 
 ```
 <script id="/template/noescape.html" type="template/text">
-  <h1>{{@title}}</h1>
+  <h1>{{= title}}</h1>
   <h4>默认 escape = true</h4>
-  <p>{{@noescapeContent}}</p>
+  <p>{{= noescapeContent}}</p>
   <h4>不转义</h4>
   <p>{{#escapeContent}}</p>
   <h4>强制转义</h4>
@@ -189,10 +189,10 @@ oTemplate.renderById('/template/noescape.html', {
 
 ```
 <!-- /templates/ajax-1.html -->
-<h1>{{@title}}</h1>
+<h1>{{= title}}</h1>
 <ul>
     {{each list as value, index}}
-        <li>{{@index}} ：{{@value}}</li>
+        <li>{{= index}} ：{{= value}}</li>
     {{/each}}    
 </ul>
 ```
@@ -220,7 +220,7 @@ function(html) {
 
 ```
 <script id="/template/debug/a.html" type="template/text">
-  <h1>{{@title</h1>
+  <h1>{{= title</h1>
   <p>{{#content}}</p>
 </script>
 

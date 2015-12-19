@@ -14,10 +14,10 @@
 ## Syntax Version/简洁写法
 
 ```
-<h1>{{@title}}</h1>
+<h1>{{= title}}</h1>
 <ul>
   {{each list as value, index}}
-    <li>{{@index}}: {{@value}}</li>
+    <li>{{= index}}: {{= value}}</li>
   {{/each}}
 </ul>
 ```

@@ -37,10 +37,10 @@ bower install oTemplate
 ```
 # Template In HTML
 <script id="templates/list/default.html" type="template/text">
-  <h1>{{@title}}</h1>
+  <h1>{{= title}}</h1>
   <ul>
       {{each list as value index}}
-          <li>{{@index}}: {{@value}}</li>
+          <li>{{= index}}: {{= value}}</li>
       {{\/each}}
   </ul>
 </script>
