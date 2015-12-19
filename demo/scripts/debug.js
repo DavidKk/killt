@@ -4,6 +4,7 @@ window.onload = function() {
   oTemplate.onError(function(error, message) {
     message = oTemplate.helper('$escape')(message)
     document.body.innerHTML += message.replace(/\n/g, '<br>')
+    console.log && console.log(message)
   })
 
   oTemplate.renderById('/template/debug/a.html')
