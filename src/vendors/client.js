@@ -23,7 +23,7 @@ OTemplate.extend(function() {
     templateId = toString(templateId)
 
     let conf   = extend({}, this._defaults, options, { filename: templateId }),
-        render = true === conf.overwrite || this.$$cache(templateId)
+        render = true === conf.overwrite || this._cache(templateId)
 
     if (is('Function')(render)) {
       return render
@@ -33,7 +33,7 @@ OTemplate.extend(function() {
 
     return node
       ? this.compile(node.innerHTML, conf)
-      : (this.$$throw({
+      : (this._throw({
           message: `[Compile Template]: Template ID {templateId} is not found.`
         }),
         __render)
@@ -66,7 +66,7 @@ OTemplate.extend(function() {
 
     let self   = this,
         conf   = extend({}, this._defaults, options),
-        render = true === conf.overwrite || this.$$cache(sourceUrl)
+        render = true === conf.overwrite || this._cache(sourceUrl)
 
     if (is('Function')(render)) {
       callback(render)
@@ -88,14 +88,14 @@ OTemplate.extend(function() {
 
         let __return = function() {
           render = self.$compile(origin)
-          self.$$cache(sourceUrl, render)
+          self._cache(sourceUrl, render)
           callback(render)
           total = undefined
         }
 
         if (total > 0) {
           forEach(unique(requires), function(file) {
-            if (self.$$cache(file)) {
+            if (self._cache(file)) {
               __exec()
             }
             else {
@@ -195,7 +195,7 @@ OTemplate.extend(function() {
         response  : `[Reponse State]: ${this.status}`
       }
 
-      self.$$throw(err)
+      self._throw(err)
       is('Function')(errorCallback) && errorCallback(err)
       errorCallback = undefined
     }
@@ -206,7 +206,7 @@ OTemplate.extend(function() {
         filename  : sourceUrl
       }
 
-      self.$$throw(err)
+      self._throw(err)
       is('Function')(errorCallback) && errorCallback(err)
       errorCallback = undefined
     }
@@ -217,7 +217,7 @@ OTemplate.extend(function() {
         filename  : sourceUrl
       }
 
-      self.$$throw(err)
+      self._throw(err)
       is('Function')(errorCallback) && errorCallback(err)
       errorCallback = undefined
     }

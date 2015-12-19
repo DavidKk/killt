@@ -86,7 +86,7 @@ class OTemplate {
             node = document.getElementById(filename)
 
         if (node) {
-          self.$$throw({
+          self._throw({
             message: `[Include Error]: Template ID ${filename} is not found.`
           })
 
@@ -107,11 +107,12 @@ class OTemplate {
 
   /**
    * 抛出错误
+   * @private
    * @function
    * @param {string} message 错误信息
    * @param {Object} options 配置 (optional)
    */
-  $$throw (message, options = {}) {
+  _throw (message, options = {}) {
     let conf = extend({}, this.DEFAULTS, options),
         err  = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
 
@@ -122,12 +123,13 @@ class OTemplate {
 
   /**
    * 获取或设置缓存方法
+   * @private
    * @function
    * @param {string} name 方法名称
    * @param {Function} render 渲染函数
    * @returns {Function|OTemplate}
    */
-  $$cache (name, render) {
+  _cache (name, render) {
     let caches = this._caches
     if (arguments.length > 1) {
       caches[name] = render
@@ -293,14 +295,14 @@ class OTemplate {
 
     let conf     = extend({}, this.DEFAULTS, options),
         filename = conf.filename,
-        render   = true === conf.overwrite || this.$$cache(filename)
+        render   = true === conf.overwrite || this._cache(filename)
 
     if (is('Function')(render)) {
       return render
     }
 
     render = this.$compile(source, conf)
-    is('String')(filename) && this.$$cache(filename, render)
+    is('String')(filename) && this._cache(filename, render)
     return render
   }
 
@@ -379,11 +381,12 @@ OTemplate._extends = []
 
   /**
    * add the line number to the string - 给每行开头添加序列号
+   * @private
    * @function
    * @param  {string} str 需要添加序列号的字符串
    * @returns {string}
    */
-  $$table: (function () {
+  _table: (function () {
     return function (string, direction) {
       let line  = 0,
           match = string.match(/([^\n]*)?\n|([^\n]+)$/g)
@@ -741,10 +744,10 @@ OTemplate._extends = []
           render = new Function(_args_, shell)
         }
         catch (err) {
-          self.$$throw({
+          self._throw({
             message   : `[Compile Render]: ${err.message}`,
             line      : `Javascript syntax occur error, it can not find out the error line.`,
-            syntax    : self.$$table(origin),
+            syntax    : self._table(origin),
             template  : source,
             shell     : shell
           })
@@ -758,14 +761,14 @@ OTemplate._extends = []
           }
           catch (err) {
             err = extend({}, err, {
-              source: self.$$table(scope.$source, err.line)
+              source: self._table(scope.$source, err.line)
             })
 
-            self.$$throw({
+            self._throw({
               message   : `[Exec Render]: ${err.message}`,
               line      : err.line,
               template  : err.source,
-              shell     : self.$$table(err.shell, err.line)
+              shell     : self._table(err.shell, err.line)
             })
 
             return ''
@@ -808,7 +811,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * if my defauts is { openTag: '{{', closeTag: '}}' }
    * the result is '{{hi}}'
    */
-  $$compile: function (source, data) {
+  _compile: function (source, data) {
     data = is('PlainObject')(data) ? data : this.DEFAULTS
 
     return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, function (all, $1) {
@@ -828,8 +831,8 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * replace string to '{{hi}}'
    * the return result is /{{hi}}/
    */
-  $$compileRegexp: function (patternTemplate, attributes) {
-    let pattern = this.$$compile(patternTemplate)
+  _compileRegexp: function (patternTemplate, attributes) {
+    let pattern = this._compile(patternTemplate)
     return new RegExp(pattern, attributes)
   },
 
@@ -855,8 +858,8 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
 
     if (2 < arguments.length) {
       this._blocks[name] = {
-        syntax  : is('RegExp')(syntax) ? syntax : this.$$compileRegexp(`<%= openTag %>${syntax}<%= closeTag %>`, 'igm'),
-        shell   : is('Function')(shell) ? shell : `<%${this.$$compile(shell)}%>`
+        syntax  : is('RegExp')(syntax) ? syntax : this._compileRegexp(`<%= openTag %>${syntax}<%= closeTag %>`, 'igm'),
+        shell   : is('Function')(shell) ? shell : `<%${this._compile(shell)}%>`
       }
     }
     else if (is('PlainObject')(syntax)) {
@@ -897,7 +900,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * @returns {string}
    */
   $clearSyntax: function (source) {
-    let regexp = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
+    let regexp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
     return source.replace(regexp, '')
   },
 
@@ -918,7 +921,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
     }
 
     // error open or close tag - 语法错误，缺少闭合
-    let tagReg   = this.$$compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
+    let tagReg   = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
         stripTpl = this.$clearSyntax(tpl),
         pos      = stripTpl.search(tagReg)
 
@@ -927,12 +930,12 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
 
       return {
         message : `[Syntax Error]: Syntax error in line ${line}.`,
-        syntax  : this.$$table(origin, line)
+        syntax  : this._table(origin, line)
       }
     }
 
     // not match any syntax or helper - 语法错误，没有匹配到相关语法
-    let syntaxReg = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
+    let syntaxReg = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
         match     = source.match(syntaxReg)
 
     if (match) {
@@ -942,7 +945,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
 
       return {
         message : `[Syntax Error]: ${match[0]} did not match any syntax in line ${line}.`,
-        syntax  : this.$$table(tpl, line)
+        syntax  : this._table(tpl, line)
       }
     }
 
@@ -1028,7 +1031,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
     return strict
       ? (true === (valid = this.$analyzeSyntax(source, false, origin))
           ? source
-          : (this.$$throw(valid) || ''))
+          : (this._throw(valid) || ''))
       : this.$clearSyntax(source)
   },
 
@@ -1102,9 +1105,9 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
  */
 OTemplate.extend(function() {
   let HELPER_SYNTAX       = '(=|-|!|#|!#)?\\s*([^|]+?(?:\\s*(?:\\|\\||\\&\\&)\\s*[^|]+?)*)\\s*\\|\\s*([^:\\|]+?)\\s*(?:\\:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?',
-      HELPER_REGEXP       = this.$$compileRegexp(HELPER_SYNTAX),
+      HELPER_REGEXP       = this._compileRegexp(HELPER_SYNTAX),
       HELPER_INNER_SYNTAX = '\\s*([\\w\\W]+?\\s*\\\([\\w\\W]+?\\\))\\s*\\|\\s*([^:]+?)\\s*(:\\s*([^\\|]+?))?$',
-      HELPER_INNER_REGEXP = this.$$compileRegexp(HELPER_INNER_SYNTAX)
+      HELPER_INNER_REGEXP = this._compileRegexp(HELPER_INNER_SYNTAX)
 
   this
   .$registerSyntax('echo',      '=\\s*([\\w\\W]+?)\\s*', '=$1')
@@ -1173,7 +1176,7 @@ OTemplate.extend(function() {
     templateId = toString(templateId)
 
     let conf   = extend({}, this._defaults, options, { filename: templateId }),
-        render = true === conf.overwrite || this.$$cache(templateId)
+        render = true === conf.overwrite || this._cache(templateId)
 
     if (is('Function')(render)) {
       return render
@@ -1183,7 +1186,7 @@ OTemplate.extend(function() {
 
     return node
       ? this.compile(node.innerHTML, conf)
-      : (this.$$throw({
+      : (this._throw({
           message: `[Compile Template]: Template ID {templateId} is not found.`
         }),
         __render)
@@ -1216,7 +1219,7 @@ OTemplate.extend(function() {
 
     let self   = this,
         conf   = extend({}, this._defaults, options),
-        render = true === conf.overwrite || this.$$cache(sourceUrl)
+        render = true === conf.overwrite || this._cache(sourceUrl)
 
     if (is('Function')(render)) {
       callback(render)
@@ -1238,14 +1241,14 @@ OTemplate.extend(function() {
 
         let __return = function() {
           render = self.$compile(origin)
-          self.$$cache(sourceUrl, render)
+          self._cache(sourceUrl, render)
           callback(render)
           total = undefined
         }
 
         if (total > 0) {
           forEach(unique(requires), function(file) {
-            if (self.$$cache(file)) {
+            if (self._cache(file)) {
               __exec()
             }
             else {
@@ -1345,7 +1348,7 @@ OTemplate.extend(function() {
         response  : `[Reponse State]: ${this.status}`
       }
 
-      self.$$throw(err)
+      self._throw(err)
       is('Function')(errorCallback) && errorCallback(err)
       errorCallback = undefined
     }
@@ -1356,7 +1359,7 @@ OTemplate.extend(function() {
         filename  : sourceUrl
       }
 
-      self.$$throw(err)
+      self._throw(err)
       is('Function')(errorCallback) && errorCallback(err)
       errorCallback = undefined
     }
@@ -1367,7 +1370,7 @@ OTemplate.extend(function() {
         filename  : sourceUrl
       }
 
-      self.$$throw(err)
+      self._throw(err)
       is('Function')(errorCallback) && errorCallback(err)
       errorCallback = undefined
     }

@@ -30,7 +30,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * if my defauts is { openTag: '{{', closeTag: '}}' }
    * the result is '{{hi}}'
    */
-  $$compile: function (source, data) {
+  _compile: function (source, data) {
     data = is('PlainObject')(data) ? data : this.DEFAULTS
 
     return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, function (all, $1) {
@@ -50,8 +50,8 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * replace string to '{{hi}}'
    * the return result is /{{hi}}/
    */
-  $$compileRegexp: function (patternTemplate, attributes) {
-    let pattern = this.$$compile(patternTemplate)
+  _compileRegexp: function (patternTemplate, attributes) {
+    let pattern = this._compile(patternTemplate)
     return new RegExp(pattern, attributes)
   },
 
@@ -77,8 +77,8 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
 
     if (2 < arguments.length) {
       this._blocks[name] = {
-        syntax  : is('RegExp')(syntax) ? syntax : this.$$compileRegexp(`<%= openTag %>${syntax}<%= closeTag %>`, 'igm'),
-        shell   : is('Function')(shell) ? shell : `<%${this.$$compile(shell)}%>`
+        syntax  : is('RegExp')(syntax) ? syntax : this._compileRegexp(`<%= openTag %>${syntax}<%= closeTag %>`, 'igm'),
+        shell   : is('Function')(shell) ? shell : `<%${this._compile(shell)}%>`
       }
     }
     else if (is('PlainObject')(syntax)) {
@@ -119,7 +119,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * @returns {string}
    */
   $clearSyntax: function (source) {
-    let regexp = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
+    let regexp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
     return source.replace(regexp, '')
   },
 
@@ -140,7 +140,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
     }
 
     // error open or close tag - 语法错误，缺少闭合
-    let tagReg   = this.$$compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
+    let tagReg   = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
         stripTpl = this.$clearSyntax(tpl),
         pos      = stripTpl.search(tagReg)
 
@@ -149,12 +149,12 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
 
       return {
         message : `[Syntax Error]: Syntax error in line ${line}.`,
-        syntax  : this.$$table(origin, line)
+        syntax  : this._table(origin, line)
       }
     }
 
     // not match any syntax or helper - 语法错误，没有匹配到相关语法
-    let syntaxReg = this.$$compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
+    let syntaxReg = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
         match     = source.match(syntaxReg)
 
     if (match) {
@@ -164,7 +164,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
 
       return {
         message : `[Syntax Error]: ${match[0]} did not match any syntax in line ${line}.`,
-        syntax  : this.$$table(tpl, line)
+        syntax  : this._table(tpl, line)
       }
     }
 
@@ -250,7 +250,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
     return strict
       ? (true === (valid = this.$analyzeSyntax(source, false, origin))
           ? source
-          : (this.$$throw(valid) || ''))
+          : (this._throw(valid) || ''))
       : this.$clearSyntax(source)
   },
 

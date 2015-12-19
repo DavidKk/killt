@@ -11,9 +11,9 @@
  */
 OTemplate.extend(function() {
   let HELPER_SYNTAX       = '(=|-|!|#|!#)?\\s*([^|]+?(?:\\s*(?:\\|\\||\\&\\&)\\s*[^|]+?)*)\\s*\\|\\s*([^:\\|]+?)\\s*(?:\\:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?',
-      HELPER_REGEXP       = this.$$compileRegexp(HELPER_SYNTAX),
+      HELPER_REGEXP       = this._compileRegexp(HELPER_SYNTAX),
       HELPER_INNER_SYNTAX = '\\s*([\\w\\W]+?\\s*\\\([\\w\\W]+?\\\))\\s*\\|\\s*([^:]+?)\\s*(:\\s*([^\\|]+?))?$',
-      HELPER_INNER_REGEXP = this.$$compileRegexp(HELPER_INNER_SYNTAX)
+      HELPER_INNER_REGEXP = this._compileRegexp(HELPER_INNER_SYNTAX)
 
   this
   .$registerSyntax('echo',      '=\\s*([\\w\\W]+?)\\s*', '=$1')
