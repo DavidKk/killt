@@ -1,7 +1,7 @@
 window.onload = function() {
   oTemplate.config('env', oTemplate.ENV.UNIT)
 
-  oTemplate.onError(function(message) {
+  oTemplate.onError(function(error, message) {
     message = oTemplate.helper('$escape')(message)
     document.body.innerHTML += message.replace(/\n/g, '<br>')
   })
