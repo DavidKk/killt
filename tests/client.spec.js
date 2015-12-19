@@ -232,8 +232,8 @@ describe('Test OTemplate In Client.', function() {
           <div>{{"error helper" | helper}}</div>\
         </script>'
 
-      oTemplate.onError(function(message) {
-        console.log(message)
+      oTemplate.onError(function(error, message) {
+        console.log(error)
       })
 
       oTemplate.renderById('/template/debug/a.html')

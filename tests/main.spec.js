@@ -29,14 +29,14 @@ describe('Test OTemplate.', function() {
       expect(shell).toEqual('<%="Hello world"%>')
     })
 
-    it('should compile the `@ aa || bb && cc` in syntax.', function() {
+    it('should compile the `= aa || bb && cc` in syntax.', function() {
       var shell = oTemplate.$compileSyntax('{{= aa || bb && cc}}')
       expect(shell).toEqual('<%=aa || bb && cc%>')
     })
 
     it('should compile the `if` syntax.', function() {
       var shell = oTemplate.$compileSyntax('{{if 1}}\n<div></div>\n{{else if 1}}\n<div></div>\n{{else}}\n<div></div>\n{{/if}}')
-      expect(shell).toEqual('<%if(1) {%>\n<div></div>\n<%} else if(1) {%>\n<div></div>\n<%} else {%>\n<div></div>\n<%}%>')
+      expect(shell).toEqual('<%if (1) {%>\n<div></div>\n<%} else if (1) {%>\n<div></div>\n<%} else {%>\n<div></div>\n<%}%>')
     })
 
     it('should allow compile `each` syntax.', function() {
@@ -97,13 +97,13 @@ describe('Test OTemplate.', function() {
       ].join('\n'))
 
       expect(shell).toEqual([
-        '<%if(1) {%>',
+        '<%if (1) {%>',
           '<%each(data, function(value, key) {%>',
             '<div><%#include("/templates/index.html", data)%></div>',
           '<%})%>',
-        '<%} else if(1) {%>',
+        '<%} else if (1) {%>',
           '<div><%#toString(1)%></div>',
-        '<%} else if(1) {%>',
+        '<%} else if (1) {%>',
           '<div></div>',
         '<%} else {%>',
           '<div><%helper(value,a,b,c)%></div>',

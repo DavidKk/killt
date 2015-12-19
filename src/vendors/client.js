@@ -23,7 +23,7 @@ OTemplate.extend(function() {
     templateId = toString(templateId)
 
     let conf   = extend({}, this._defaults, options, { filename: templateId }),
-        render = true === conf.overwrite || this._cache(templateId)
+        render = true === conf.override || this._cache(templateId)
 
     if (is('Function')(render)) {
       return render
@@ -34,7 +34,7 @@ OTemplate.extend(function() {
     return node
       ? this.compile(node.innerHTML, conf)
       : (this._throw({
-          message: `[Compile Template]: Template ID {templateId} is not found.`
+          message: `[Compile Template]: Template ID ${templateId} is not found.`
         }),
         __render)
   },
@@ -66,13 +66,13 @@ OTemplate.extend(function() {
 
     let self   = this,
         conf   = extend({}, this._defaults, options),
-        render = true === conf.overwrite || this._cache(sourceUrl)
+        render = true === conf.override || this._cache(sourceUrl)
 
     if (is('Function')(render)) {
       callback(render)
     }
     else {
-      this.getSourceByAjax(sourceUrl, function(source) {
+      this.getSourceByAjax(sourceUrl, function (source) {
         source = self.$compileSyntax(source, !!conf.strict)
 
         let [origin, requires, match] = [source, []]
@@ -82,11 +82,11 @@ OTemplate.extend(function() {
         }
 
         let total = requires.length
-        let __exec = function() {
+        let __exec = function () {
           0 >= (-- total) && __return()
         }
 
-        let __return = function() {
+        let __return = function () {
           render = self.$compile(origin)
           self._cache(sourceUrl, render)
           callback(render)
@@ -94,17 +94,17 @@ OTemplate.extend(function() {
         }
 
         if (total > 0) {
-          forEach(unique(requires), function(file) {
+          forEach(unique(requires), function (file) {
             if (self._cache(file)) {
               __exec()
             }
             else {
-              let childSource = findChildTpl(file, origin)
+              let childSource = findChildTemplate(file, origin)
 
               if (childSource) {
                 self.compile(childSource, {
                   filename: file,
-                  overwrite: false
+                  override: !!conf.override
                 })
 
                 __exec()
@@ -115,14 +115,14 @@ OTemplate.extend(function() {
                 if (node) {
                   self.compile(node.innerHTML, {
                     filename: file,
-                    overwrite: false
+                    override: !!conf.override
                   })
 
                   __exec()
                 }
                 else {
                   self.compileByAjax(file, __exec, extend(conf, {
-                    overwrite: false
+                    override: !!conf.override
                   }))
                 }
               }
@@ -135,7 +135,7 @@ OTemplate.extend(function() {
       })
     }
 
-    function findChildTpl (templateId, source) {
+    function findChildTemplate (templateId, source) {
       let node = document.createElement('div')
       node.innerHTML = source
 

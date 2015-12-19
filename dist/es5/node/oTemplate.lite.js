@@ -109,15 +109,15 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
    * 抛出错误
    * @private
    * @function
-   * @param {string} message 错误信息
+   * @param {Object} error 错误信息
    * @param {Object} options 配置 (optional)
    */
-  proto$0._throw = function (message) {var options = arguments[1];if(options === void 0)options = {};
-    var conf = extend({}, this.DEFAULTS, options),
-        err  = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
+  proto$0._throw = function (error) {var options = arguments[1];if(options === void 0)options = {};
+    var conf    = extend({}, this.DEFAULTS, options),
+        message = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
 
     forEach(this._listeners, function(listener) {
-      'error' === listener.type && listener.handle(err)
+      'error' === listener.type && listener.handle(error, message)
     })
   };
 
@@ -286,8 +286,8 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
    * @param {Object} options 配置
    * @returns {Function}
    * @description
-   * 当渲染器已经被缓存的情况下，options 除 overwrite 外的所有属性均不会
-   * 对渲染器造成任何修改；当 overwrite 为 true 的时候，缓存将被刷新，此
+   * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
+   * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
    * 时才能真正修改渲染器的配置
    */
   proto$0.compile = function (source) {var options = arguments[1];if(options === void 0)options = {};
@@ -295,7 +295,7 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
 
     var conf     = extend({}, this.DEFAULTS, options),
         filename = conf.filename,
-        render   = true === conf.overwrite || this._cache(filename)
+        render   = true === conf.override || this._cache(filename)
 
     if (is('Function')(render)) {
       return render
@@ -697,12 +697,12 @@ OTemplate._extends = []
    * Render and it's options will be cached together,
    * and they can not be modified by any operation.
    * If you want to replace or modify the options, u
-   * must compile it again. And u can use options.overwrite
-   * to overwrite it.
+   * must compile it again. And u can use options.override
+   * to override it.
    * 
    * 渲染器的 options 将与渲染器一起缓存起来，且不会被
    * 外界影响，若要修改 options，则必须重新生成渲染器，
-   * 可以设置 options.overwrite 为 true 来覆盖
+   * 可以设置 options.override 为 true 来覆盖
    */
   $compile: (function () {
     return function() {var source = arguments[0];if(source === void 0)source = '';var options = arguments[1];if(options === void 0)options = {};
@@ -844,7 +844,7 @@ function is (type) {
         return true
 
       default:
-        return '[object ' + type + ']' === Object.prototype.toString.call(value)
+        return (("[object " + type) + "]") === Object.prototype.toString.call(value)
     }
   }
 }
@@ -1120,9 +1120,15 @@ function extend () {var SLICE$0 = Array.prototype.slice;var args = SLICE$0.call(
 function __throw (error, type) {
   var message = ''
 
+  var _throw = function (message) {
+    setTimeout(function () {
+      throw message
+    })
+  }
+
   if (is('Object')(error)) {
     forEach(error, function (value, name) {
-      message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
+      message += (("<" + (name.substr(0, 1).toUpperCase())) + ("" + (name.substr(1))) + (">\n" + value) + "\n\n")
     })
   }
   else if (is('String')(error)) {
@@ -1139,12 +1145,6 @@ function __throw (error, type) {
   }
 
   return message
-
-  function _throw (message) {
-    setTimeout(function () {
-      throw message
-    })
-  }
 }
 
 /**
@@ -1163,7 +1163,7 @@ function __render () {
  * @param {Function} factory
  */
 function UMD (name, factory, root) {
-  var define = (module = [window.define, factory(root)])[0], module = module[1]
+  var define = (module = [root.define, factory(root)])[0], module = module[1]
 
   // AMD & CMD
   if (is('Function')(define)) {

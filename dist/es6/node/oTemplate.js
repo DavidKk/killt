@@ -109,15 +109,15 @@ class OTemplate {
    * 抛出错误
    * @private
    * @function
-   * @param {string} message 错误信息
+   * @param {Object} error 错误信息
    * @param {Object} options 配置 (optional)
    */
-  _throw (message, options = {}) {
-    let conf = extend({}, this.DEFAULTS, options),
-        err  = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
+  _throw (error, options = {}) {
+    let conf    = extend({}, this.DEFAULTS, options),
+        message = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
 
     forEach(this._listeners, function(listener) {
-      'error' === listener.type && listener.handle(err)
+      'error' === listener.type && listener.handle(error, message)
     })
   }
 
@@ -286,8 +286,8 @@ class OTemplate {
    * @param {Object} options 配置
    * @returns {Function}
    * @description
-   * 当渲染器已经被缓存的情况下，options 除 overwrite 外的所有属性均不会
-   * 对渲染器造成任何修改；当 overwrite 为 true 的时候，缓存将被刷新，此
+   * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
+   * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
    * 时才能真正修改渲染器的配置
    */
   compile (source, options = {}) {
@@ -295,7 +295,7 @@ class OTemplate {
 
     let conf     = extend({}, this.DEFAULTS, options),
         filename = conf.filename,
-        render   = true === conf.overwrite || this._cache(filename)
+        render   = true === conf.override || this._cache(filename)
 
     if (is('Function')(render)) {
       return render
@@ -697,12 +697,12 @@ OTemplate._extends = []
    * Render and it's options will be cached together,
    * and they can not be modified by any operation.
    * If you want to replace or modify the options, u
-   * must compile it again. And u can use options.overwrite
-   * to overwrite it.
+   * must compile it again. And u can use options.override
+   * to override it.
    * 
    * 渲染器的 options 将与渲染器一起缓存起来，且不会被
    * 外界影响，若要修改 options，则必须重新生成渲染器，
-   * 可以设置 options.overwrite 为 true 来覆盖
+   * 可以设置 options.override 为 true 来覆盖
    */
   $compile: (function () {
     return function(source = '', options = {}) {
@@ -1110,23 +1110,7 @@ OTemplate.extend(function() {
       HELPER_INNER_REGEXP = this._compileRegexp(HELPER_INNER_SYNTAX)
 
   this
-  .$registerSyntax('echo',      '=\\s*([\\w\\W]+?)\\s*', '=$1')
-  .$registerSyntax('logic',     '-\\s*([\\w\\W]+?)\\s*', '$1')
-  .$registerSyntax('noescape',  '#\\s*([^|]+?)\\s*', '#$1')
-  .$registerSyntax('escape',    '!#\\s*([^|]+?)\\s*', '!#$1')
-  .$registerSyntax('ifopen',    'if\\s*(.+?)\\s*', 'if($1) {')
-  .$registerSyntax('else',      'else', '} else {')
-  .$registerSyntax('elseif',    'else\\s*if\\s*(.+?)\\s*', '} else if($1) {')
-  .$registerSyntax('ifclose',   '\\/if', '}')
-  .$registerSyntax('eachopen',  'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', function($all, $1, $2, $3, $4) {
-    let string = `each(${$1}, function(${$3 || '$value'}${$4 || ', $index'}) {`
-    return `<%${string}%>`
-  })
-  .$registerSyntax('eachclose', '\\/each', '})')
-  .$registerSyntax('include',   'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3) {
-    return `<%#include(${$1}, ${$3 || '$data'})%>`
-  })
-  .$registerSyntax('helper',    HELPER_SYNTAX, (function() {
+  .$registerSyntax('helper',    HELPER_SYNTAX,              (function() {
     return function($all, $1, $2, $3, $4, $5) {
       let str = format.apply(this, arguments)
       while (HELPER_INNER_REGEXP.exec(str)) {
@@ -1144,6 +1128,22 @@ OTemplate.extend(function() {
       return `${$2}(${$1},${$4})`
     }
   })())
+  .$registerSyntax('echo',      '=\\s*([\\w\\W]+?)\\s*',    '=$1')
+  .$registerSyntax('logic',     '-\\s*([\\w\\W]+?)\\s*',    '$1')
+  .$registerSyntax('noescape',  '#\\s*([\\w\\W]+?)\\s*',    '#$1')
+  .$registerSyntax('escape',    '!#\\s*([\\w\\W]+?)\\s*',   '!#$1')
+  .$registerSyntax('ifopen',    'if\\s*(.+?)\\s*',          'if ($1) {')
+  .$registerSyntax('else',      'else',                     '} else {')
+  .$registerSyntax('elseif',    'else\\s*if\\s*(.+?)\\s*',  '} else if ($1) {')
+  .$registerSyntax('ifclose',   '\\/if',                    '}')
+  .$registerSyntax('eachopen',  'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', function($all, $1, $2, $3, $4) {
+    let string = `each(${$1}, function(${$3 || '$value'}${$4 || ', $index'}) {`
+    return `<%${string}%>`
+  })
+  .$registerSyntax('eachclose', '\\/each',                  '})')
+  .$registerSyntax('include',   'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3) {
+    return `<%#include(${$1}, ${$3 || '$data'})%>`
+  })
 
   ~extend(this._helpers, {
     each: function(data, callback) {
@@ -1216,7 +1216,7 @@ function is (type) {
         return true
 
       default:
-        return '[object ' + type + ']' === Object.prototype.toString.call(value)
+        return `[object ${type}]` === Object.prototype.toString.call(value)
     }
   }
 }
@@ -1492,9 +1492,15 @@ function extend (...args) {
 function __throw (error, type) {
   let message = ''
 
+  let _throw = function (message) {
+    setTimeout(function () {
+      throw message
+    })
+  }
+
   if (is('Object')(error)) {
     forEach(error, function (value, name) {
-      message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
+      message += `<${name.substr(0, 1).toUpperCase()}${name.substr(1)}>\n${value}\n\n`
     })
   }
   else if (is('String')(error)) {
@@ -1511,12 +1517,6 @@ function __throw (error, type) {
   }
 
   return message
-
-  function _throw (message) {
-    setTimeout(function () {
-      throw message
-    })
-  }
 }
 
 /**
@@ -1535,7 +1535,7 @@ function __render () {
  * @param {Function} factory
  */
 function UMD (name, factory, root) {
-  let [define, module] = [window.define, factory(root)]
+  let [define, module] = [root.define, factory(root)]
 
   // AMD & CMD
   if (is('Function')(define)) {

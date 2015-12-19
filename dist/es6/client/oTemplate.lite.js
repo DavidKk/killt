@@ -109,15 +109,15 @@ class OTemplate {
    * 抛出错误
    * @private
    * @function
-   * @param {string} message 错误信息
+   * @param {Object} error 错误信息
    * @param {Object} options 配置 (optional)
    */
-  _throw (message, options = {}) {
-    let conf = extend({}, this.DEFAULTS, options),
-        err  = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
+  _throw (error, options = {}) {
+    let conf    = extend({}, this.DEFAULTS, options),
+        message = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
 
     forEach(this._listeners, function(listener) {
-      'error' === listener.type && listener.handle(err)
+      'error' === listener.type && listener.handle(error, message)
     })
   }
 
@@ -286,8 +286,8 @@ class OTemplate {
    * @param {Object} options 配置
    * @returns {Function}
    * @description
-   * 当渲染器已经被缓存的情况下，options 除 overwrite 外的所有属性均不会
-   * 对渲染器造成任何修改；当 overwrite 为 true 的时候，缓存将被刷新，此
+   * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
+   * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
    * 时才能真正修改渲染器的配置
    */
   compile (source, options = {}) {
@@ -295,7 +295,7 @@ class OTemplate {
 
     let conf     = extend({}, this.DEFAULTS, options),
         filename = conf.filename,
-        render   = true === conf.overwrite || this._cache(filename)
+        render   = true === conf.override || this._cache(filename)
 
     if (is('Function')(render)) {
       return render
@@ -697,12 +697,12 @@ OTemplate._extends = []
    * Render and it's options will be cached together,
    * and they can not be modified by any operation.
    * If you want to replace or modify the options, u
-   * must compile it again. And u can use options.overwrite
-   * to overwrite it.
+   * must compile it again. And u can use options.override
+   * to override it.
    * 
    * 渲染器的 options 将与渲染器一起缓存起来，且不会被
    * 外界影响，若要修改 options，则必须重新生成渲染器，
-   * 可以设置 options.overwrite 为 true 来覆盖
+   * 可以设置 options.override 为 true 来覆盖
    */
   $compile: (function () {
     return function(source = '', options = {}) {
@@ -804,7 +804,7 @@ OTemplate.extend(function() {
     templateId = toString(templateId)
 
     let conf   = extend({}, this._defaults, options, { filename: templateId }),
-        render = true === conf.overwrite || this._cache(templateId)
+        render = true === conf.override || this._cache(templateId)
 
     if (is('Function')(render)) {
       return render
@@ -815,7 +815,7 @@ OTemplate.extend(function() {
     return node
       ? this.compile(node.innerHTML, conf)
       : (this._throw({
-          message: `[Compile Template]: Template ID {templateId} is not found.`
+          message: `[Compile Template]: Template ID ${templateId} is not found.`
         }),
         __render)
   },
@@ -847,13 +847,13 @@ OTemplate.extend(function() {
 
     let self   = this,
         conf   = extend({}, this._defaults, options),
-        render = true === conf.overwrite || this._cache(sourceUrl)
+        render = true === conf.override || this._cache(sourceUrl)
 
     if (is('Function')(render)) {
       callback(render)
     }
     else {
-      this.getSourceByAjax(sourceUrl, function(source) {
+      this.getSourceByAjax(sourceUrl, function (source) {
         source = self.$compileSyntax(source, !!conf.strict)
 
         let [origin, requires, match] = [source, []]
@@ -863,11 +863,11 @@ OTemplate.extend(function() {
         }
 
         let total = requires.length
-        let __exec = function() {
+        let __exec = function () {
           0 >= (-- total) && __return()
         }
 
-        let __return = function() {
+        let __return = function () {
           render = self.$compile(origin)
           self._cache(sourceUrl, render)
           callback(render)
@@ -875,17 +875,17 @@ OTemplate.extend(function() {
         }
 
         if (total > 0) {
-          forEach(unique(requires), function(file) {
+          forEach(unique(requires), function (file) {
             if (self._cache(file)) {
               __exec()
             }
             else {
-              let childSource = findChildTpl(file, origin)
+              let childSource = findChildTemplate(file, origin)
 
               if (childSource) {
                 self.compile(childSource, {
                   filename: file,
-                  overwrite: false
+                  override: !!conf.override
                 })
 
                 __exec()
@@ -896,14 +896,14 @@ OTemplate.extend(function() {
                 if (node) {
                   self.compile(node.innerHTML, {
                     filename: file,
-                    overwrite: false
+                    override: !!conf.override
                   })
 
                   __exec()
                 }
                 else {
                   self.compileByAjax(file, __exec, extend(conf, {
-                    overwrite: false
+                    override: !!conf.override
                   }))
                 }
               }
@@ -916,7 +916,7 @@ OTemplate.extend(function() {
       })
     }
 
-    function findChildTpl (templateId, source) {
+    function findChildTemplate (templateId, source) {
       let node = document.createElement('div')
       node.innerHTML = source
 
@@ -1057,7 +1057,7 @@ function is (type) {
         return true
 
       default:
-        return '[object ' + type + ']' === Object.prototype.toString.call(value)
+        return `[object ${type}]` === Object.prototype.toString.call(value)
     }
   }
 }
@@ -1333,9 +1333,15 @@ function extend (...args) {
 function __throw (error, type) {
   let message = ''
 
+  let _throw = function (message) {
+    setTimeout(function () {
+      throw message
+    })
+  }
+
   if (is('Object')(error)) {
     forEach(error, function (value, name) {
-      message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
+      message += `<${name.substr(0, 1).toUpperCase()}${name.substr(1)}>\n${value}\n\n`
     })
   }
   else if (is('String')(error)) {
@@ -1352,12 +1358,6 @@ function __throw (error, type) {
   }
 
   return message
-
-  function _throw (message) {
-    setTimeout(function () {
-      throw message
-    })
-  }
 }
 
 /**
@@ -1376,7 +1376,7 @@ function __render () {
  * @param {Function} factory
  */
 function UMD (name, factory, root) {
-  let [define, module] = [window.define, factory(root)]
+  let [define, module] = [root.define, factory(root)]
 
   // AMD & CMD
   if (is('Function')(define)) {

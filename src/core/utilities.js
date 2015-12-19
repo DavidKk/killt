@@ -48,7 +48,7 @@ function is (type) {
         return true
 
       default:
-        return '[object ' + type + ']' === Object.prototype.toString.call(value)
+        return `[object ${type}]` === Object.prototype.toString.call(value)
     }
   }
 }
@@ -324,9 +324,15 @@ function extend (...args) {
 function __throw (error, type) {
   let message = ''
 
+  let _throw = function (message) {
+    setTimeout(function () {
+      throw message
+    })
+  }
+
   if (is('Object')(error)) {
     forEach(error, function (value, name) {
-      message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
+      message += `<${name.substr(0, 1).toUpperCase()}${name.substr(1)}>\n${value}\n\n`
     })
   }
   else if (is('String')(error)) {
@@ -343,12 +349,6 @@ function __throw (error, type) {
   }
 
   return message
-
-  function _throw (message) {
-    setTimeout(function () {
-      throw message
-    })
-  }
 }
 
 /**
@@ -367,7 +367,7 @@ function __render () {
  * @param {Function} factory
  */
 function UMD (name, factory, root) {
-  let [define, module] = [window.define, factory(root)]
+  let [define, module] = [root.define, factory(root)]
 
   // AMD & CMD
   if (is('Function')(define)) {

@@ -108,15 +108,15 @@ class OTemplate {
    * 抛出错误
    * @private
    * @function
-   * @param {string} message 错误信息
+   * @param {Object} error 错误信息
    * @param {Object} options 配置 (optional)
    */
-  _throw (message, options = {}) {
-    let conf = extend({}, this.DEFAULTS, options),
-        err  = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
+  _throw (error, options = {}) {
+    let conf    = extend({}, this.DEFAULTS, options),
+        message = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
 
     forEach(this._listeners, function(listener) {
-      'error' === listener.type && listener.handle(err)
+      'error' === listener.type && listener.handle(error, message)
     })
   }
 
@@ -285,8 +285,8 @@ class OTemplate {
    * @param {Object} options 配置
    * @returns {Function}
    * @description
-   * 当渲染器已经被缓存的情况下，options 除 overwrite 外的所有属性均不会
-   * 对渲染器造成任何修改；当 overwrite 为 true 的时候，缓存将被刷新，此
+   * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
+   * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
    * 时才能真正修改渲染器的配置
    */
   compile (source, options = {}) {
@@ -294,7 +294,7 @@ class OTemplate {
 
     let conf     = extend({}, this.DEFAULTS, options),
         filename = conf.filename,
-        render   = true === conf.overwrite || this._cache(filename)
+        render   = true === conf.override || this._cache(filename)
 
     if (is('Function')(render)) {
       return render
@@ -696,12 +696,12 @@ OTemplate._extends = []
    * Render and it's options will be cached together,
    * and they can not be modified by any operation.
    * If you want to replace or modify the options, u
-   * must compile it again. And u can use options.overwrite
-   * to overwrite it.
+   * must compile it again. And u can use options.override
+   * to override it.
    * 
    * 渲染器的 options 将与渲染器一起缓存起来，且不会被
    * 外界影响，若要修改 options，则必须重新生成渲染器，
-   * 可以设置 options.overwrite 为 true 来覆盖
+   * 可以设置 options.override 为 true 来覆盖
    */
   $compile: (function () {
     return function(source = '', options = {}) {
