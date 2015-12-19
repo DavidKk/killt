@@ -114,7 +114,7 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
    */
   proto$0._throw = function (error) {var options = arguments[1];if(options === void 0)options = {};
     var conf    = extend({}, this.DEFAULTS, options),
-        message = __throw(message, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
+        message = __throw(error, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
 
     forEach(this._listeners, function(listener) {
       'error' === listener.type && listener.handle(error, message)
