@@ -998,7 +998,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
         .replace(new RegExp(`(\`)([\\w\\W]+?)(\`)`, 'gim'), clearTags)
     }
 
-    source = clearTagsFromString(source)
+    // source = clearTagsFromString(source)
 
     /**
      * 分割标签，这样可以将所有正则都匹配每一个标签而不是整个字符串。
@@ -1091,7 +1091,8 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
 
     return this
   },
-});
+})
+;
 /**
  * Simple Syntax Defination - 定义简单语法
  * @description
