@@ -628,7 +628,7 @@ OTemplate._extends = []
       }
 
       source = sourceToJs(source)
-      source = cleanTagsFromString(source)
+      // source = cleanTagsFromString(source)
 
       forEach(source.split('<%'), function(code) {
         code = code.split('%>')
