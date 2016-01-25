@@ -1,6 +1,6 @@
 /**
  * Exports Module
  */
-UMD('oTemplate', function() {
-  return new OTemplate()
+UMD('Bone', function() {
+  return new Bone()
 }, root)

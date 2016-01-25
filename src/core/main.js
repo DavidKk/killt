@@ -10,7 +10,7 @@
  * @param {string} options.closeTag 语法的结束标识
  * @param {Array} options.depends 追加渲染器的传值设定
  */
-class OTemplate {
+class Bone {
   /**
    * 构造函数
    * @function
@@ -62,7 +62,7 @@ class OTemplate {
     this._listeners = []
 
     // set the config - 设置配置
-    ~extend(this.DEFAULTS, OTemplate.DEFAULTS, options)
+    ~extend(this.DEFAULTS, Bone.DEFAULTS, options)
 
     // set any helpers - 设置基础辅助函数
     ~extend(this._helpers, {
@@ -97,8 +97,8 @@ class OTemplate {
     })
 
     // set any syntax - 设置语法
-    if (is('Array')(OTemplate._extends)) {
-      forEach(OTemplate._extends, function(_extends_) {
+    if (is('Array')(Bone._extends)) {
+      forEach(Bone._extends, function(_extends_) {
         self.extends(_extends_)
       })
     }
@@ -113,7 +113,7 @@ class OTemplate {
    */
   _throw (error, options = {}) {
     let conf    = extend({}, this.DEFAULTS, options),
-        message = __throw(error, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
+        message = __throw(error, conf.env === Bone.ENV.UNIT ? 'null' : 'log')
 
     forEach(this._listeners, function(listener) {
       'error' === listener.type && listener.handle(error, message)
@@ -126,7 +126,7 @@ class OTemplate {
    * @function
    * @param {string} name 方法名称
    * @param {Function} render 渲染函数
-   * @returns {Function|OTemplate}
+   * @returns {Function|Bone}
    */
   _cache (name, render) {
     let caches = this._caches
@@ -143,7 +143,7 @@ class OTemplate {
    * @function
    * @param {string} type 监听类型
    * @param {Function} handle 监听函数
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   on (type, handle) {
     if (is('String')(type) && is('Function')(handle)) {
@@ -160,7 +160,7 @@ class OTemplate {
    * 撤销监听事件
    * @function
    * @param {Function} handle 监听函数
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   off (handle) {
     if (is('Function')(handle)) {
@@ -182,20 +182,20 @@ class OTemplate {
   }
 
   /**
-   * 生成一个新的 OTemplate 制作对象
+   * 生成一个新的 Bone 制作对象
    * @function
    * @param  {Object} options 配置
-   * @returns {OTemplate} 新的 OTemplate
+   * @returns {Bone} 新的 Bone
    */
-  OTemplate (options) {
-    return new OTemplate(options)
+  Bone (options) {
+    return new Bone(options)
   }
 
   /**
-   * 扩展 OTemplate
+   * 扩展 Bone
    * @function
    * @param {Function} callback 回调
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   extends (callback) {
     callback.call(this, this)
@@ -207,7 +207,7 @@ class OTemplate {
    * @function
    * @param {string|Object} query 设置/获取的配置值名称
    * @param {*} value 需要配置的值 (optional)
-   * @returns {OTemplate|*} 设置则返回 OTemplate,获取则返回相应的配置
+   * @returns {Bone|*} 设置则返回 Bone,获取则返回相应的配置
    */
   config (query, value) {
     if (1 < arguments.length) {
@@ -240,7 +240,7 @@ class OTemplate {
    * @function
    * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
    * @param {Function} callback 回调函数
-   * @returns {OTemplate|Function}
+   * @returns {Bone|Function}
    */
   helper (query, callback) {
     if (1 < arguments.length) {
@@ -267,7 +267,7 @@ class OTemplate {
    * 注销辅助函数
    * @function
    * @param {string} name 名称
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   unhelper (name) {
     let helpers = this._helpers
@@ -321,10 +321,10 @@ class OTemplate {
    * 扩展库
    * @function
    * @param  {Function} _extends_ 扩展方法
-   * @return {OTemplate}
+   * @return {Bone}
    */
   static extend (_extends_) {
-    is('Function')(_extends_) && OTemplate._extends.push(_extends_)
+    is('Function')(_extends_) && Bone._extends.push(_extends_)
     return this
   }
 }
@@ -333,7 +333,7 @@ class OTemplate {
  * current envirment - 配置环境
  * @type {Object}
  */
-OTemplate.ENV = {
+Bone.ENV = {
   /** production env - 生产环境 */
   PRODUCE : 1,
   /** develop env - 开发环境 */
@@ -346,9 +346,9 @@ OTemplate.ENV = {
  * default options - 默认配置
  * @type {Object}
  */
-OTemplate.DEFAULTS = {
+Bone.DEFAULTS = {
   /** current entironment - 当前环境 [unit, develop, produce] */
-  env       : OTemplate.ENV.PRODUCE,
+  env       : Bone.ENV.PRODUCE,
   /** is use native syntax/是否使用使用原生语法 */
   noSyntax  : false,
   /** compile syntax in strict mode - 是否通过严格模式编译语法 */
@@ -369,14 +369,14 @@ OTemplate.DEFAULTS = {
  * extens plugins - 扩展集合
  * @type {Array}
  */
-OTemplate._extends = []
+Bone._extends = []
 
-~extend(OTemplate.prototype, {
+~extend(Bone.prototype, {
   /**
    * current envirment - 配置环境
    * @type {Object}
    */
-  ENV: OTemplate.ENV,
+  ENV: Bone.ENV,
 
   /**
    * add the line number to the string - 给每行开头添加序列号

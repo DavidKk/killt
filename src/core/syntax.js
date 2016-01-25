@@ -13,11 +13,11 @@
  * 1. 正则表达式之间最好不要具有优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
-OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
+Bone.DEFAULTS = extend(Bone.DEFAULTS, {
   noSyntax: false
 })
 
-~extend(OTemplate.prototype, {
+~extend(Bone.prototype, {
   /**
    * 通过配置作为数据来替换模板
    * @function
@@ -61,7 +61,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * @param {string} name 语法名称
    * @param {string|array|object|regexp} syntax 语法正则 (请注意贪婪与贪婪模式)，当为 RegExp时，记得用 openTag 和 closeTag 包裹
    * @param {string|function} shell 元脚本, 当为 Function 时记得加上 `<%` 和 `%>` 包裹
-   * @returns {OTemplate}
+   * @returns {Bone}
    * @description
    * '(\\\w+)' will be compiled to /{{(\\\w+)}}/igm
    * but please use the non-greedy regex, and modify it to'(\\\w+)?'
@@ -101,7 +101,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * 销毁语法
    * @function
    * @param {string} name 语法名称
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   $unregisterSyntax: function (name) {
     let blocks = this._blocks
@@ -217,7 +217,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
         .replace(new RegExp(`(\`)([\\w\\W]+?)(\`)`, 'gim'), clearTags)
     }
 
-    // source = clearTagsFromString(source)
+    source = clearTagsFromString(source)
 
     /**
      * 分割标签，这样可以将所有正则都匹配每一个标签而不是整个字符串。
@@ -296,7 +296,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * 注销块级辅助函数
    * @function
    * @param {string} name 名称
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   unblock: function (name) {
     let helpers = this._blockHelpers,

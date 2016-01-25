@@ -1,7 +1,7 @@
 /**
  * 扩展新的 include 支持 ajax
  */
-OTemplate.extend(function() {
+Bone.extend(function() {
   let self = this
 
   ~extend(this._helpers, {
@@ -11,7 +11,7 @@ OTemplate.extend(function() {
   })
 })
 
-~extend(OTemplate.prototype, {
+~extend(Bone.prototype, {
   /**
    * 编译内联模板
    * @function

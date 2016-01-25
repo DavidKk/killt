@@ -11,13 +11,13 @@
  * @param {string} options.closeTag 语法的结束标识
  * @param {Array} options.depends 追加渲染器的传值设定
  */
-var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};var static$0={},proto$0={};
+var Bone = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};var static$0={},proto$0={};
   /**
    * 构造函数
    * @function
    * @param {Object} options 配置 (optional)
    */
-  function OTemplate () {var options = arguments[0];if(options === void 0)options = {};
+  function Bone () {var options = arguments[0];if(options === void 0)options = {};
     var self = this
 
     /**
@@ -63,7 +63,7 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
     this._listeners = []
 
     // set the config - 设置配置
-    ~extend(this.DEFAULTS, OTemplate.DEFAULTS, options)
+    ~extend(this.DEFAULTS, Bone.DEFAULTS, options)
 
     // set any helpers - 设置基础辅助函数
     ~extend(this._helpers, {
@@ -98,12 +98,12 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
     })
 
     // set any syntax - 设置语法
-    if (is('Array')(OTemplate._extends)) {
-      forEach(OTemplate._extends, function(_extends_) {
+    if (is('Array')(Bone._extends)) {
+      forEach(Bone._extends, function(_extends_) {
         self.extends(_extends_)
       })
     }
-  }DP$0(OTemplate,"prototype",{"configurable":false,"enumerable":false,"writable":false});
+  }DP$0(Bone,"prototype",{"configurable":false,"enumerable":false,"writable":false});
 
   /**
    * 抛出错误
@@ -114,7 +114,7 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
    */
   proto$0._throw = function (error) {var options = arguments[1];if(options === void 0)options = {};
     var conf    = extend({}, this.DEFAULTS, options),
-        message = __throw(error, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
+        message = __throw(error, conf.env === Bone.ENV.UNIT ? 'null' : 'log')
 
     forEach(this._listeners, function(listener) {
       'error' === listener.type && listener.handle(error, message)
@@ -127,7 +127,7 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
    * @function
    * @param {string} name 方法名称
    * @param {Function} render 渲染函数
-   * @returns {Function|OTemplate}
+   * @returns {Function|Bone}
    */
   proto$0._cache = function (name, render) {
     var caches = this._caches
@@ -144,7 +144,7 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
    * @function
    * @param {string} type 监听类型
    * @param {Function} handle 监听函数
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   proto$0.on = function (type, handle) {
     if (is('String')(type) && is('Function')(handle)) {
@@ -161,7 +161,7 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
    * 撤销监听事件
    * @function
    * @param {Function} handle 监听函数
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   proto$0.off = function (handle) {
     if (is('Function')(handle)) {
@@ -183,20 +183,20 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
   };
 
   /**
-   * 生成一个新的 OTemplate 制作对象
+   * 生成一个新的 Bone 制作对象
    * @function
    * @param  {Object} options 配置
-   * @returns {OTemplate} 新的 OTemplate
+   * @returns {Bone} 新的 Bone
    */
-  proto$0.OTemplate = function (options) {
-    return new OTemplate(options)
+  proto$0.Bone = function (options) {
+    return new Bone(options)
   };
 
   /**
-   * 扩展 OTemplate
+   * 扩展 Bone
    * @function
    * @param {Function} callback 回调
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   proto$0.extends = function (callback) {
     callback.call(this, this)
@@ -208,7 +208,7 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
    * @function
    * @param {string|Object} query 设置/获取的配置值名称
    * @param {*} value 需要配置的值 (optional)
-   * @returns {OTemplate|*} 设置则返回 OTemplate,获取则返回相应的配置
+   * @returns {Bone|*} 设置则返回 Bone,获取则返回相应的配置
    */
   proto$0.config = function (query, value) {
     if (1 < arguments.length) {
@@ -241,7 +241,7 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
    * @function
    * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
    * @param {Function} callback 回调函数
-   * @returns {OTemplate|Function}
+   * @returns {Bone|Function}
    */
   proto$0.helper = function (query, callback) {
     if (1 < arguments.length) {
@@ -268,7 +268,7 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
    * 注销辅助函数
    * @function
    * @param {string} name 名称
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   proto$0.unhelper = function (name) {
     var helpers = this._helpers
@@ -322,19 +322,19 @@ var OTemplate = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};re
    * 扩展库
    * @function
    * @param  {Function} _extends_ 扩展方法
-   * @return {OTemplate}
+   * @return {Bone}
    */
   static$0.extend = function (_extends_) {
-    is('Function')(_extends_) && OTemplate._extends.push(_extends_)
+    is('Function')(_extends_) && Bone._extends.push(_extends_)
     return this
   };
-MIXIN$0(OTemplate,static$0);MIXIN$0(OTemplate.prototype,proto$0);static$0=proto$0=void 0;return OTemplate;})();
+MIXIN$0(Bone,static$0);MIXIN$0(Bone.prototype,proto$0);static$0=proto$0=void 0;return Bone;})();
 
 /**
  * current envirment - 配置环境
  * @type {Object}
  */
-OTemplate.ENV = {
+Bone.ENV = {
   /** production env - 生产环境 */
   PRODUCE : 1,
   /** develop env - 开发环境 */
@@ -347,9 +347,9 @@ OTemplate.ENV = {
  * default options - 默认配置
  * @type {Object}
  */
-OTemplate.DEFAULTS = {
+Bone.DEFAULTS = {
   /** current entironment - 当前环境 [unit, develop, produce] */
-  env       : OTemplate.ENV.PRODUCE,
+  env       : Bone.ENV.PRODUCE,
   /** is use native syntax/是否使用使用原生语法 */
   noSyntax  : false,
   /** compile syntax in strict mode - 是否通过严格模式编译语法 */
@@ -370,14 +370,14 @@ OTemplate.DEFAULTS = {
  * extens plugins - 扩展集合
  * @type {Array}
  */
-OTemplate._extends = []
+Bone._extends = []
 
-~extend(OTemplate.prototype, {
+~extend(Bone.prototype, {
   /**
    * current envirment - 配置环境
    * @type {Object}
    */
-  ENV: OTemplate.ENV,
+  ENV: Bone.ENV,
 
   /**
    * add the line number to the string - 给每行开头添加序列号
@@ -1183,6 +1183,6 @@ function UMD (name, factory, root) {
 /**
  * Exports Module
  */
-UMD('oTemplate', function() {
-  return new OTemplate()
+UMD('Bone', function() {
+  return new Bone()
 }, root)})(this);

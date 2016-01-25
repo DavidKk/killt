@@ -11,7 +11,7 @@
  * @param {string} options.closeTag 语法的结束标识
  * @param {Array} options.depends 追加渲染器的传值设定
  */
-class OTemplate {
+class Bone {
   /**
    * 构造函数
    * @function
@@ -63,7 +63,7 @@ class OTemplate {
     this._listeners = []
 
     // set the config - 设置配置
-    ~extend(this.DEFAULTS, OTemplate.DEFAULTS, options)
+    ~extend(this.DEFAULTS, Bone.DEFAULTS, options)
 
     // set any helpers - 设置基础辅助函数
     ~extend(this._helpers, {
@@ -98,8 +98,8 @@ class OTemplate {
     })
 
     // set any syntax - 设置语法
-    if (is('Array')(OTemplate._extends)) {
-      forEach(OTemplate._extends, function(_extends_) {
+    if (is('Array')(Bone._extends)) {
+      forEach(Bone._extends, function(_extends_) {
         self.extends(_extends_)
       })
     }
@@ -114,7 +114,7 @@ class OTemplate {
    */
   _throw (error, options = {}) {
     let conf    = extend({}, this.DEFAULTS, options),
-        message = __throw(error, conf.env === OTemplate.ENV.UNIT ? 'null' : 'log')
+        message = __throw(error, conf.env === Bone.ENV.UNIT ? 'null' : 'log')
 
     forEach(this._listeners, function(listener) {
       'error' === listener.type && listener.handle(error, message)
@@ -127,7 +127,7 @@ class OTemplate {
    * @function
    * @param {string} name 方法名称
    * @param {Function} render 渲染函数
-   * @returns {Function|OTemplate}
+   * @returns {Function|Bone}
    */
   _cache (name, render) {
     let caches = this._caches
@@ -144,7 +144,7 @@ class OTemplate {
    * @function
    * @param {string} type 监听类型
    * @param {Function} handle 监听函数
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   on (type, handle) {
     if (is('String')(type) && is('Function')(handle)) {
@@ -161,7 +161,7 @@ class OTemplate {
    * 撤销监听事件
    * @function
    * @param {Function} handle 监听函数
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   off (handle) {
     if (is('Function')(handle)) {
@@ -183,20 +183,20 @@ class OTemplate {
   }
 
   /**
-   * 生成一个新的 OTemplate 制作对象
+   * 生成一个新的 Bone 制作对象
    * @function
    * @param  {Object} options 配置
-   * @returns {OTemplate} 新的 OTemplate
+   * @returns {Bone} 新的 Bone
    */
-  OTemplate (options) {
-    return new OTemplate(options)
+  Bone (options) {
+    return new Bone(options)
   }
 
   /**
-   * 扩展 OTemplate
+   * 扩展 Bone
    * @function
    * @param {Function} callback 回调
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   extends (callback) {
     callback.call(this, this)
@@ -208,7 +208,7 @@ class OTemplate {
    * @function
    * @param {string|Object} query 设置/获取的配置值名称
    * @param {*} value 需要配置的值 (optional)
-   * @returns {OTemplate|*} 设置则返回 OTemplate,获取则返回相应的配置
+   * @returns {Bone|*} 设置则返回 Bone,获取则返回相应的配置
    */
   config (query, value) {
     if (1 < arguments.length) {
@@ -241,7 +241,7 @@ class OTemplate {
    * @function
    * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
    * @param {Function} callback 回调函数
-   * @returns {OTemplate|Function}
+   * @returns {Bone|Function}
    */
   helper (query, callback) {
     if (1 < arguments.length) {
@@ -268,7 +268,7 @@ class OTemplate {
    * 注销辅助函数
    * @function
    * @param {string} name 名称
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   unhelper (name) {
     let helpers = this._helpers
@@ -322,10 +322,10 @@ class OTemplate {
    * 扩展库
    * @function
    * @param  {Function} _extends_ 扩展方法
-   * @return {OTemplate}
+   * @return {Bone}
    */
   static extend (_extends_) {
-    is('Function')(_extends_) && OTemplate._extends.push(_extends_)
+    is('Function')(_extends_) && Bone._extends.push(_extends_)
     return this
   }
 }
@@ -334,7 +334,7 @@ class OTemplate {
  * current envirment - 配置环境
  * @type {Object}
  */
-OTemplate.ENV = {
+Bone.ENV = {
   /** production env - 生产环境 */
   PRODUCE : 1,
   /** develop env - 开发环境 */
@@ -347,9 +347,9 @@ OTemplate.ENV = {
  * default options - 默认配置
  * @type {Object}
  */
-OTemplate.DEFAULTS = {
+Bone.DEFAULTS = {
   /** current entironment - 当前环境 [unit, develop, produce] */
-  env       : OTemplate.ENV.PRODUCE,
+  env       : Bone.ENV.PRODUCE,
   /** is use native syntax/是否使用使用原生语法 */
   noSyntax  : false,
   /** compile syntax in strict mode - 是否通过严格模式编译语法 */
@@ -370,14 +370,14 @@ OTemplate.DEFAULTS = {
  * extens plugins - 扩展集合
  * @type {Array}
  */
-OTemplate._extends = []
+Bone._extends = []
 
-~extend(OTemplate.prototype, {
+~extend(Bone.prototype, {
   /**
    * current envirment - 配置环境
    * @type {Object}
    */
-  ENV: OTemplate.ENV,
+  ENV: Bone.ENV,
 
   /**
    * add the line number to the string - 给每行开头添加序列号
@@ -794,11 +794,11 @@ OTemplate._extends = []
  * 1. 正则表达式之间最好不要具有优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
-OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
+Bone.DEFAULTS = extend(Bone.DEFAULTS, {
   noSyntax: false
 })
 
-~extend(OTemplate.prototype, {
+~extend(Bone.prototype, {
   /**
    * 通过配置作为数据来替换模板
    * @function
@@ -842,7 +842,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * @param {string} name 语法名称
    * @param {string|array|object|regexp} syntax 语法正则 (请注意贪婪与贪婪模式)，当为 RegExp时，记得用 openTag 和 closeTag 包裹
    * @param {string|function} shell 元脚本, 当为 Function 时记得加上 `<%` 和 `%>` 包裹
-   * @returns {OTemplate}
+   * @returns {Bone}
    * @description
    * '(\\\w+)' will be compiled to /{{(\\\w+)}}/igm
    * but please use the non-greedy regex, and modify it to'(\\\w+)?'
@@ -882,7 +882,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * 销毁语法
    * @function
    * @param {string} name 语法名称
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   $unregisterSyntax: function (name) {
     let blocks = this._blocks
@@ -998,7 +998,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
         .replace(new RegExp(`(\`)([\\w\\W]+?)(\`)`, 'gim'), clearTags)
     }
 
-    // source = clearTagsFromString(source)
+    source = clearTagsFromString(source)
 
     /**
      * 分割标签，这样可以将所有正则都匹配每一个标签而不是整个字符串。
@@ -1077,7 +1077,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * 注销块级辅助函数
    * @function
    * @param {string} name 名称
-   * @returns {OTemplate}
+   * @returns {Bone}
    */
   unblock: function (name) {
     let helpers = this._blockHelpers,
@@ -1091,8 +1091,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
 
     return this
   },
-})
-;
+});
 /**
  * Simple Syntax Defination - 定义简单语法
  * @description
@@ -1104,14 +1103,14 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
  * `noescpe`: {{# data}}
  * `escpe`:   {{!# data}}
  */
-OTemplate.extend(function() {
+Bone.extend(function() {
   let HELPER_SYNTAX       = '(=|-|!|#|!#)?\\s*([^|]+?(?:\\s*(?:\\|\\||\\&\\&)\\s*[^|]+?)*)\\s*\\|\\s*([^:\\|]+?)\\s*(?:\\:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?',
       HELPER_REGEXP       = this._compileRegexp(HELPER_SYNTAX),
       HELPER_INNER_SYNTAX = '\\s*([\\w\\W]+?\\s*\\\([\\w\\W]+?\\\))\\s*\\|\\s*([^:]+?)\\s*(:\\s*([^\\|]+?))?$',
       HELPER_INNER_REGEXP = this._compileRegexp(HELPER_INNER_SYNTAX)
 
   this
-  .$registerSyntax('helper',    HELPER_SYNTAX,              (function() {
+  .$registerSyntax('helper', HELPER_SYNTAX, (function() {
     return function($all, $1, $2, $3, $4, $5) {
       let str = format.apply(this, arguments)
       while (HELPER_INNER_REGEXP.exec(str)) {
@@ -1129,20 +1128,20 @@ OTemplate.extend(function() {
       return `${$2}(${$1},${$4})`
     }
   })())
-  .$registerSyntax('echo',      '=\\s*([\\w\\W]+?)\\s*',    '=$1')
-  .$registerSyntax('logic',     '-\\s*([\\w\\W]+?)\\s*',    '$1')
-  .$registerSyntax('noescape',  '#\\s*([\\w\\W]+?)\\s*',    '#$1')
-  .$registerSyntax('escape',    '!#\\s*([\\w\\W]+?)\\s*',   '!#$1')
-  .$registerSyntax('ifopen',    'if\\s*(.+?)\\s*',          'if ($1) {')
-  .$registerSyntax('else',      'else',                     '} else {')
-  .$registerSyntax('elseif',    'else\\s*if\\s*(.+?)\\s*',  '} else if ($1) {')
-  .$registerSyntax('ifclose',   '\\/if',                    '}')
-  .$registerSyntax('eachopen',  'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', function($all, $1, $2, $3, $4) {
+  .$registerSyntax('echo', '=\\s*([\\w\\W]+?)\\s*', '=$1')
+  .$registerSyntax('logic', '-\\s*([\\w\\W]+?)\\s*', '$1')
+  .$registerSyntax('noescape', '#\\s*([\\w\\W]+?)\\s*', '#$1')
+  .$registerSyntax('escape', '!#\\s*([\\w\\W]+?)\\s*', '!#$1')
+  .$registerSyntax('ifopen', 'if\\s*(.+?)\\s*', 'if ($1) {')
+  .$registerSyntax('else', 'else', '} else {')
+  .$registerSyntax('elseif', 'else\\s*if\\s*(.+?)\\s*', '} else if ($1) {')
+  .$registerSyntax('ifclose', '\\/if', '}')
+  .$registerSyntax('eachopen', 'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', function($all, $1, $2, $3, $4) {
     let string = `each(${$1}, function(${$3 || '$value'}${$4 || ', $index'}) {`
     return `<%${string}%>`
   })
-  .$registerSyntax('eachclose', '\\/each',                  '})')
-  .$registerSyntax('include',   'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3) {
+  .$registerSyntax('eachclose', '\\/each', '})')
+  .$registerSyntax('include', 'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3) {
     return `<%#include(${$1}, ${$3 || '$data'})%>`
   })
 
@@ -1556,6 +1555,6 @@ function UMD (name, factory, root) {
 /**
  * Exports Module
  */
-UMD('oTemplate', function() {
-  return new OTemplate()
+UMD('Bone', function() {
+  return new Bone()
 }, root)})(this);
