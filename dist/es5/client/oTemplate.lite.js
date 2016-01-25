@@ -1,4 +1,40 @@
 ~(function(root) {'use strict';
+
+/**
+ * current envirment - 配置环境
+ * @type {Object}
+ */
+var ENV = {
+  /** production env - 生产环境 */
+  PRODUCE : 1,
+  /** develop env - 开发环境 */
+  DEVELOP : 2,
+  /** unit test env - 单元测试环境 */
+  UNIT    : 3
+}
+
+/**
+ * default options - 默认配置
+ * @type {Object}
+ */
+var DEFAULTS = {
+  /** current entironment - 当前环境 [unit, develop, produce] */
+  env       : ENV.PRODUCE,
+  /** is use native syntax/是否使用使用原生语法 */
+  noSyntax  : false,
+  /** compile syntax in strict mode - 是否通过严格模式编译语法 */
+  strict    : true,
+  /** compress the html code - 压缩生成的HTML代码 */
+  compress  : true,
+  /** escape the HTML - 是否编码输出变量的 HTML 字符 */
+  escape    : true,
+  /** open tag for syntax - 起始标识 */
+  openTag   : '{{',
+  /** close tag for syntax - 结束标识 */
+  closeTag  : '}}',
+  /** addition render arguments (must be use `$` to define variable name) - 追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量) */
+  depends   : [],
+};
 /**
  * A Template engine for Javascript
  * @class
@@ -63,7 +99,7 @@ var Bone = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return 
     this._listeners = []
 
     // set the config - 设置配置
-    ~extend(this.DEFAULTS, Bone.DEFAULTS, options)
+    ~extend(this.DEFAULTS, DEFAULTS, options)
 
     // set any helpers - 设置基础辅助函数
     ~extend(this._helpers, {
@@ -114,7 +150,7 @@ var Bone = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return 
    */
   proto$0._throw = function (error) {var options = arguments[1];if(options === void 0)options = {};
     var conf    = extend({}, this.DEFAULTS, options),
-        message = __throw(error, conf.env === Bone.ENV.UNIT ? 'null' : 'log')
+        message = __throw(error, conf.env === ENV.UNIT ? 'null' : 'log')
 
     forEach(this._listeners, function(listener) {
       'error' === listener.type && listener.handle(error, message)
@@ -331,42 +367,6 @@ var Bone = (function(){var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return 
 MIXIN$0(Bone,static$0);MIXIN$0(Bone.prototype,proto$0);static$0=proto$0=void 0;return Bone;})();
 
 /**
- * current envirment - 配置环境
- * @type {Object}
- */
-Bone.ENV = {
-  /** production env - 生产环境 */
-  PRODUCE : 1,
-  /** develop env - 开发环境 */
-  DEVELOP : 2,
-  /** unit test env - 单元测试环境 */
-  UNIT    : 3
-}
-
-/**
- * default options - 默认配置
- * @type {Object}
- */
-Bone.DEFAULTS = {
-  /** current entironment - 当前环境 [unit, develop, produce] */
-  env       : Bone.ENV.PRODUCE,
-  /** is use native syntax/是否使用使用原生语法 */
-  noSyntax  : false,
-  /** compile syntax in strict mode - 是否通过严格模式编译语法 */
-  strict    : true,
-  /** compress the html code - 压缩生成的HTML代码 */
-  compress  : true,
-  /** escape the HTML - 是否编码输出变量的 HTML 字符 */
-  escape    : true,
-  /** open tag for syntax - 起始标识 */
-  openTag   : '{{',
-  /** close tag for syntax - 结束标识 */
-  closeTag  : '}}',
-  /** addition render arguments (must be use `$` to define variable name) - 追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量) */
-  depends   : [],
-}
-
-/**
  * extens plugins - 扩展集合
  * @type {Array}
  */
@@ -377,7 +377,7 @@ Bone._extends = []
    * current envirment - 配置环境
    * @type {Object}
    */
-  ENV: Bone.ENV,
+  ENV: ENV,
 
   /**
    * add the line number to the string - 给每行开头添加序列号
@@ -1396,6 +1396,6 @@ function UMD (name, factory, root) {
 /**
  * Exports Module
  */
-UMD('Bone', function() {
+UMD('oTemplate', function() {
   return new Bone()
 }, root)})(this);

@@ -118,6 +118,7 @@ module.exports = function(grunt) {
         grunt.config('concat.' + name + '@lite', {
           dest: '<%= es6Path %>' + name + '/<%= pkg.name %>.lite.js',
           src: [
+            'src/core/conf.js',
             'src/core/main.js',
             file,
             'src/core/utilities.js',
@@ -138,6 +139,7 @@ module.exports = function(grunt) {
           grunt.config('concat.' + name + '@syntax', {
             dest: '<%= es6Path %>' + name + '/<%= pkg.name %>.js',
             src: [
+              'src/core/conf.js',
               'src/core/main.js',
               'src/core/syntax.js',
               defaultSyntax.path,

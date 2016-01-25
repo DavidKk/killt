@@ -13,9 +13,7 @@
  * 1. 正则表达式之间最好不要具有优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
-Bone.DEFAULTS = extend(Bone.DEFAULTS, {
-  noSyntax: false
-})
+DEFAULTS.noSyntax = false
 
 ~extend(Bone.prototype, {
   /**
