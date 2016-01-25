@@ -114,26 +114,6 @@ module.exports = function(grunt) {
           name      = filename.replace(ext, '')
 
       if (ext === '.js') {
-        // Lit version
-        // grunt.config('concat.' + name + '@lite', {
-        //   dest: '<%= es6Path %>' + name + '/<%= pkg.name %>.lite.js',
-        //   src: [
-        //     'src/core/conf.js',
-        //     'src/core/main.js',
-        //     file,
-        //     'src/core/utilities.js',
-        //     'src/core/export.js'
-        //   ]
-        // })
-
-        // grunt.config('uglify.' + name + '@lite', {
-        //   options: {
-        //     banner: '// <%= pkg.name %>.lite.min.js#<%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd HH:MM:ss") %>'
-        //   },
-        //   dest: '<%= es5Path %>' + name + '/<%= pkg.name %>.lite.min.js',
-        //   src: '<%= es5Path %>' + name + '/<%= pkg.name %>.lite.js'
-        // })
-
         // Default syntax version
         if (defaultSyntax) {
           grunt.config('concat.' + name + '@syntax', {

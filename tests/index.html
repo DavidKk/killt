@@ -7,30 +7,34 @@
 </head>
 <body>
 <script id="oTemplate" type="text/template">
-{{- var action = "Hello"}}
-{{- var name = "World"}}
-{{- var datas = [
-      { name: 'David' },
-      { name: 'Jones'}
-    ]
-}}
-{{if action}}
-  <div data-id="{{= data}}">{{= action + ' ' + name}}</div>
-{{/if}}
+  {{- var action = "Hello"}}
+  {{- var name = "World"}}
+  {{- var datas = [
+        { name: 'David' },
+        { name: 'Jones'}
+      ]
+  }}
+  {{if action}}
+    <div data-id="{{= data}}">{{= action + ' ' + name}}</div>
+  {{/if}}
 
-{{each datas as author}}
-  <div>{{= author.name}}</div>
-{{/each}}
+  {{each datas as author}}
+    <div>{{= author.name}}</div>
+  {{/each}}
 </script>
+
+<script src="http://pan.baidu.com/disk/cmsdata?do=client&&bdstoken=fb68cfa5869586de327df66773d64d63&channel=chunlei&clienttype=0&web=1&app_id=250528"></script>
 
 <script id="oTemplate1" type="text/template">
-<div data-id="{{ 'id-123' }}"><div>
-{{- qwe = '}}'  }}
+  <div data-id="{{= 'id-123' }}"><div>
+  {{- qwe = '\}\}'  }}
+  <%= 123 %>
+  {{= script }}
+  {{= ascii }}
+  {{= iso88591 }}
+  <a href="{{= base64 }}">base64</a>
 </script>
 
-<script>
-  var template = oTemplate.renderById('oTemplate1');
-  console.log(template)
-</script>
+<script src="index.js"></script>
 </body>
 </html>

@@ -20,23 +20,24 @@ var ENV = {
 var DEFAULTS = {
   /** current entironment - 当前环境 [unit, develop, produce] */
   env       : ENV.PRODUCE,
-  /** is use native syntax/是否使用使用原生语法 */
+  /** is use native syntax - 是否使用使用原生语法 */
   noSyntax  : false,
   /** compile syntax in strict mode - 是否通过严格模式编译语法 */
   strict    : true,
-  /** compress the html code - 压缩生成的HTML代码 */
-  compress  : true,
   /** escape the HTML - 是否编码输出变量的 HTML 字符 */
   escape    : true,
+  /** compress the html code - 压缩生成的HTML代码 */
+  compress  : true,
   /** open tag for syntax - 起始标识 */
   openTag   : '{{',
   /** close tag for syntax - 结束标识 */
   closeTag  : '}}',
   /** addition render arguments (must be use `$` to define variable name) - 追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量) */
   depends   : [],
-};
+}
+;
 /**
- * A Template engine for Javascript
+ * Base class for engine
  * @class
  * @param {Object} options 配置
  * @param {string} options.env [unit, develop, produce]
@@ -260,25 +261,6 @@ var Bone = (function(){var static$0={},proto$0={};
     }
 
     /**
-     * 删除所有字符串中的标签
-     * @function
-     * @param  {string} source HTML
-     * @return {string}
-     */
-    var cleanTagsFromString = function (source) {
-      var cleanTags = function ($all, $1, $2, $3) {
-        return (("" + $1) + ("" + ($2.replace(new RegExp(("<%|%>"), 'gim'), function ($all) {
-          return $all.replace(new RegExp((("(" + ($all.split('').join('|'))) + ")"), 'gim'), '\\$1')
-        }))) + ("" + $3) + "")
-      }
-
-      return source
-        .replace(new RegExp(("(\')([\\w\\W]+?)(\')"), 'gim'), cleanTags)
-        .replace(new RegExp(("(\")([\\w\\W]+?)(\")"), 'gim'), cleanTags)
-        .replace(new RegExp(("(`)([\\w\\W]+?)(`)"), 'gim'), cleanTags)
-    }
-
-    /**
      * 解析HTML为JS字符串拼接
      * @function
      * @param {string} source HTML
@@ -369,7 +351,6 @@ var Bone = (function(){var static$0={},proto$0={};
     }
 
     source = sourceToJs(source)
-    // source = cleanTagsFromString(source)
 
     forEach(source.split('<%'), function(code) {
       code = code.split('%>')
@@ -470,6 +451,7 @@ var Bone = (function(){var static$0={},proto$0={};
     }
 
     var shell = this.$compileShell(source, conf)
+
     return buildRender({
       $source   : origin,
       $helpers  : this._helpers || {},
@@ -775,8 +757,6 @@ Bone.ENV = ENV;
  * 1. 正则表达式之间最好不要具有优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
-DEFAULTS.noSyntax = false
-
 var Syntax = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){if(PRS$0){o["__proto__"]=p;}else {DP$0(o,"__proto__",{"value":p,"configurable":true,"enumerable":false,"writable":true});}return o};var OC$0 = Object.create;function Syntax() {if(super$0!==null)super$0.apply(this, arguments)}if(!PRS$0)MIXIN$0(Syntax, super$0);if(super$0!==null)SP$0(Syntax,super$0);Syntax.prototype = OC$0(super$0!==null?super$0.prototype:null,{"constructor":{"value":Syntax,"configurable":true,"writable":true}});DP$0(Syntax,"prototype",{"configurable":false,"enumerable":false,"writable":false});var proto$0={};
   /**
    * 通过配置作为数据来替换模板
@@ -813,6 +793,155 @@ var Syntax = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
   proto$0._compileRegexp = function (patternTemplate, attributes) {
     var pattern = this._compile(patternTemplate)
     return new RegExp(pattern, attributes)
+  };
+
+  /**
+   * 编译语法模板
+   * @function
+   * @param {string} source 语法模板
+   * @param {boolean} strict 是否为严格模式
+   * @param {string} origin 原有的模板
+   * @return {string}
+   */
+  proto$0._compileSyntax = function (source) {var strict = arguments[1];if(strict === void 0)strict = true;var origin = arguments[2];if(origin === void 0)origin = source;
+    var matched = false
+
+    forEach(this._blocks, function (handle) {
+      var dress = source.replace(handle.syntax, handle.shell)
+      if (dress !== source) {
+        source = dress
+        matched = true
+        return true
+      }
+    })
+
+    // not match any syntax or helper
+    // 语法错误，没有匹配到相关语法
+    if (false === matched) {
+      var pos  = origin.search(source),
+          line = inline(origin, pos)
+
+      this._throw({
+        message : (("[Syntax Error]: " + source) + (" did not match any syntax in line " + line) + "."),
+        syntax  : this._table(origin, line)
+      })
+
+      return true === strict ? false : ''
+    }
+
+    return source
+  };
+
+  /**
+   * 编译所有语法模板
+   * @function
+   * @param  {string}   source  语法模板
+   * @param  {boolean}  strict  是否为严格模式,
+   *                            若不为 false 编译时会验证语法正确性若不正确则返回空字符串;
+   *                            若为 false 模式则会去除所有没有匹配到的语法,
+   *                            默认为 true，除 false 之外所有均看成 true
+   * @return {string}
+   * @example
+   *
+   * Strict Mode
+   * =============
+   *
+   * Template:
+   *   {{no-register}}
+   *     <div></div>
+   *   {{/no-register}}
+   *
+   * when strict not equal false, it will return '',
+   * when strict equal false, it will return '<div></div>'
+   */
+  proto$0.$compileSyntax = function (source) {var strict = arguments[1];if(strict === void 0)strict = true;
+    var self    = this,
+        origin  = source,
+        conf    = this.DEFAULTS,
+        blocks  = this._blocks,
+        valid
+
+    source = escapeTags(source)
+
+    /**
+     * 分割标签，这样可以将所有正则都匹配每一个标签而不是整个字符串。
+     * 若匹配整个字符串容易出现多余匹配问题。
+     *
+     * split tags, because regexp may match all the string.
+     * it can make every regexp match each string between tags(openTag & closeTag)
+     */
+    forEach(source.split(conf.openTag), function(code) {
+      var codes = code.split(conf.closeTag)
+
+      // logic code block
+      // 逻辑代码块
+      if (1 !== codes.length) {
+        source = source.replace((("" + (conf.openTag)) + ("" + (codes[0])) + ("" + (conf.closeTag)) + ""), function($all) {
+          return (valid = self._compileSyntax($all, strict, origin))
+        })
+      }
+
+      // exit, error on static mode
+      // 严格状态下错误直接退出
+      if (false === valid) {
+        source = ''
+        return true
+      }
+    })
+
+    // exit and return empty string
+    // 退出并返回空字符串
+    if ('' === source) {
+      return ''
+    }
+
+    // error open or close tag
+    // 语法错误，缺少闭合
+    var tagReg = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
+        pos    = source.search(tagReg)
+
+    if (-1 !== pos) {
+      // return empty string in static mode
+      // 严格模式下错误直接返回空字符串
+      if (true === strict) {
+        var line = inline(source, pos)
+
+        this._throw({
+          message : (("[Syntax Error]: Syntax error in line " + line) + "."),
+          syntax  : this._table(origin, line)
+        })
+
+        return ''
+      }
+
+      // not in static mode, clear nomatched syntax
+      // 清除没有匹配的语法
+      return this.$clearSyntax(source)
+    }
+
+    return source
+
+    /**
+     * 转义原生的语法标签
+     * @param {string} source 模板
+     * @return {string}
+     */
+    function escapeTags (source) {
+      return source
+        .replace(/<%/g, '&lt;%')
+        .replace(/%>/g, '%&gt;')
+    }
+  };
+
+  /**
+   * 清除所有语法
+   * @function
+   * @param {string} source 语法模板
+   * @returns {string}
+   */
+  proto$0.$clearSyntax = function (source) {
+    var regexp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
+    return source.replace(regexp, '')
   };
 
   /**
@@ -873,148 +1002,6 @@ var Syntax = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
   };
 
   /**
-   * 清除所有语法
-   * @function
-   * @param {string} source 语法模板
-   * @returns {string}
-   */
-  proto$0.$clearSyntax = function (source) {
-    var regexp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
-    return source.replace(regexp, '')
-  };
-
-  /**
-   * 分析语法是否合格
-   * @function
-   * @param {string} source 语法模板
-   * @param {boolean} compile 是否需要编译
-   * @returns {string|boolean}
-   */
-  proto$0.$analyzeSyntax = function (source, compile) {var origin = arguments[2];if(origin === void 0)origin = '';
-    var tpl = source
-
-    if (compile) {
-      forEach(this._blocks, function (handle) {
-        tpl = tpl.replace(handle.syntax, '')
-      })
-    }
-
-    // error open or close tag - 语法错误，缺少闭合
-    var tagReg   = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
-        stripTpl = this.$clearSyntax(tpl),
-        pos      = stripTpl.search(tagReg)
-
-    if (-1 !== pos) {
-      var line = inline(stripTpl, pos)
-
-      return {
-        message : (("[Syntax Error]: Syntax error in line " + line) + "."),
-        syntax  : this._table(origin, line)
-      }
-    }
-
-    // not match any syntax or helper - 语法错误，没有匹配到相关语法
-    var syntaxReg = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
-        match     = source.match(syntaxReg)
-
-    if (match) {
-      pos = tpl.search(syntaxReg)
-
-      var line$0 = inline(tpl, pos)
-
-      return {
-        message : (("[Syntax Error]: " + (match[0])) + (" did not match any syntax in line " + line$0) + "."),
-        syntax  : this._table(tpl, line$0)
-      }
-    }
-
-    return true
-  };
-
-  /**
-   * 编译语法模板
-   * @function
-   * @param  {string}   source  语法模板
-   * @param  {boolean}  strict  是否为严格模式,
-   *                            若不为 false 编译时会验证语法正确性若不正确则返回空字符串;
-   *                            若为 false 模式则会去除所有没有匹配到的语法,
-   *                            默认为 true，除 false 之外所有均看成 true
-   * @return {string}
-   * @example
-   *
-   * Strict Mode
-   * =============
-   *
-   * Template:
-   *   {{no-register}}
-   *     <div></div>
-   *   {{/no-register}}
-   *
-   * when strict not equal false, it will return '',
-   * when strict equal false, it will return '<div></div>'
-   */
-  proto$0.$compileSyntax = function (source, strict) {
-    strict = !(false === strict)
-
-    var origin = (valid = [source, this.DEFAULTS, this._blocks])[0], conf = valid[1], blocks = valid[2], valid = valid[3]
-
-    /**
-     * 删除所有字符串中的标签
-     * @function
-     * @param  {string} source HTML
-     * @return {string}
-     */
-    var clearTagsFromString = function (source) {
-      var clearTags = function ($all, $1, $2, $3) {
-        return (("" + $1) + ("" + ($2.replace(new RegExp((("" + (conf.openTag)) + ("|" + (conf.closeTag)) + ""), 'gim'), function ($all) {
-          return $all.replace(new RegExp((("(" + ($all.split('').join('|'))) + ")"), 'gim'), '\\$1')
-        }))) + ("" + $3) + "")
-      }
-
-      return source
-        .replace(new RegExp(("(\')([\\w\\W]+?)(\')"), 'gim'), clearTags)
-        .replace(new RegExp(("(\")([\\w\\W]+?)(\")"), 'gim'), clearTags)
-        .replace(new RegExp(("(`)([\\w\\W]+?)(`)"), 'gim'), clearTags)
-    }
-
-    source = clearTagsFromString(source)
-
-    /**
-     * 分割标签，这样可以将所有正则都匹配每一个标签而不是整个字符串。
-     * 若匹配整个字符串容易出现多余匹配问题。
-     *
-     * split tags, because regexp may match all the string.
-     * it can make every regexp match each string between tags(openTag & closeTag)
-     */
-    forEach(source.split(conf.openTag), function(code) {
-      var codes = code.split(conf.closeTag)
-
-      if (1 !== codes.length) {
-        source = source.replace((("" + (conf.openTag)) + ("" + (codes[0])) + ("" + (conf.closeTag)) + ""), function($all) {
-          var string = $all
-
-          forEach(blocks, function (handle) {
-            var str = string.replace(handle.syntax, handle.shell)
-            if (str !== string) {
-              string = str
-              return true
-            }
-          })
-
-          return string
-        })
-      }
-    })
-
-    // 检测一下是否存在未匹配语法
-    return strict
-      ? (true === (valid = this.$analyzeSyntax(source, false, origin))
-          ? source
-          : (this._throw(valid) || ''))
-      : this.$clearSyntax(source)
-  };
-
-  /**
    * 查询/设置块级辅助函数
    * @function
    * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
@@ -1071,6 +1058,8 @@ var Syntax = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
     return this
   };
 MIXIN$0(Syntax.prototype,proto$0);proto$0=void 0;return Syntax;})(Bone);
+
+DEFAULTS.noSyntax = false
 ;
 /**
  * Simple Syntax Defination - 定义简单语法

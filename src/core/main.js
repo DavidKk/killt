@@ -1,5 +1,5 @@
 /**
- * A Template engine for Javascript
+ * Base class for engine
  * @class
  * @param {Object} options 配置
  * @param {string} options.env [unit, develop, produce]
@@ -223,25 +223,6 @@ class Bone {
     }
 
     /**
-     * 删除所有字符串中的标签
-     * @function
-     * @param  {string} source HTML
-     * @return {string}
-     */
-    let cleanTagsFromString = function (source) {
-      let cleanTags = function ($all, $1, $2, $3) {
-        return `${$1}${$2.replace(new RegExp(`<%|%>`, 'gim'), function ($all) {
-          return $all.replace(new RegExp(`(${$all.split('').join('|')})`, 'gim'), '\\$1')
-        })}${$3}`
-      }
-
-      return source
-        .replace(new RegExp(`(\')([\\w\\W]+?)(\')`, 'gim'), cleanTags)
-        .replace(new RegExp(`(\")([\\w\\W]+?)(\")`, 'gim'), cleanTags)
-        .replace(new RegExp(`(\`)([\\w\\W]+?)(\`)`, 'gim'), cleanTags)
-    }
-
-    /**
      * 解析HTML为JS字符串拼接
      * @function
      * @param {string} source HTML
@@ -332,7 +313,6 @@ class Bone {
     }
 
     source = sourceToJs(source)
-    // source = cleanTagsFromString(source)
 
     forEach(source.split('<%'), function(code) {
       code = code.split('%>')
@@ -433,6 +413,7 @@ class Bone {
     }
 
     let shell = this.$compileShell(source, conf)
+
     return buildRender({
       $source   : origin,
       $helpers  : this._helpers || {},

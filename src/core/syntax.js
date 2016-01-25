@@ -13,8 +13,6 @@
  * 1. 正则表达式之间最好不要具有优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
-DEFAULTS.noSyntax = false
-
 class Syntax extends Bone {
   /**
    * 通过配置作为数据来替换模板
@@ -51,6 +49,155 @@ class Syntax extends Bone {
   _compileRegexp (patternTemplate, attributes) {
     let pattern = this._compile(patternTemplate)
     return new RegExp(pattern, attributes)
+  }
+
+  /**
+   * 编译语法模板
+   * @function
+   * @param {string} source 语法模板
+   * @param {boolean} strict 是否为严格模式
+   * @param {string} origin 原有的模板
+   * @return {string}
+   */
+  _compileSyntax (source, strict = true, origin = source) {
+    let matched = false
+
+    forEach(this._blocks, function (handle) {
+      let dress = source.replace(handle.syntax, handle.shell)
+      if (dress !== source) {
+        source = dress
+        matched = true
+        return true
+      }
+    })
+
+    // not match any syntax or helper
+    // 语法错误，没有匹配到相关语法
+    if (false === matched) {
+      let pos  = origin.search(source),
+          line = inline(origin, pos)
+
+      this._throw({
+        message : `[Syntax Error]: ${source} did not match any syntax in line ${line}.`,
+        syntax  : this._table(origin, line)
+      })
+
+      return true === strict ? false : ''
+    }
+
+    return source
+  }
+
+  /**
+   * 编译所有语法模板
+   * @function
+   * @param  {string}   source  语法模板
+   * @param  {boolean}  strict  是否为严格模式,
+   *                            若不为 false 编译时会验证语法正确性若不正确则返回空字符串;
+   *                            若为 false 模式则会去除所有没有匹配到的语法,
+   *                            默认为 true，除 false 之外所有均看成 true
+   * @return {string}
+   * @example
+   *
+   * Strict Mode
+   * =============
+   *
+   * Template:
+   *   {{no-register}}
+   *     <div></div>
+   *   {{/no-register}}
+   *
+   * when strict not equal false, it will return '',
+   * when strict equal false, it will return '<div></div>'
+   */
+  $compileSyntax (source, strict = true) {
+    let self    = this,
+        origin  = source,
+        conf    = this.DEFAULTS,
+        blocks  = this._blocks,
+        valid
+
+    source = escapeTags(source)
+
+    /**
+     * 分割标签，这样可以将所有正则都匹配每一个标签而不是整个字符串。
+     * 若匹配整个字符串容易出现多余匹配问题。
+     *
+     * split tags, because regexp may match all the string.
+     * it can make every regexp match each string between tags(openTag & closeTag)
+     */
+    forEach(source.split(conf.openTag), function(code) {
+      let codes = code.split(conf.closeTag)
+
+      // logic code block
+      // 逻辑代码块
+      if (1 !== codes.length) {
+        source = source.replace(`${conf.openTag}${codes[0]}${conf.closeTag}`, function($all) {
+          return (valid = self._compileSyntax($all, strict, origin))
+        })
+      }
+
+      // exit, error on static mode
+      // 严格状态下错误直接退出
+      if (false === valid) {
+        source = ''
+        return true
+      }
+    })
+
+    // exit and return empty string
+    // 退出并返回空字符串
+    if ('' === source) {
+      return ''
+    }
+
+    // error open or close tag
+    // 语法错误，缺少闭合
+    let tagReg = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
+        pos    = source.search(tagReg)
+
+    if (-1 !== pos) {
+      // return empty string in static mode
+      // 严格模式下错误直接返回空字符串
+      if (true === strict) {
+        let line = inline(source, pos)
+
+        this._throw({
+          message : `[Syntax Error]: Syntax error in line ${line}.`,
+          syntax  : this._table(origin, line)
+        })
+
+        return ''
+      }
+
+      // not in static mode, clear nomatched syntax
+      // 清除没有匹配的语法
+      return this.$clearSyntax(source)
+    }
+
+    return source
+
+    /**
+     * 转义原生的语法标签
+     * @param {string} source 模板
+     * @return {string}
+     */
+    function escapeTags (source) {
+      return source
+        .replace(/<%/g, '&lt;%')
+        .replace(/%>/g, '%&gt;')
+    }
+  }
+
+  /**
+   * 清除所有语法
+   * @function
+   * @param {string} source 语法模板
+   * @returns {string}
+   */
+  $clearSyntax (source) {
+    let regexp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
+    return source.replace(regexp, '')
   }
 
   /**
@@ -111,148 +258,6 @@ class Syntax extends Bone {
   }
 
   /**
-   * 清除所有语法
-   * @function
-   * @param {string} source 语法模板
-   * @returns {string}
-   */
-  $clearSyntax (source) {
-    let regexp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
-    return source.replace(regexp, '')
-  }
-
-  /**
-   * 分析语法是否合格
-   * @function
-   * @param {string} source 语法模板
-   * @param {boolean} compile 是否需要编译
-   * @returns {string|boolean}
-   */
-  $analyzeSyntax (source, compile, origin = '') {
-    let tpl = source
-
-    if (compile) {
-      forEach(this._blocks, function (handle) {
-        tpl = tpl.replace(handle.syntax, '')
-      })
-    }
-
-    // error open or close tag - 语法错误，缺少闭合
-    let tagReg   = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
-        stripTpl = this.$clearSyntax(tpl),
-        pos      = stripTpl.search(tagReg)
-
-    if (-1 !== pos) {
-      let line = inline(stripTpl, pos)
-
-      return {
-        message : `[Syntax Error]: Syntax error in line ${line}.`,
-        syntax  : this._table(origin, line)
-      }
-    }
-
-    // not match any syntax or helper - 语法错误，没有匹配到相关语法
-    let syntaxReg = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm'),
-        match     = source.match(syntaxReg)
-
-    if (match) {
-      pos = tpl.search(syntaxReg)
-
-      let line = inline(tpl, pos)
-
-      return {
-        message : `[Syntax Error]: ${match[0]} did not match any syntax in line ${line}.`,
-        syntax  : this._table(tpl, line)
-      }
-    }
-
-    return true
-  }
-
-  /**
-   * 编译语法模板
-   * @function
-   * @param  {string}   source  语法模板
-   * @param  {boolean}  strict  是否为严格模式,
-   *                            若不为 false 编译时会验证语法正确性若不正确则返回空字符串;
-   *                            若为 false 模式则会去除所有没有匹配到的语法,
-   *                            默认为 true，除 false 之外所有均看成 true
-   * @return {string}
-   * @example
-   *
-   * Strict Mode
-   * =============
-   *
-   * Template:
-   *   {{no-register}}
-   *     <div></div>
-   *   {{/no-register}}
-   *
-   * when strict not equal false, it will return '',
-   * when strict equal false, it will return '<div></div>'
-   */
-  $compileSyntax (source, strict) {
-    strict = !(false === strict)
-
-    let [origin, conf, blocks, valid] = [source, this.DEFAULTS, this._blocks]
-
-    /**
-     * 删除所有字符串中的标签
-     * @function
-     * @param  {string} source HTML
-     * @return {string}
-     */
-    let clearTagsFromString = function (source) {
-      let clearTags = function ($all, $1, $2, $3) {
-        return `${$1}${$2.replace(new RegExp(`${conf.openTag}|${conf.closeTag}`, 'gim'), function ($all) {
-          return $all.replace(new RegExp(`(${$all.split('').join('|')})`, 'gim'), '\\$1')
-        })}${$3}`
-      }
-
-      return source
-        .replace(new RegExp(`(\')([\\w\\W]+?)(\')`, 'gim'), clearTags)
-        .replace(new RegExp(`(\")([\\w\\W]+?)(\")`, 'gim'), clearTags)
-        .replace(new RegExp(`(\`)([\\w\\W]+?)(\`)`, 'gim'), clearTags)
-    }
-
-    source = clearTagsFromString(source)
-
-    /**
-     * 分割标签，这样可以将所有正则都匹配每一个标签而不是整个字符串。
-     * 若匹配整个字符串容易出现多余匹配问题。
-     *
-     * split tags, because regexp may match all the string.
-     * it can make every regexp match each string between tags(openTag & closeTag)
-     */
-    forEach(source.split(conf.openTag), function(code) {
-      let codes = code.split(conf.closeTag)
-
-      if (1 !== codes.length) {
-        source = source.replace(`${conf.openTag}${codes[0]}${conf.closeTag}`, function($all) {
-          let string = $all
-
-          forEach(blocks, function (handle) {
-            let str = string.replace(handle.syntax, handle.shell)
-            if (str !== string) {
-              string = str
-              return true
-            }
-          })
-
-          return string
-        })
-      }
-    })
-
-    // 检测一下是否存在未匹配语法
-    return strict
-      ? (true === (valid = this.$analyzeSyntax(source, false, origin))
-          ? source
-          : (this._throw(valid) || ''))
-      : this.$clearSyntax(source)
-  }
-
-  /**
    * 查询/设置块级辅助函数
    * @function
    * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
@@ -309,3 +314,5 @@ class Syntax extends Bone {
     return this
   }
 }
+
+DEFAULTS.noSyntax = false

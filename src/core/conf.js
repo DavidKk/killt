@@ -19,14 +19,14 @@ const ENV = {
 const DEFAULTS = {
   /** current entironment - 当前环境 [unit, develop, produce] */
   env       : ENV.PRODUCE,
-  /** is use native syntax/是否使用使用原生语法 */
+  /** is use native syntax - 是否使用使用原生语法 */
   noSyntax  : false,
   /** compile syntax in strict mode - 是否通过严格模式编译语法 */
   strict    : true,
-  /** compress the html code - 压缩生成的HTML代码 */
-  compress  : true,
   /** escape the HTML - 是否编码输出变量的 HTML 字符 */
   escape    : true,
+  /** compress the html code - 压缩生成的HTML代码 */
+  compress  : true,
   /** open tag for syntax - 起始标识 */
   openTag   : '{{',
   /** close tag for syntax - 结束标识 */
