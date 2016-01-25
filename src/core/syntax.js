@@ -15,7 +15,7 @@
  */
 DEFAULTS.noSyntax = false
 
-~extend(Bone.prototype, {
+class Syntax extends Bone {
   /**
    * 通过配置作为数据来替换模板
    * @function
@@ -28,13 +28,13 @@ DEFAULTS.noSyntax = false
    * if my defauts is { openTag: '{{', closeTag: '}}' }
    * the result is '{{hi}}'
    */
-  _compile: function (source, data) {
+  _compile (source, data) {
     data = is('PlainObject')(data) ? data : this.DEFAULTS
 
     return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, function (all, $1) {
       return get(data, $1) || ''
     })
-  },
+  }
 
   /**
    * 通过配置作为数据和模板生成 RegExp
@@ -48,10 +48,10 @@ DEFAULTS.noSyntax = false
    * replace string to '{{hi}}'
    * the return result is /{{hi}}/
    */
-  _compileRegexp: function (patternTemplate, attributes) {
+  _compileRegexp (patternTemplate, attributes) {
     let pattern = this._compile(patternTemplate)
     return new RegExp(pattern, attributes)
-  },
+  }
 
   /**
    * 注册语法
@@ -70,7 +70,7 @@ DEFAULTS.noSyntax = false
    * 但是这个正则是贪婪匹配，这样会造成很多匹配错误，我们必须将其改成 '(\\\w+)?'
    * 例如匹配 '{{aaa}}{{aaa}}' 的是否，贪婪匹配会将整个字符串匹配完成，而不是 '{{aaa}}'
    */
-  $registerSyntax: function (name, syntax, shell) {
+  $registerSyntax (name, syntax, shell) {
     let self = this
 
     if (2 < arguments.length) {
@@ -93,7 +93,7 @@ DEFAULTS.noSyntax = false
     }
 
     return this
-  },
+  }
 
   /**
    * 销毁语法
@@ -101,14 +101,14 @@ DEFAULTS.noSyntax = false
    * @param {string} name 语法名称
    * @returns {Bone}
    */
-  $unregisterSyntax: function (name) {
+  $unregisterSyntax (name) {
     let blocks = this._blocks
     if (blocks.hasOwnProperty(name)) {
       delete blocks[name]
     }
 
     return this
-  },
+  }
 
   /**
    * 清除所有语法
@@ -116,10 +116,10 @@ DEFAULTS.noSyntax = false
    * @param {string} source 语法模板
    * @returns {string}
    */
-  $clearSyntax: function (source) {
+  $clearSyntax (source) {
     let regexp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
     return source.replace(regexp, '')
-  },
+  }
 
   /**
    * 分析语法是否合格
@@ -128,7 +128,7 @@ DEFAULTS.noSyntax = false
    * @param {boolean} compile 是否需要编译
    * @returns {string|boolean}
    */
-  $analyzeSyntax: function (source, compile, origin = '') {
+  $analyzeSyntax (source, compile, origin = '') {
     let tpl = source
 
     if (compile) {
@@ -167,7 +167,7 @@ DEFAULTS.noSyntax = false
     }
 
     return true
-  },
+  }
 
   /**
    * 编译语法模板
@@ -191,7 +191,7 @@ DEFAULTS.noSyntax = false
    * when strict not equal false, it will return '',
    * when strict equal false, it will return '<div></div>'
    */
-  $compileSyntax: function (source, strict) {
+  $compileSyntax (source, strict) {
     strict = !(false === strict)
 
     let [origin, conf, blocks, valid] = [source, this.DEFAULTS, this._blocks]
@@ -250,7 +250,7 @@ DEFAULTS.noSyntax = false
           ? source
           : (this._throw(valid) || ''))
       : this.$clearSyntax(source)
-  },
+  }
 
   /**
    * 查询/设置块级辅助函数
@@ -261,7 +261,7 @@ DEFAULTS.noSyntax = false
    * @description
    * 只有语法版本才拥有 block 这个概念，原生版本可以通过各种函数达到目的
    */
-  block: function (query, callback) {
+  block (query, callback) {
     if (1 < arguments.length) {
       if (is('String')(query) && is('Function')(callback)) {
         this
@@ -288,7 +288,7 @@ DEFAULTS.noSyntax = false
     }
 
     return this
-  },
+  }
 
   /**
    * 注销块级辅助函数
@@ -296,7 +296,7 @@ DEFAULTS.noSyntax = false
    * @param {string} name 名称
    * @returns {Bone}
    */
-  unblock: function (name) {
+  unblock (name) {
     let helpers = this._blockHelpers,
         blocks  = this._blocks
 
@@ -307,5 +307,5 @@ DEFAULTS.noSyntax = false
     }
 
     return this
-  },
-})
+  }
+}

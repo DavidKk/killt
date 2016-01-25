@@ -2,5 +2,5 @@
  * Exports Module
  */
 UMD('oTemplate', function() {
-  return new Bone()
+  return new Syntax()
 }, root)
