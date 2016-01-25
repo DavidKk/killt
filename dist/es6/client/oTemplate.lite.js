@@ -693,13 +693,13 @@ OTemplate._extends = []
    * @param {Object} options 编译配置 (optional)
    * @returns {Function}
    * @description
-   * 
+   *
    * Render and it's options will be cached together,
    * and they can not be modified by any operation.
    * If you want to replace or modify the options, u
    * must compile it again. And u can use options.override
    * to override it.
-   * 
+   *
    * 渲染器的 options 将与渲染器一起缓存起来，且不会被
    * 外界影响，若要修改 options，则必须重新生成渲染器，
    * 可以设置 options.override 为 true 来覆盖
@@ -1044,7 +1044,7 @@ function is (type) {
         if ('function' !== typeof ctor) {
             return false
         }
-        
+
         prot = ctor.prototype;
         if (false === is('Object')(prot)) {
             return false

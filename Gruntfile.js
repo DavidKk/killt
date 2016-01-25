@@ -90,15 +90,15 @@ module.exports = function(grunt) {
     grunt.file
     .expand('src/syntax/*')
     .forEach(function(file) {
-      var stats = fs.lstatSync(file),
-          filename = file.split('/').splice(-1, 1).pop(),
-          ext = path.extname(filename),
-          name = filename.replace(ext, '')
+      var stats     = fs.lstatSync(file),
+          filename  = file.split('/').splice(-1, 1).pop(),
+          ext       = path.extname(filename),
+          name      = filename.replace(ext, '')
 
        ext === '.js' && syntax.push({
-        path: file,
-        filename: filename,
-        name: name
+        path      : file,
+        filename  : filename,
+        name      : name
       })
     })
 
@@ -108,10 +108,10 @@ module.exports = function(grunt) {
     grunt.file
     .expand('src/vendors/*')
     .forEach(function(file) {
-      var stats = fs.lstatSync(file),
-          filename = file.split('/').splice(-1, 1).pop(),
-          ext = path.extname(filename),
-          name = filename.replace(ext, '')
+      var stats     = fs.lstatSync(file),
+          filename  = file.split('/').splice(-1, 1).pop(),
+          ext       = path.extname(filename),
+          name      = filename.replace(ext, '')
 
       if (ext === '.js') {
         // Lit version

@@ -35,7 +35,7 @@ function is (type) {
         if ('function' !== typeof ctor) {
             return false
         }
-        
+
         prot = ctor.prototype;
         if (false === is('Object')(prot)) {
             return false

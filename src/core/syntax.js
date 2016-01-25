@@ -8,7 +8,7 @@
  * 使用者可以拥有完全自主的控制权，但是语法最终必须替换成原生语法 (以 `<%` 和 `%>` 为包裹标记)
  * 其包裹内容是 Javascript 代码，你可以通过 `block` `helper` 为模板渲染时创建
  * 需要的辅助函数。
- * 
+ *
  * 自定义语法需注意：
  * 1. 正则表达式之间最好不要具有优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
@@ -25,7 +25,7 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    * @param {Object} data 数据 (optional)，若数据不为 object 则设为默认配置数据
    * @returns {string}
    * @description
-   * 
+   *
    * '<%= openTag %>hi<%= closeTag %>'
    * if my defauts is { openTag: '{{', closeTag: '}}' }
    * the result is '{{hi}}'
@@ -181,10 +181,10 @@ OTemplate.DEFAULTS = extend(OTemplate.DEFAULTS, {
    *                            默认为 true，除 false 之外所有均看成 true
    * @return {string}
    * @example
-   * 
+   *
    * Strict Mode
    * =============
-   * 
+   *
    * Template:
    *   {{no-register}}
    *     <div></div>

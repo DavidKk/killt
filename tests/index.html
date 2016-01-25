@@ -24,11 +24,12 @@
 </script>
 
 <script id="oTemplate1" type="text/template">
+<div data-id="{{ 'id-123' }}"><div>
 {{- qwe = '}}'  }}
 </script>
 
 <script>
-  var template = oTemplate.renderById('oTemplate');
+  var template = oTemplate.renderById('oTemplate1');
   console.log(template)
 </script>
 </body>
