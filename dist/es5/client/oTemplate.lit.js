@@ -1045,14 +1045,15 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
     if (1 < arguments.length) {
       if (is('String')(query) && is('Function')(callback)) {
         this
-          .$registerSyntax((("" + query) + "open"), (("(" + query) + ")\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*"), function ($all, $1, $2, $3, $4, $5) {
-            return (("<%" + $1) + ("($append, " + ($2 ? $2 + ', ' : '')) + ("function (" + ($5 || '')) + ") {'use strict';var $buffer='';%>")
-          })
-          .$registerSyntax((("" + query) + "close"), ("/" + query), ("return $buffer;});"))
-          ._blockHelpers[query] = function ($append) {
-            var args = Array.prototype.splice.call(arguments, 1)
-            $append(callback.apply(this, args))
-          }
+        .$registerSyntax((("" + query) + "open"), (("(" + query) + ")\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*"), function ($all, $1, $2, $3, $4, $5) {
+          return (("<%" + $1) + ("($append, " + ($2 ? $2 + ', ' : '')) + ("function (" + ($5 || '')) + ") {'use strict';var $buffer='';%>")
+        })
+        .$registerSyntax((("" + query) + "close"), ("/" + query), ("return $buffer;});"))
+
+        this._blockHelpers[query] = function ($append) {
+          var args = Array.prototype.splice.call(arguments, 1)
+          $append(callback.apply(this, args))
+        }
       }
     }
     else {
@@ -1185,15 +1186,27 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
     }
     else {
       this.getSourceByAjax(sourceUrl, function (source) {
-        source = self.$compileSyntax(source, !!conf.strict)
+        var origin = (dependencies = [source, []])[0], dependencies = dependencies[1]
 
-        var origin = (match = [source, []])[0], requires = match[1], match = match[2]
-        while (match = /<%!?#?\s*include\s*\(\s*(\'([^\']+)?\'|\"([^\"]+)?\")(\s*,\s*([^\)]+)?)?\)%>/.exec(source)) {
-          requires.push(match[3])
-          source = source.replace(match[0], '')
+        // source 经过这里会变得不纯正
+        // 主要用于确定需要导入的模板
+        if (false === conf.noSyntax) {
+          source = self.$compileSyntax(source, conf.strict)
         }
 
-        var total = requires.length
+        // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
+        forEach(source.split('<%'), function(code) {
+          var codes = (match = [code.split('%>')])[0], match = match[1]
+
+          // logic block is fist part when `codes.length === 2`
+          // 逻辑模块
+          if (1 !== codes.length
+          && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
+            dependencies.push(match[1].replace(/[\'\"\`]/g, ''))
+          }
+        })
+
+        var total = dependencies.length
         var __exec = function () {
           0 >= (-- total) && __return()
         }
@@ -1206,7 +1219,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
         }
 
         if (total > 0) {
-          forEach(unique(requires), function (file) {
+          forEach(unique(dependencies), function (file) {
             if (self._cache(file)) {
               __exec()
             }

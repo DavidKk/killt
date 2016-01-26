@@ -1,7 +1,7 @@
-describe('Test lit syntax', function() {
+describe('Test origin javascript syntax', function() {
   var _ = oTemplate
 
-  describe('It can parse templates', function() {
+  describe('It can compile templates', function() {
     beforeEach(function() {
       _ = _.$divide({
         env       : _.ENV.UNIT,
@@ -41,21 +41,42 @@ describe('Test lit syntax', function() {
       expect(source.trim()).toEqual('12')
     })
 
-    it('should not use keyword for variables', function() {
-      var template = '<%= for %>',
-          flag = false
+    it('should not compile keywords', function() {
+      var keywords = [
+            '$append',
+            '$blocks', '$buffer',
+            '$data',
+            '$helpers',
+            '$scope',
+            '$runtime',
 
-      _.on('error', function(err) {
-        expect(err).toEqual(jasmine.any(Object))
-        flag = true
+            'abstract', 'arguments',
+            'break', 'boolean', 'byte',
+            'case', 'catch', 'char', 'class', 'continue', 'console', 'const',
+            'debugger', 'default', 'delete', 'do', 'double',
+            'else', 'enum', 'export', 'extends',
+            'false', 'final', 'finally', 'float', 'for', 'function',
+            'goto',
+            'if', 'implements', 'import', 'in', 'instanceof', 'int', 'interface',
+            'let', 'long',
+            'native', 'new', 'null',
+            'package', 'private', 'protected', 'public',
+            'return',
+            'short', 'static', 'super', 'switch', 'synchronized',
+            'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof',
+            'undefined',
+            'var', 'void', 'volatile',
+            'while', 'with',
+            'yield'
+          ]
+
+      keywords.forEach(function(name, index) {
+        var datas = {}
+        datas[name] = index
+
+        var source = _.render('<%= ' + name + '%>', datas)
+        expect(source).not.toEqual(index)
       })
-
-      var source = _.render(template, {
-        for: 'Hello World'
-      })
-
-      expect(source).toEqual('')
-      expect(flag).toBeTruthy()
     })
 
     it('should use helper', function() {

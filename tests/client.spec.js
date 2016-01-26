@@ -1,249 +1,133 @@
-// describe('Test OTemplate In Client.', function() {
-//   oTemplate.config('env', oTemplate.ENV.UNIT)
+describe('Test in client', function() {
+  var _ = oTemplate
 
-//   beforeEach(function() {
-//     jasmine.Ajax.install()
-//   })
+  describe('It can compile templates', function() {
+    beforeEach(function() {
+      _ = _.$divide({
+        env: _.ENV.UNIT,
+        noSyntax  : true
+      })
 
-//   afterEach(function() {
-//     jasmine.Ajax.uninstall()
-//   })
+      jasmine.Ajax.install()
+    })
 
-//   // lit version
-//   describe('oTemplate can parse templates.', function() {
-//     it('should render the templates in script-node.', function() {
-//       document.body.innerHTML = '<script id="/templates/a.html" type="/templates/text"><%if (1) {%><div>Hello world</div><%}%></script>'
+    afterEach(function() {
+      jasmine.Ajax.uninstall()
 
-//       var view = oTemplate.renderById('/templates/a.html')
-//       expect(view).toEqual('<div>Hello world</div>')
-//     })
+      document.body.innerHTML = ''
+    })
 
-//     it('should render the template file by AJAX.', function(done) {
-//       jasmine.Ajax
-//       .stubRequest('/templates/b.html')
-//       .andReturn({
-//         status: 200,
-//         statusText: 'HTTP/1.1 200 OK',
-//         contentType: 'text/xml;charset=UTF-8',
-//         responseText: '<%if (1) {%><div>Hello world</div><%}%>'
-//       })
+    it('should render nested templates', function() {
+      document.body.innerHTML =
+        '<script id="templates/nested.html" type="template/text">'
+      +   '<%if (true) {%>'
+      +     '<div>Hello world</div>'
+      +   '<%}%>'
+      + '</script>'
 
-//       oTemplate.renderByAjax('/templates/b.html', {}, function(view) {
-//         expect(view).toEqual('<div>Hello world</div>')
-//         done()
-//       })
-//     })
+      var source = _.renderById('templates/nested.html')
+      expect(source).toEqual('<div>Hello world</div>')
+    })
 
-//     it('should render the template file by AJAX and render nested templates in that AJAX file.', function(done) {
-//       jasmine.Ajax
-//       .stubRequest('/templates/b-1')
-//       .andReturn({
-//         status: 200,
-//         statusText: 'HTTP/1.1 200 OK',
-//         contentType: 'text/xml;charset=UTF-8',
-//         responseText: '<%include("template/b-2")%><script id="template/b-2" type="text/template">Hello</script>'
-//       })
+    it('should render remote templates', function(done) {
+      _.renderByAjax('templates/remote.html', {}, function(source) {
+        expect(source).toEqual('<div>Hello world</div>')
+        done()
+      })
 
-//       oTemplate.renderByAjax('/templates/b-1', {}, function(view) {
-//         expect(view).toEqual('Hello<script id="template/b-2" type="text/template">Hello</script>')
-//         done()
-//       })
-//     })
-//   })
+      jasmine.Ajax.requests
+      .mostRecent()
+      .respondWith({
+        status: 200,
+        statusText: 'HTTP/1.1 200 OK',
+        contentType: 'text/xml;charset=UTF-8',
+        responseText:
+            '<%if (true) {%>'
+          +   '<div>Hello world</div>'
+          + '<%}%>'
+      })
+    })
 
-//   describe('oTemplate can parse nested templates.', function() {
-//     it('should render the nested templates in script-node.', function() {
-//       var template = [
-//         '<script id="/templates/c.html" type="template/text"><%include("/templates/d.html", { mesage: "Hello Nested!!!" })%></script>',
-//         '<script id="/templates/d.html" type="template/text"><div><%= mesage %></div></script>'
-//       ]
+    it('should render remote templates which include the nested templates in body', function(done) {
+      document.body.innerHTML =
+        '<script id="template/nested.html" type="text/template">'
+      +   '<div>Hello World</div>'
+      + '</script>'
 
-//       document.body.innerHTML = template.join('')
-//       var view = oTemplate.renderById('/templates/c.html')
-//       expect(view).toEqual('&lt;div&gt;Hello Nested!!!&lt;/div&gt;')
-//     })
+      _.renderByAjax('template/remote.html', {}, function(source) {
+        expect(source).toEqual('<div>Hello World</div>')
+        done()
+      })
 
-//     it('should render the nested templates file by AJAX.', function(done) {
-//       jasmine.Ajax
-//       .stubRequest('/templates/e.html')
-//       .andReturn({
-//         status: 200,
-//         statusText: 'HTTP/1.1 200 OK',
-//         contentType: 'text/xml;charset=UTF-8',
-//         responseText: '<%include("/templates/f.html", { mesage: "Hello AJAX!!!" })%>'
-//       })
+      jasmine.Ajax.requests
+      .mostRecent()
+      .respondWith({
+        status: 200,
+        statusText: 'HTTP/1.1 200 OK',
+        contentType: 'text/xml;charset=UTF-8',
+        responseText: '<%# include("template/nested.html") %>'
+      })
+    })
+  })
 
-//       jasmine.Ajax
-//       .stubRequest('/templates/f.html')
-//       .andReturn({
-//         status: 200,
-//         statusText: 'HTTP/1.1 200 OK',
-//         contentType: 'text/xml;charset=UTF-8',
-//         responseText: '<div><%= mesage %></div>'
-//       })
+  describe('It can compile nested templates.', function() {
+    beforeEach(function() {
+      _ = _.$divide({
+        env: _.ENV.UNIT,
+        noSyntax  : true
+      })
 
-//       oTemplate.renderByAjax('/templates/e.html', {}, function(view) {
-//         expect(view).toEqual('&lt;div&gt;Hello AJAX!!!&lt;/div&gt;')
-//         done()
-//       })
-//     })
-//   })
+      jasmine.Ajax.install()
+    })
 
-//   describe('oTemplate can complete examples below.', function() {
-//     it('basic', function() {
-//       document.body.innerHTML = 
-//         '<script id="/template/basic.html" type="template/text">'
-//         +   '<h1>{{=title}}</h1>'
-//         +   '<ul>'
-//         +     '{{each list as value, index}}'
-//         +       '<li>{{=index}} ：{{=value}}</li>'
-//         +     '{{/each}}'
-//         +   '</ul>'
-//         + '</script>'
+    afterEach(function() {
+      jasmine.Ajax.uninstall()
 
-//       var view = oTemplate.renderById('/template/basic.html', {
-//         title: 'Keywords',
-//         list: ['Template', 'Template Engine', 'Javascript']
-//       })
+      document.body.innerHTML = ''
+    })
 
-//       expect(view).toEqual('<h1>Keywords</h1><ul><li>0 ：Template</li><li>1 ：Template Engine</li><li>2 ：Javascript</li></ul>')
-//     })
+    it('should render the nested templates', function() {
+      document.body.innerHTML =
+          '<script id="templates/nested.html" type="template/text">'
+        +   '<%# include("templates/nested/a.html", {'
+        +     'mesage: "Hello Nested Template!!!"'
+        +   '}) %>'
+        + '</script>'
 
-//     it('compile', function() {
-//       document.body.innerHTML = 
-//         '<script id="/template/compile.html" type="template/text">'
-//         +   '<h1>{{=title}}</h1>'
-//         +   '<ul>'
-//         +     '{{each list as value, index}}'
-//         +       '<li>{{=index}} ：{{=value}}</li>'
-//         +     '{{/each}}'
-//         +   '</ul>'
-//         + '</script>'
+        + '<script id="templates/nested/a.html" type="template/text">'
+        +   '<div><%= mesage %></div>'
+        + '</script>'
 
-//       var render = oTemplate.compileById('/template/compile.html')
+      var source = _.renderById('templates/nested.html')
+      expect(source).toEqual('<div>Hello Nested Template!!!</div>')
+    })
 
-//       var view = render({
-//         title: 'Keywords',
-//         list: ['Template', 'Template Engine', 'Javascript']
-//       })
+    it('should render the remote templates which included other remote templates', function(done) {
+      jasmine.Ajax
+      .stubRequest('templates/nested/a.html')
+      .andReturn({
+        status: 200,
+        statusText: 'HTTP/1.1 200 OK',
+        contentType: 'text/xml;charset=UTF-8',
+        responseText: '<div><%= mesage %></div>'
+      })
 
-//       expect(view).toEqual('<h1>Keywords</h1><ul><li>0 ：Template</li><li>1 ：Template Engine</li><li>2 ：Javascript</li></ul>')
-//     })
+      jasmine.Ajax
+      .stubRequest('templates/nested.html')
+      .andReturn({
+        status: 200,
+        statusText: 'HTTP/1.1 200 OK',
+        contentType: 'text/xml;charset=UTF-8',
+        responseText:
+            '<%# include("templates/nested/a.html", {'
+          +   'mesage: "Hello Remote Template!!!"'
+          + '})%>'
+      })
 
-//     it('helper', function() {
-//       document.body.innerHTML = 
-//         '<script id="/template/helper.html" type="template/text">'
-//         +  '<h1>{{=title}}</h1>'
-//         +  '<p>{{"Me?" | love}}</p>'
-//         +  '<p>{{"U" | love}}</p>'
-//         + '</script>'
-
-//       oTemplate.helper('love', function(who) {
-//         return /\?/.exec(who) ? 'Fuck Q!!!' : 'Love ' + who
-//       })
-
-//       var view = oTemplate.renderById('/template/helper.html', {
-//         title: 'Helper Defination'
-//       })
-
-//       expect(view).toEqual('<h1>Helper Defination</h1><p>Fuck Q!!!</p><p>Love U</p>')
-//     })
-
-//     it('include', function() {
-//       document.body.innerHTML = 
-//         '<script id="/template/include.html" type="template/text">'
-//         +   '<h1>{{=title}}</h1>'
-//         +   '{{include "/template/include/a.html"}}'
-//         + '</script>'
-
-//         + '<script id="/template/include/a.html" type="template/text">'
-//         +   '<h3>{{=subTitle}}</h3>'
-//         +   '{{include "/template/include/b.html"}}'
-//         + '</script>'
-
-//         + '<script id="/template/include/b.html" type="template/text">'
-//         +   '<ul>'
-//         +     '{{each list as value, index}}'
-//         +       '<li>{{=index}} ：{{=value}}</li>'
-//         +     '{{/each}}'
-//         +   '</ul>'
-//         + '</script>'
-
-//       var view = oTemplate.renderById('/template/include.html', {
-//         title: 'oTemplate',
-//         subTitle: 'Keywords',
-//         list: ['Template', 'Template Engine', 'Javascript']
-//       })
-
-//       expect(view).toEqual('<h1>oTemplate</h1><h3>Keywords</h3><ul><li>0 ：Template</li><li>1 ：Template Engine</li><li>2 ：Javascript</li></ul>')
-//     })
-
-//     it('noescape', function() {
-//       document.body.innerHTML = 
-//         '<script id="/template/noescape.html" type="template/text">'
-//         +  '<h1>{{=title}}</h1>'
-//         +   '<h4>默认 escape = true</h4>'
-//         +   '<p>{{=noescapeContent}}</p>'
-//         +   '<h4>不转义</h4>'
-//         +   '<p>{{#escapeContent}}</p>'
-//         +   '<h4>强制转义</h4>'
-//         +   '<p>{{!#escapeContent}}</p>'
-//         + '</script>'
-
-//       var view = oTemplate.renderById('/template/noescape.html', {
-//         title: 'oTemplate',
-//         noescapeContent: '<div>\
-//             Check it out!!!\
-//             <ul>\
-//               <li>check</li>\
-//               <li>check</li>\
-//               <li>check</li>\
-//               <li>yoyoyo</li>\
-//             </ul>\
-//           </div>',
-//         escapeContent: '<div>\
-//             Check it out!!!\
-//             <ul>\
-//               <li>check</li>\
-//               <li>check</li>\
-//               <li>check</li>\
-//               <li>yoyoyo</li>\
-//             </ul>\
-//           </div>'
-//       }, {
-//         escape: true
-//       })
-
-//       expect(view).toEqual('<h1>oTemplate</h1><h4>默认 escape = true</h4><p>&lt;div&gt;            Check it out!!!            &lt;ul&gt;              &lt;li&gt;check&lt;/li&gt;              &lt;li&gt;check&lt;/li&gt;              &lt;li&gt;check&lt;/li&gt;              &lt;li&gt;yoyoyo&lt;/li&gt;            &lt;/ul&gt;          &lt;/div&gt;</p><h4>不转义</h4><p><div>            Check it out!!!            <ul>              <li>check</li>              <li>check</li>              <li>check</li>              <li>yoyoyo</li>            </ul>          </div></p><h4>强制转义</h4><p>&lt;div&gt;            Check it out!!!            &lt;ul&gt;              &lt;li&gt;check&lt;/li&gt;              &lt;li&gt;check&lt;/li&gt;              &lt;li&gt;check&lt;/li&gt;              &lt;li&gt;yoyoyo&lt;/li&gt;            &lt;/ul&gt;          &lt;/div&gt;</p>')
-//     })
-
-//     it('debug', function() {
-//       document.body.innerHTML = 
-//         '<script id="/template/debug/a.html" type="template/text">\
-//           <h1>{{=title</h1>\
-//           <p>{{#content}}</p>\
-//         </script>\
-//         <script id="/template/debug/b.html" type="template/text">\
-//           {{helper}}\
-//             <div>Hello world!!!</div>\
-//           {{/helper}}\
-//         </script>\
-//         <script id="/template/debug/c.html" type="template/text">\
-//           <div>{{"error helper" | helper}}</div>\
-//         </script>'
-
-//       oTemplate.onError(function(error, message) {
-//         console.log(message)
-//       })
-
-//       oTemplate.renderById('/template/debug/a.html')
-//       oTemplate.renderById('/template/debug/b.html')
-//       oTemplate.renderById('/template/debug/c.html')
-//       oTemplate.renderById('/template/debug/d.html')
-//       oTemplate.renderByAjax('/template/debug/e.html', function() {})
-//       oTemplate.renderByAjax('http://baidu.com', function() {})
-//     })
-//   })
-
-//   // TODO: error issue should below.
-// })
+      _.renderByAjax('templates/nested.html', {}, function(source) {
+        expect(source).toEqual('<div>Hello Remote Template!!!</div>')
+        done()
+      })
+    })
+  })
+})

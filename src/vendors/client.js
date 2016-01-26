@@ -85,15 +85,27 @@ class Client extends Bone {
     }
     else {
       this.getSourceByAjax(sourceUrl, function (source) {
-        source = self.$compileSyntax(source, !!conf.strict)
+        let [origin, dependencies] = [source, []]
 
-        let [origin, requires, match] = [source, []]
-        while (match = /<%!?#?\s*include\s*\(\s*(\'([^\']+)?\'|\"([^\"]+)?\")(\s*,\s*([^\)]+)?)?\)%>/.exec(source)) {
-          requires.push(match[3])
-          source = source.replace(match[0], '')
+        // source 经过这里会变得不纯正
+        // 主要用于确定需要导入的模板
+        if (false === conf.noSyntax) {
+          source = self.$compileSyntax(source, conf.strict)
         }
 
-        let total = requires.length
+        // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
+        forEach(source.split('<%'), function(code) {
+          let [codes, match] = [code.split('%>')]
+
+          // logic block is fist part when `codes.length === 2`
+          // 逻辑模块
+          if (1 !== codes.length
+          && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
+            dependencies.push(match[1].replace(/[\'\"\`]/g, ''))
+          }
+        })
+
+        let total = dependencies.length
         let __exec = function () {
           0 >= (-- total) && __return()
         }
@@ -106,7 +118,7 @@ class Client extends Bone {
         }
 
         if (total > 0) {
-          forEach(unique(requires), function (file) {
+          forEach(unique(dependencies), function (file) {
             if (self._cache(file)) {
               __exec()
             }

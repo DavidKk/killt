@@ -1045,14 +1045,15 @@ class Syntax {
     if (1 < arguments.length) {
       if (is('String')(query) && is('Function')(callback)) {
         this
-          .$registerSyntax(`${query}open`, `(${query})\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*`, function ($all, $1, $2, $3, $4, $5) {
-            return `<%${$1}($append, ${$2 ? $2 + ', ' : ''}function (${$5 || ''}) {'use strict';var $buffer='';%>`
-          })
-          .$registerSyntax(`${query}close`, `/${query}`, `return $buffer;});`)
-          ._blockHelpers[query] = function ($append) {
-            let args = Array.prototype.splice.call(arguments, 1)
-            $append(callback.apply(this, args))
-          }
+        .$registerSyntax(`${query}open`, `(${query})\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*`, function ($all, $1, $2, $3, $4, $5) {
+          return `<%${$1}($append, ${$2 ? $2 + ', ' : ''}function (${$5 || ''}) {'use strict';var $buffer='';%>`
+        })
+        .$registerSyntax(`${query}close`, `/${query}`, `return $buffer;});`)
+
+        this._blockHelpers[query] = function ($append) {
+          let args = Array.prototype.splice.call(arguments, 1)
+          $append(callback.apply(this, args))
+        }
       }
     }
     else {

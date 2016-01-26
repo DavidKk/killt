@@ -9,6 +9,31 @@ Bone.extend(function() {
 
   this
   /**
+   * helper syntax
+   * syntax {{ data | helperA: dataA, dataB, dataC | helperB: dataD, dataE, dataF }}
+   */
+  .$registerSyntax('helper', HELPER_SYNTAX, (function() {
+    return function($all, $1, $2, $3, $4, $5) {
+      let str = format.apply(this, arguments)
+
+      // 这里需要递推所有的辅助函数
+      while (HELPER_INNER_REGEXP.exec(str)) {
+        str = str.replace(HELPER_INNER_REGEXP, innerFormat)
+      }
+
+      return `<%${toString($1)}${str}%>`
+    }
+
+    function format ($all, $1, $2, $3, $4, $5) {
+      return `${$3}(${trim($2)}${$4 ? ',' + $4 : ''})${$5 ? $5.replace(/^\s*$/, '') : ''}`
+    }
+
+    function innerFormat ($all, $1, $2, $3, $4) {
+      return `${$2}(${$1},${$4})`
+    }
+  })())
+
+  /**
    * echo something
    * syntax {{= 'hello world' }}
    */
@@ -68,30 +93,6 @@ Bone.extend(function() {
   .$registerSyntax('include', 'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3) {
     return `<%#include('${$1.replace(/[\'\"\`]/g, '')}', ${$3 || '$data'})%>`
   })
-  /**
-   * helper syntax
-   * syntax {{ data | helperA: dataA, dataB, dataC | helperB: dataD, dataE, dataF }}
-   */
-  .$registerSyntax('helper', HELPER_SYNTAX, (function() {
-    return function($all, $1, $2, $3, $4, $5) {
-      let str = format.apply(this, arguments)
-
-      // 这里需要递推所有的辅助函数
-      while (HELPER_INNER_REGEXP.exec(str)) {
-        str = str.replace(HELPER_INNER_REGEXP, innerFormat)
-      }
-
-      return `<%${toString($1)}${str}%>`
-    }
-
-    function format ($all, $1, $2, $3, $4, $5) {
-      return `${$3}(${trim($2)}${$4 ? ',' + $4 : ''})${$5 ? $5.replace(/^\s*$/, '') : ''}`
-    }
-
-    function innerFormat ($all, $1, $2, $3, $4) {
-      return `${$2}(${$1},${$4})`
-    }
-  })())
 
   // add a each syntax helper
   // 添加语法辅助函数
