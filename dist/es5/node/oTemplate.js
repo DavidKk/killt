@@ -1,5 +1,4 @@
 ~(function(root) {'use strict';var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};
-
 /**
  * current envirment - 配置环境
  * @type {Object}
@@ -10,7 +9,7 @@ var ENV = {
   /** develop env - 开发环境 */
   DEVELOP : 2,
   /** unit test env - 单元测试环境 */
-  UNIT    : 3
+  UNITEST : 3,
 }
 
 /**
@@ -21,7 +20,7 @@ var DEFAULTS = {
   /** current entironment - 当前环境 [unit, develop, produce] */
   env       : ENV.PRODUCE,
   /** is use native syntax - 是否使用使用原生语法 */
-  noSyntax  : false,
+  noSyntax  : true,
   /** compile syntax in strict mode - 是否通过严格模式编译语法 */
   strict    : true,
   /** escape the HTML - 是否编码输出变量的 HTML 字符 */
@@ -34,8 +33,7 @@ var DEFAULTS = {
   closeTag  : '}}',
   /** addition render arguments (must be use `$` to define variable name) - 追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量) */
   depends   : [],
-}
-;
+};
 /**
  * Base class for engine
  * @class
@@ -48,7 +46,7 @@ var DEFAULTS = {
  * @param {string} options.closeTag 语法的结束标识
  * @param {Array} options.depends 追加渲染器的传值设定
  */
-var Bone = (function(){var static$0={},proto$0={};
+var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto$0={};
   /**
    * 构造函数
    * @function
@@ -134,13 +132,14 @@ var Bone = (function(){var static$0={},proto$0={};
       }
     })
 
-    // set any syntax - 设置语法
+    // set any syntax
+    // 设置语法
     if (is('Array')(Bone._extends)) {
       forEach(Bone._extends, function(_extends_) {
         self.extends(_extends_)
       })
     }
-  }DP$0(Bone,"prototype",{"configurable":false,"enumerable":false,"writable":false});
+  }DPS$0(Bone.prototype,{ENV: {"get": $ENV_get$0, "configurable":true,"enumerable":true}});DP$0(Bone,"prototype",{"configurable":false,"enumerable":false,"writable":false});
 
   /**
    * 查询与设置配置
@@ -196,26 +195,13 @@ var Bone = (function(){var static$0={},proto$0={};
         line      = 1,
         buffer    = ''
 
-    /**
-     * 获取变量名
-     * @function
-     * @param {string} source Shell
-     * @returns {Array}
-     */
-    var getVariables = function (source) {
-      var variables = source
-            .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
-            .replace(/[^\w$]+/g, ',')
-            .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
-            .split(/^$|,+/)
-
-      return filter(variables, function(variable) {
-        return -1 === getVariables.KEYWORDS.indexOf(variable)
-      })
-    }
-
-    getVariables.KEYWORDS = [
-      '$scope', '$helpers', '$blocks', '$data', '$buffer', '$runtime', '$append',
+    var KEYWORDS = [
+      '$append',
+      '$blocks', '$buffer',
+      '$data',
+      '$helpers',
+      '$scope',
+      '$runtime',
 
       'abstract', 'arguments',
       'break', 'boolean', 'byte',
@@ -236,6 +222,24 @@ var Bone = (function(){var static$0={},proto$0={};
       'while', 'with',
       'yield'
     ]
+
+    /**
+     * 获取变量名
+     * @function
+     * @param {string} source Shell
+     * @returns {Array}
+     */
+    var getVariables = function (source) {
+      var variables = source
+            .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
+            .replace(/[^\w$]+/g, ',')
+            .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
+            .split(/^$|,+/)
+
+      return filter(variables, function(variable) {
+        return -1 === KEYWORDS.indexOf(variable)
+      })
+    }
 
     /**
      * 解析Source为JS字符串拼接
@@ -720,6 +724,31 @@ var Bone = (function(){var static$0={},proto$0={};
   };
 
   /**
+   * 创建新的该类
+   * @function
+   * @param {Object} options 配置
+   * @param {string} options.env [unit, develop, produce]
+   * @param {boolean} options.noSyntax 是否使用使用原生语法
+   * @param {boolean} options.strict 是否通过严格模式编译语法
+   * @param {boolean} options.compress 压缩生成的HTML代码
+   * @param {string} options.openTag 语法的起始标识
+   * @param {string} options.closeTag 语法的结束标识
+   * @param {Array} options.depends 追加渲染器的传值设定
+   * @return {Bone}
+   */
+  proto$0.$divide = function (options) {
+    return new this.constructor(options)
+  };
+
+  /**
+   * current envirment - 配置环境
+   * @type {Object}
+   */
+  function $ENV_get$0 () {
+    return ENV
+  }
+
+  /**
    * 扩展库
    * @function
    * @param  {Function} _extends_ 扩展方法
@@ -729,22 +758,24 @@ var Bone = (function(){var static$0={},proto$0={};
     is('Function')(_extends_) && Bone._extends.push(_extends_)
     return this
   };
+
+  /**
+   * 编译语法
+   * @function
+   */
+  proto$0.$compileSyntax = function () {
+    throw new Error('Function `$compileSyntax` does not be implemented.')
+  };
 MIXIN$0(Bone,static$0);MIXIN$0(Bone.prototype,proto$0);static$0=proto$0=void 0;return Bone;})();
 
 /**
  * extens plugins - 扩展集合
  * @type {Array}
  */
-Bone._extends = []
-
+Bone._extends = [];
 /**
- * current envirment - 配置环境
- * @type {Object}
- */
-Bone.ENV = ENV;
-/**
- * Syntax Module - 语法模块
- * @type {Object}
+ * Syntax - 语法类
+ * @class
  * @description
  * 该模块主要提供一系列方法和基础语法供使用者更为简洁编写模板和自定义扩展语法
  * 你可以通过 `$registerSyntax` 方法来扩展自己所需求的语法；
@@ -757,7 +788,7 @@ Bone.ENV = ENV;
  * 1. 正则表达式之间最好不要具有优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
-var Syntax = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){if(PRS$0){o["__proto__"]=p;}else {DP$0(o,"__proto__",{"value":p,"configurable":true,"enumerable":false,"writable":true});}return o};var OC$0 = Object.create;function Syntax() {if(super$0!==null)super$0.apply(this, arguments)}if(!PRS$0)MIXIN$0(Syntax, super$0);if(super$0!==null)SP$0(Syntax,super$0);Syntax.prototype = OC$0(super$0!==null?super$0.prototype:null,{"constructor":{"value":Syntax,"configurable":true,"writable":true}});DP$0(Syntax,"prototype",{"configurable":false,"enumerable":false,"writable":false});var proto$0={};
+var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configurable":false,"enumerable":false,"writable":false});var proto$0={};
   /**
    * 通过配置作为数据来替换模板
    * @function
@@ -1057,20 +1088,18 @@ var Syntax = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
 
     return this
   };
-MIXIN$0(Syntax.prototype,proto$0);proto$0=void 0;return Syntax;})(Bone);
+MIXIN$0(Syntax.prototype,proto$0);proto$0=void 0;return Syntax;})();
 
+// close no syntax config
+// 关闭没有语法的配置项
 DEFAULTS.noSyntax = false
+
+// extends all method to Bone class
+// 扩展所有方法到 Bone 类中
+~extend(Bone.prototype, Syntax.prototype)
 ;
 /**
  * Simple Syntax Defination - 定义简单语法
- * @description
- * `if`:      {{if true}}...{{elseif}}...{{else}}...{{/if}}
- * `each`:    {{each data as value,key}}...{{/each}}
- * `include`: {{include "/templates/index.html", data}}
- * `escape`:  {{# "<div></div>"}}
- * `helper`:  {{data | helperA:dataA,dataB,dataC | helperB:dataD,dataE,dataF}}
- * `noescpe`: {{# data}}
- * `escpe`:   {{!# data}}
  */
 Bone.extend(function() {
   var HELPER_SYNTAX       = '(=|-|!|#|!#)?\\s*([^|]+?(?:\\s*(?:\\|\\||\\&\\&)\\s*[^|]+?)*)\\s*\\|\\s*([^:\\|]+?)\\s*(?:\\:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?',
@@ -1079,9 +1108,75 @@ Bone.extend(function() {
       HELPER_INNER_REGEXP = this._compileRegexp(HELPER_INNER_SYNTAX)
 
   this
+  /**
+   * echo something
+   * syntax {{= 'hello world' }}
+   */
+  .$registerSyntax('echo', '=\\s*([\\w\\W]+?)\\s*', '=$1')
+  /**
+   * do some javascript
+   * syntax {{- var sayWhat = 'hello world' }}
+   */
+  .$registerSyntax('logic', '-\\s*([\\w\\W]+?)\\s*', '$1')
+  /**
+   * do not escape html, sometime it not safe
+   * syntax {{# "<script></script>" }}
+   */
+  .$registerSyntax('noescape', '#\\s*([\\w\\W]+?)\\s*', '#$1')
+  /**
+   * escape html, it can not be used when `DEAUTIFUL.escape === true`
+   * syntax {{!# "<script></script>" }}
+   */
+  .$registerSyntax('escape', '!#\\s*([\\w\\W]+?)\\s*', '!#$1')
+  /**
+   * if open tag and corresponding to ifclose (block syntax)
+   * syntax {{if true}} Hello World {{/if}}
+   */
+  .$registerSyntax('ifopen', 'if\\s*(.+?)\\s*', 'if ($1) {')
+  /**
+   * else tag between if and ifclose tag
+   * syntax {{if false}} {{else}} Hello World {{/if}}
+   */
+  .$registerSyntax('else', 'else', '} else {')
+  /**
+   * elseif tag,  a special tag for if tag
+   * syntax {{if false}} {{elseif true}} Hello World {{/if}}
+   */
+  .$registerSyntax('elseif', 'else\\s*if\\s*(.+?)\\s*', '} else if ($1) {')
+  /**
+   * if close tag
+   * syntax {{if true}} Hello World {{/if}}
+   */
+  .$registerSyntax('ifclose', '\\/if', '}')
+  /**
+   * each open tag. iterate data one by one
+   * syntax {{each data as value, key}} {{= key + '=>' + value }} {{/each}}
+   */
+  .$registerSyntax('eachopen', 'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', function($all, $1, $2, $3, $4) {
+    var string = (("each(" + $1) + (", function(" + ($3 || '$value')) + ("" + ($4 || ', $index')) + ") {")
+    return (("<%" + string) + "%>")
+  })
+  /**
+   * each close tag
+   * syntax {{each data as value, key}} {{= key + '=>' + value }} {{/each}}
+   */
+  .$registerSyntax('eachclose', '\\/each', '})')
+  /*
+   * include another template
+   * syntax {{include template/index.html [, ...(optional)] }}
+   */
+  .$registerSyntax('include', 'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3) {
+    return (("<%#include('" + ($1.replace(/[\'\"\`]/g, ''))) + ("', " + ($3 || '$data')) + ")%>")
+  })
+  /**
+   * helper syntax
+   * syntax {{ data | helperA: dataA, dataB, dataC | helperB: dataD, dataE, dataF }}
+   */
   .$registerSyntax('helper', HELPER_SYNTAX, (function() {
     return function($all, $1, $2, $3, $4, $5) {
       var str = format.apply(this, arguments)
+
+      // 这里需要递推所有的辅助函数
       while (HELPER_INNER_REGEXP.exec(str)) {
         str = str.replace(HELPER_INNER_REGEXP, innerFormat)
       }
@@ -1097,23 +1192,9 @@ Bone.extend(function() {
       return (("" + $2) + ("(" + $1) + ("," + $4) + ")")
     }
   })())
-  .$registerSyntax('echo', '=\\s*([\\w\\W]+?)\\s*', '=$1')
-  .$registerSyntax('logic', '-\\s*([\\w\\W]+?)\\s*', '$1')
-  .$registerSyntax('noescape', '#\\s*([\\w\\W]+?)\\s*', '#$1')
-  .$registerSyntax('escape', '!#\\s*([\\w\\W]+?)\\s*', '!#$1')
-  .$registerSyntax('ifopen', 'if\\s*(.+?)\\s*', 'if ($1) {')
-  .$registerSyntax('else', 'else', '} else {')
-  .$registerSyntax('elseif', 'else\\s*if\\s*(.+?)\\s*', '} else if ($1) {')
-  .$registerSyntax('ifclose', '\\/if', '}')
-  .$registerSyntax('eachopen', 'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', function($all, $1, $2, $3, $4) {
-    var string = (("each(" + $1) + (", function(" + ($3 || '$value')) + ("" + ($4 || ', $index')) + ") {")
-    return (("<%" + string) + "%>")
-  })
-  .$registerSyntax('eachclose', '\\/each', '})')
-  .$registerSyntax('include', 'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3) {
-    return (("<%#include(" + $1) + (", " + ($3 || '$data')) + ")%>")
-  })
 
+  // add a each syntax helper
+  // 添加语法辅助函数
   ~extend(this._helpers, {
     each: function(data, callback) {
       forEach(data, callback)
@@ -1123,17 +1204,27 @@ Bone.extend(function() {
 var fs = require('fs')
 
 /**
- * 读取文件
- * @function
- * @param  {String}   filename 文件名
- * @param  {Function} callback 回调函数
+ * 服务器接口类
+ * @class
  */
-function readFile (filename, callback) {
-  if (is('Function')(callback)) {
-    fs.readFile(filename, function(err, buffer) {
-      callback(buffer.toString())
-    })
-  }
+var Server = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){if(PRS$0){o["__proto__"]=p;}else {DP$0(o,"__proto__",{"value":p,"configurable":true,"enumerable":false,"writable":true});}return o};var OC$0 = Object.create;function Server() {if(super$0!==null)super$0.apply(this, arguments)}if(!PRS$0)MIXIN$0(Server, super$0);if(super$0!==null)SP$0(Server,super$0);Server.prototype = OC$0(super$0!==null?super$0.prototype:null,{"constructor":{"value":Server,"configurable":true,"writable":true}});DP$0(Server,"prototype",{"configurable":false,"enumerable":false,"writable":false});var proto$0={};
+  /**
+   * 读取文件
+   * @function
+   * @param  {String}   filename 文件名
+   * @param  {Function} callback 回调函数
+   */
+  proto$0.readFile = function (filename, callback) {
+    if (is('Function')(callback)) {
+      fs.readFile(filename, function(err, buffer) {
+        callback(buffer.toString())
+      })
+    }
+  };
+MIXIN$0(Server.prototype,proto$0);proto$0=void 0;return Server;})(Bone);
+
+module.exports = function() {
+  return new Server()
 };
 /**
  * 判断类型
@@ -1281,29 +1372,20 @@ function escapeSymbol () {var string = arguments[0];if(string === void 0)string 
  * @returns {string}
  */
 function escapeHTML (string) {
-  return toString(string).replace(/&(?![\w#]+;)|[<>"']/g, escapeHTML.escapeFn)
-}
+  // escape sources
+  // 转义资源
+  var SOURCES = {
+    '<': '&lt;',
+    '>': '&gt;',
+    '&': '&amp;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '/': '&#x2f;'
+  }
 
-/**
- * 转义资源
- * @type {Object}
- */
-escapeHTML.SOURCES = {
-  '<': '&lt;',
-  '>': '&gt;',
-  '&': '&amp;',
-  '"': '&quot;',
-  "'": '&#x27;',
-  '/': '&#x2f;'
-}
-
-/**
- * 转义函数
- * @param {string} name 转义字符
- * @returns {string}
- */
-escapeHTML.escapeFn = function (name) {
-  return escapeHTML.SOURCES[name]
+  return toString(string).replace(/&(?![\w#]+;)|[<>"']/g, function(name) {
+    return SOURCES[name]
+  })
 }
 
 /**
@@ -1495,35 +1577,4 @@ function __throw (error, type) {
  */
 function __render () {
   return ''
-}
-
-/**
- * UMD 模块定义
- * @function
- * @param {windows|global} root
- * @param {Function} factory
- */
-function UMD (name, factory, root) {
-  var define = (module = [root.define, factory(root)])[0], module = module[1]
-
-  // AMD & CMD
-  if (is('Function')(define)) {
-    define(function () {
-      return module
-    })
-  }
-  // NodeJS
-  else if ('object' === typeof exports) {
-    module.exports = module
-  }
-  // no module definaction
-  else {
-    root[name] = module
-  }
-};
-/**
- * Exports Module
- */
-UMD('oTemplate', function() {
-  return new Syntax()
-}, root)})(this);
+}})(this);

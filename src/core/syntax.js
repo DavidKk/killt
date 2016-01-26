@@ -1,6 +1,6 @@
 /**
- * Syntax Module - 语法模块
- * @type {Object}
+ * Syntax - 语法类
+ * @class
  * @description
  * 该模块主要提供一系列方法和基础语法供使用者更为简洁编写模板和自定义扩展语法
  * 你可以通过 `$registerSyntax` 方法来扩展自己所需求的语法；
@@ -13,7 +13,7 @@
  * 1. 正则表达式之间最好不要具有优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
-class Syntax extends Bone {
+class Syntax {
   /**
    * 通过配置作为数据来替换模板
    * @function
@@ -315,4 +315,10 @@ class Syntax extends Bone {
   }
 }
 
+// close no syntax config
+// 关闭没有语法的配置项
 DEFAULTS.noSyntax = false
+
+// extends all method to Bone class
+// 扩展所有方法到 Bone 类中
+~extend(Bone.prototype, Syntax.prototype)

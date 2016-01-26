@@ -1,4 +1,3 @@
-
 /**
  * current envirment - 配置环境
  * @type {Object}
@@ -9,7 +8,7 @@ const ENV = {
   /** develop env - 开发环境 */
   DEVELOP : 2,
   /** unit test env - 单元测试环境 */
-  UNIT    : 3
+  UNITEST : 3,
 }
 
 /**
@@ -20,7 +19,7 @@ const DEFAULTS = {
   /** current entironment - 当前环境 [unit, develop, produce] */
   env       : ENV.PRODUCE,
   /** is use native syntax - 是否使用使用原生语法 */
-  noSyntax  : false,
+  noSyntax  : true,
   /** compile syntax in strict mode - 是否通过严格模式编译语法 */
   strict    : true,
   /** escape the HTML - 是否编码输出变量的 HTML 字符 */

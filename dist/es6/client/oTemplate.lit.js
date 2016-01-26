@@ -1,9 +1,9 @@
-~(function(root) {'use strict';var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};
+~(function(root) {'use strict'
 /**
  * current envirment - 配置环境
  * @type {Object}
  */
-var ENV = {
+const ENV = {
   /** production env - 生产环境 */
   PRODUCE : 1,
   /** develop env - 开发环境 */
@@ -16,7 +16,7 @@ var ENV = {
  * default options - 默认配置
  * @type {Object}
  */
-var DEFAULTS = {
+const DEFAULTS = {
   /** current entironment - 当前环境 [unit, develop, produce] */
   env       : ENV.PRODUCE,
   /** is use native syntax - 是否使用使用原生语法 */
@@ -46,14 +46,14 @@ var DEFAULTS = {
  * @param {string} options.closeTag 语法的结束标识
  * @param {Array} options.depends 追加渲染器的传值设定
  */
-var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto$0={};
+class Bone {
   /**
    * 构造函数
    * @function
    * @param {Object} options 配置 (optional)
    */
-  function Bone () {var options = arguments[0];if(options === void 0)options = {};
-    var self = this
+  constructor (options = {}) {
+    let self = this
 
     /**
      * render caches - 编译器缓存
@@ -111,18 +111,18 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       $toString: function(string, isEscape) {
         string = toString(string)
 
-        var conf = self.DEFAULTS
+        let conf = self.DEFAULTS
         return true === (is('Boolean')(isEscape) ? isEscape : conf.escape)
           ? self.helper('$escape')(string)
           : string
       },
-      include: function(filename) {var data = arguments[1];if(data === void 0)data = {};var options = arguments[2];if(options === void 0)options = {};
-        var conf = self.DEFAULTS,
+      include: function(filename, data = {}, options = {}) {
+        let conf = self.DEFAULTS,
             node = document.getElementById(filename)
 
         if (node) {
           self._throw({
-            message: (("[Include Error]: Template ID " + filename) + " is not found.")
+            message: `[Include Error]: Template ID ${filename} is not found.`
           })
 
           return ''
@@ -139,7 +139,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
         self.extends(_extends_)
       })
     }
-  }DPS$0(Bone.prototype,{ENV: {"get": $ENV_get$0, "configurable":true,"enumerable":true}});DP$0(Bone,"prototype",{"configurable":false,"enumerable":false,"writable":false});
+  }
 
   /**
    * 查询与设置配置
@@ -148,7 +148,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param {*} value 需要配置的值 (optional)
    * @returns {Bone|*} 设置则返回 Bone,获取则返回相应的配置
    */
-  proto$0.config = function (query, value) {
+  config (query, value) {
     if (1 < arguments.length) {
       if (is('String')(query)) {
         if ((query === 'openTag' && query === '<%') || (query === 'closeTag' && query === '%>')) {
@@ -160,7 +160,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       }
     }
 
-    var self = this
+    let self = this
     if (is('PlainObject')(query)) {
       forEach(query, function(name, value) {
         self.config(name, value)
@@ -172,7 +172,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
     if (is('String')(query)) {
       return this.DEFAULTS[query]
     }
-  };
+  }
 
   /**
    * 编译脚本
@@ -181,8 +181,8 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param {Object} options 配置
    * @returns {string}
    */
-  proto$0.$compileShell = function () {var source = arguments[0];if(source === void 0)source = '';var options = arguments[1];if(options === void 0)options = {};
-    var origin    = source,
+  $compileShell (source = '', options = {}) {
+    let origin    = source,
         conf      = this.DEFAULTS,
         isEscape  = is('Boolean')(options.escape) ? options.escape : conf.escape,
         strip     = is('Boolean')(options.compress) ? options.compress : conf.compress,
@@ -195,7 +195,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
         line      = 1,
         buffer    = ''
 
-    var KEYWORDS = [
+    const KEYWORDS = [
       '$append',
       '$blocks', '$buffer',
       '$data',
@@ -229,8 +229,8 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
      * @param {string} source Shell
      * @returns {Array}
      */
-    var getVariables = function (source) {
-      var variables = source
+    let getVariables = function (source) {
+      let variables = source
             .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
             .replace(/[^\w$]+/g, ',')
             .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
@@ -247,17 +247,17 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
      * @param {string} source HTML
      * @returns {string}
      */
-    var sourceToJs = function (source) {
-      var match
+    let sourceToJs = function (source) {
+      let match
       while (match = /<%source\\s*([\w\W]+?)?\\s*%>(.+?)<%\/source%>/igm.exec(source)) {
-        var helperName = match[1]
-        var str = match[2]
+        let helperName = match[1]
+        let str = match[2]
 
         str = helperName && _sources_.hasOwnProperty(helperName)
           ? _sources_[helperName](str)
           : str
 
-        str = (("<%=unescape('" + (window.escape(str))) + "')%>")
+        str = `<%=unescape('${window.escape(str)}')%>`
         source = source.replace(match[0], str)
       }
 
@@ -270,7 +270,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
      * @param {string} source HTML
      * @returns {string}
      */
-    var htmlToJs = function (source) {
+    let htmlToJs = function (source) {
       source = source
         .replace(/<!--[\w\W]*?-->/g, '')
         .replace(/^ +$/, '')
@@ -290,7 +290,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
           .replace(/\r/g, '\\r')
           .replace(/\n/g, '\\n')
 
-      return (("$buffer+='" + source) + "';")
+      return `$buffer+='${source}';`
     }
 
     /**
@@ -299,7 +299,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
      * @param {string} source JS shell
      * @returns {string}
      */
-    var shellToJs = function (source) {
+    let shellToJs = function (source) {
       source = trim(source || '')
 
       // analyze and define variables
@@ -308,7 +308,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
           return
         }
 
-        var func = root[name]
+        let func = root[name]
         if (is('Function')(func) && func.toString().match(/^\s*?function \w+\(\) \{\s*?\[native code\]\s*?\}\s*?$/i)) {
           return
         }
@@ -328,19 +328,19 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
 
       // echo
       if (/^=\s*[\w\W]+?\s*$/.exec(source)) {
-        source = (("$buffer+=$helpers.$toString(" + (source.replace(/^=|;$/g, ''))) + (", " + isEscape) + ");")
+        source = `$buffer+=$helpers.$toString(${source.replace(/^=|;$/g, '')}, ${isEscape});`
       }
       // no escape HTML code
       else if (/^#\s*[\w\W]+?\s*$/.exec(source)) {
-        source = (("$buffer+=$helpers.$noescape(" + (source.replace(/^#|;$/g, ''))) + ");")
+        source = `$buffer+=$helpers.$noescape(${source.replace(/^#|;$/g, '')});`
       }
       // escape HTML code
       else if (/^!#\s*[\w\W]+?\s*$/.exec(source)) {
-        source = (("$buffer+=$helpers.$escape(" + (source.replace(/^!#|;$/g, ''))) + ");")
+        source = `$buffer+=$helpers.$escape(${source.replace(/^!#|;$/g, '')});`
       }
       // echo helper
       else if (/^\s*([\w\W]+)\s*\([^\)]*?\)\s*$/.exec(source)) {
-        source = (("$buffer+=$helpers.$toString(" + source) + (", " + isEscape) + ");")
+        source = `$buffer+=$helpers.$toString(${source}, ${isEscape});`
       }
       else {
         source += ';'
@@ -350,7 +350,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       line += source.split(/\n|%0A/).length - 1
 
       // Must be save the line at first, otherwise the error will break the execution.
-      source = (("$runtime=" + line) + (";" + source) + ("" + (/\)$/.exec(source) ? ';' : '')) + "")
+      source = `$runtime=${line};${source}${(/\)$/.exec(source) ? ';' : '')}`
       return source
     }
 
@@ -359,7 +359,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
     forEach(source.split('<%'), function(code) {
       code = code.split('%>')
 
-      var p1 = (p2 = [code[0], code[1]])[0], p2 = p2[1]
+      let [p1, p2] = [code[0], code[1]]
 
       if (1 === code.length) {
         buffer += htmlToJs(p1)
@@ -372,17 +372,17 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
 
     // define variables
     forEach(unique(variables), function(name) {
-      buffer = (("var " + name) + ("=$data." + name) + (";" + buffer) + "")
+      buffer = `var ${name}=$data.${name};${buffer}`
     })
 
     // define helpers
     forEach(unique(helpers), function(name) {
-      buffer = (("var " + name) + ("=$helpers." + name) + (";" + buffer) + "")
+      buffer = `var ${name}=$helpers.${name};${buffer}`
     })
 
     // define block helpers
     forEach(unique(blocks), function(name) {
-      buffer = (("var " + name) + ("=$blocks." + name) + (";" + buffer) + "")
+      buffer = `var ${name}=$blocks.${name};${buffer}`
     })
 
     // use strict
@@ -400,7 +400,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       +        'throw {'
       +          'message: err.message,'
       +          'line: $runtime,'
-      +          (("shell: '" + (escapeSymbol(origin))) + "'")
+      +          `shell: '${escapeSymbol(origin)}'`
       +        '};'
       +      '}'
 
@@ -409,7 +409,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       +      '}'
 
     return buffer
-  };
+  }
 
   /**
    * 编译模板为函数
@@ -429,10 +429,10 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * 外界影响，若要修改 options，则必须重新生成渲染器，
    * 可以设置 options.override 为 true 来覆盖
    */
-  proto$0.$compile = function () {var source = arguments[0];if(source === void 0)source = '';var options = arguments[1];if(options === void 0)options = {};
+  $compile (source = '', options = {}) {
     source = trim(source)
 
-    var self    = this,
+    let self    = this,
         origin  = source,
         conf    = extend({}, this.DEFAULTS, options),
         deps    = conf.depends,
@@ -454,7 +454,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       source = this.$compileSyntax(source, !!conf.strict)
     }
 
-    var shell = this.$compileShell(source, conf)
+    let shell = this.$compileShell(source, conf)
 
     return buildRender({
       $source   : origin,
@@ -463,15 +463,15 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
     })
 
     function buildRender (scope) {
-      var render
+      let render
 
       try {
         render = new Function(_args_, shell)
       }
       catch (err) {
         self._throw({
-          message   : ("[Compile Render]: " + (err.message)),
-          line      : ("Javascript syntax occur error, it can not find out the error line."),
+          message   : `[Compile Render]: ${err.message}`,
+          line      : `Javascript syntax occur error, it can not find out the error line.`,
           syntax    : self._table(origin),
           template  : source,
           shell     : shell
@@ -490,7 +490,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
           })
 
           self._throw({
-            message   : ("[Exec Render]: " + (err.message)),
+            message   : `[Exec Render]: ${err.message}`,
             line      : err.line,
             template  : err.source,
             shell     : self._table(err.shell, err.line)
@@ -500,7 +500,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
         }
       }
     }
-  };
+  }
 
   /**
    * 编译模板
@@ -513,10 +513,10 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
    * 时才能真正修改渲染器的配置
    */
-  proto$0.compile = function (source) {var options = arguments[1];if(options === void 0)options = {};
+  compile (source, options = {}) {
     source = toString(source)
 
-    var conf     = extend({}, this.DEFAULTS, options),
+    let conf     = extend({}, this.DEFAULTS, options),
         filename = conf.filename,
         render   = true === conf.override || this._cache(filename)
 
@@ -527,7 +527,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
     render = this.$compile(source, conf)
     is('String')(filename) && this._cache(filename, render)
     return render
-  };
+  }
 
   /**
    * 渲染模板
@@ -537,9 +537,9 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param {Object} options 配置 (optional)
    * @returns {string}
    */
-  proto$0.render = function (source) {var data = arguments[1];if(data === void 0)data = {};var options = arguments[2];if(options === void 0)options = {};
+  render (source, data = {}, options = {}) {
     return this.compile(source, options)(data)
-  };
+  }
 
   /**
    * 查找/设置辅助函数
@@ -548,7 +548,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param {Function} callback 回调函数
    * @returns {Bone|Function}
    */
-  proto$0.helper = function (query, callback) {
+  helper (query, callback) {
     if (1 < arguments.length) {
       if (is('String')(query) && is('Function')(callback)) {
         this._helpers[query] = callback
@@ -560,14 +560,14 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       }
 
       if (is('PlainObject')(query)) {
-        for (var name in query) {
+        for (let name in query) {
           this.helper(name, query[name])
         }
       }
     }
 
     return this
-  };
+  }
 
   /**
    * 注销辅助函数
@@ -575,14 +575,14 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param {string} name 名称
    * @returns {Bone}
    */
-  proto$0.unhelper = function (name) {
-    var helpers = this._helpers
+  unhelper (name) {
+    let helpers = this._helpers
     if (helpers.hasOwnProperty(name)) {
       delete helpers[name]
     }
 
     return this
-  };
+  }
 
   /**
    * 添加监听事件
@@ -591,7 +591,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param {Function} handle 监听函数
    * @returns {Bone}
    */
-  proto$0.on = function (type, handle) {
+  on (type, handle) {
     if (is('String')(type) && is('Function')(handle)) {
       this._listeners.push({
         type: type,
@@ -600,7 +600,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
     }
 
     return this
-  };
+  }
 
   /**
    * 撤销监听事件
@@ -608,14 +608,14 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param {Function} handle 监听函数
    * @returns {Bone}
    */
-  proto$0.off = function (handle) {
+  off (handle) {
     if (is('Function')(handle)) {
-      var index = inArrayBy(this._listeners, handle, 'handle')
+      let index = inArrayBy(this._listeners, handle, 'handle')
       -1 !== index && this._listeners.splice(index, 1)
     }
 
     return this
-  };
+  }
 
   /**
    * 添加错误事件监听
@@ -623,9 +623,9 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param {Function} handle 监听函数
    * @returns {OTempalte}
    */
-  proto$0.onError = function (handle) {
+  onError (handle) {
     return this.on('error', handle)
-  };
+  }
 
   /**
    * 扩展 Bone
@@ -633,10 +633,10 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param {Function} callback 回调
    * @returns {Bone}
    */
-  proto$0.extends = function (callback) {
+  extends (callback) {
     callback.call(this, this)
     return this
-  };
+  }
 
   /**
    * 抛出错误
@@ -645,14 +645,14 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param {Object} error 错误信息
    * @param {Object} options 配置 (optional)
    */
-  proto$0._throw = function (error) {var options = arguments[1];if(options === void 0)options = {};
-    var conf    = extend({}, this.DEFAULTS, options),
+  _throw (error, options = {}) {
+    let conf    = extend({}, this.DEFAULTS, options),
         message = __throw(error, conf.env === ENV.UNIT ? 'null' : 'log')
 
     forEach(this._listeners, function(listener) {
       'error' === listener.type && listener.handle(error, message)
     })
-  };
+  }
 
   /**
    * 获取或设置缓存方法
@@ -662,15 +662,15 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param {Function} render 渲染函数
    * @returns {Function|Bone}
    */
-  proto$0._cache = function (name, render) {
-    var caches = this._caches
+  _cache (name, render) {
+    let caches = this._caches
     if (arguments.length > 1) {
       caches[name] = render
       return this
     }
 
     return caches[name]
-  };
+  }
 
   /**
    * add the line number to the string - 给每行开头添加序列号
@@ -679,16 +679,16 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param  {string} str 需要添加序列号的字符串
    * @returns {string}
    */
-  proto$0._table = function (string, direction) {
-    var line  = 0,
+  _table (string, direction) {
+    let line  = 0,
         match = string.match(/([^\n]*)?\n|([^\n]+)$/g)
 
     if (!match) {
-      return (("> " + line) + ("|" + string) + "")
+      return `> ${line}|${string}`
     }
 
-    var max = match.length,
-        start = (end = [0, max])[0], end = end[1]
+    let max = match.length,
+        [start, end] = [0, max]
 
     if (0 < direction && direction < max) {
       start = direction -3
@@ -699,7 +699,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       ++ line
 
       if (start <= line && line <= end) {
-        return (("" + (line === direction ? '>' : ' ')) + (" " + (zeros(line, max))) + ("|" + $all) + "")
+        return `${line === direction ? '>' : ' '} ${zeros(line, max)}|${$all}`
       }
 
       return ''
@@ -713,15 +713,15 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
      * @param {string} zero 需要填补的 "零"
      * @returns {string}
      */
-    function zeros (num, max) {var zero = arguments[2];if(zero === void 0)zero = ' ';
+    function zeros (num, max, zero = ' ') {
       num = num.toString()
       max = max.toString().replace(/\d/g, zero)
 
-      var res = max.split('')
+      let res = max.split('')
       res.splice(- num.length, num.length, num)
       return res.join('')
     }
-  };
+  }
 
   /**
    * 创建新的该类
@@ -736,15 +736,15 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param {Array} options.depends 追加渲染器的传值设定
    * @return {Bone}
    */
-  proto$0.$divide = function (options) {
+  $divide (options) {
     return new this.constructor(options)
-  };
+  }
 
   /**
    * current envirment - 配置环境
    * @type {Object}
    */
-  function $ENV_get$0 () {
+  get ENV () {
     return ENV
   }
 
@@ -754,19 +754,19 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param  {Function} _extends_ 扩展方法
    * @return {Bone}
    */
-  static$0.extend = function (_extends_) {
+  static extend (_extends_) {
     is('Function')(_extends_) && Bone._extends.push(_extends_)
     return this
-  };
+  }
 
   /**
    * 编译语法
    * @function
    */
-  proto$0.$compileSyntax = function () {
+  $compileSyntax () {
     throw new Error('Function `$compileSyntax` does not be implemented.')
-  };
-MIXIN$0(Bone,static$0);MIXIN$0(Bone.prototype,proto$0);static$0=proto$0=void 0;return Bone;})();
+  }
+}
 
 /**
  * extens plugins - 扩展集合
@@ -788,7 +788,7 @@ Bone._extends = [];
  * 1. 正则表达式之间最好不要具有优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
-var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configurable":false,"enumerable":false,"writable":false});var proto$0={};
+class Syntax {
   /**
    * 通过配置作为数据来替换模板
    * @function
@@ -801,13 +801,13 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
    * if my defauts is { openTag: '{{', closeTag: '}}' }
    * the result is '{{hi}}'
    */
-  proto$0._compile = function (source, data) {
+  _compile (source, data) {
     data = is('PlainObject')(data) ? data : this.DEFAULTS
 
     return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, function (all, $1) {
       return get(data, $1) || ''
     })
-  };
+  }
 
   /**
    * 通过配置作为数据和模板生成 RegExp
@@ -821,10 +821,10 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
    * replace string to '{{hi}}'
    * the return result is /{{hi}}/
    */
-  proto$0._compileRegexp = function (patternTemplate, attributes) {
-    var pattern = this._compile(patternTemplate)
+  _compileRegexp (patternTemplate, attributes) {
+    let pattern = this._compile(patternTemplate)
     return new RegExp(pattern, attributes)
-  };
+  }
 
   /**
    * 编译语法模板
@@ -834,11 +834,11 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
    * @param {string} origin 原有的模板
    * @return {string}
    */
-  proto$0._compileSyntax = function (source) {var strict = arguments[1];if(strict === void 0)strict = true;var origin = arguments[2];if(origin === void 0)origin = source;
-    var matched = false
+  _compileSyntax (source, strict = true, origin = source) {
+    let matched = false
 
     forEach(this._blocks, function (handle) {
-      var dress = source.replace(handle.syntax, handle.shell)
+      let dress = source.replace(handle.syntax, handle.shell)
       if (dress !== source) {
         source = dress
         matched = true
@@ -849,11 +849,11 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
     // not match any syntax or helper
     // 语法错误，没有匹配到相关语法
     if (false === matched) {
-      var pos  = origin.search(source),
+      let pos  = origin.search(source),
           line = inline(origin, pos)
 
       this._throw({
-        message : (("[Syntax Error]: " + source) + (" did not match any syntax in line " + line) + "."),
+        message : `[Syntax Error]: ${source} did not match any syntax in line ${line}.`,
         syntax  : this._table(origin, line)
       })
 
@@ -861,7 +861,7 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
     }
 
     return source
-  };
+  }
 
   /**
    * 编译所有语法模板
@@ -885,8 +885,8 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
    * when strict not equal false, it will return '',
    * when strict equal false, it will return '<div></div>'
    */
-  proto$0.$compileSyntax = function (source) {var strict = arguments[1];if(strict === void 0)strict = true;
-    var self    = this,
+  $compileSyntax (source, strict = true) {
+    let self    = this,
         origin  = source,
         conf    = this.DEFAULTS,
         blocks  = this._blocks,
@@ -902,12 +902,12 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
      * it can make every regexp match each string between tags(openTag & closeTag)
      */
     forEach(source.split(conf.openTag), function(code) {
-      var codes = code.split(conf.closeTag)
+      let codes = code.split(conf.closeTag)
 
       // logic code block
       // 逻辑代码块
       if (1 !== codes.length) {
-        source = source.replace((("" + (conf.openTag)) + ("" + (codes[0])) + ("" + (conf.closeTag)) + ""), function($all) {
+        source = source.replace(`${conf.openTag}${codes[0]}${conf.closeTag}`, function($all) {
           return (valid = self._compileSyntax($all, strict, origin))
         })
       }
@@ -928,17 +928,17 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
 
     // error open or close tag
     // 语法错误，缺少闭合
-    var tagReg = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
+    let tagReg = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
         pos    = source.search(tagReg)
 
     if (-1 !== pos) {
       // return empty string in static mode
       // 严格模式下错误直接返回空字符串
       if (true === strict) {
-        var line = inline(source, pos)
+        let line = inline(source, pos)
 
         this._throw({
-          message : (("[Syntax Error]: Syntax error in line " + line) + "."),
+          message : `[Syntax Error]: Syntax error in line ${line}.`,
           syntax  : this._table(origin, line)
         })
 
@@ -962,7 +962,7 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
         .replace(/<%/g, '&lt;%')
         .replace(/%>/g, '%&gt;')
     }
-  };
+  }
 
   /**
    * 清除所有语法
@@ -970,10 +970,10 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
    * @param {string} source 语法模板
    * @returns {string}
    */
-  proto$0.$clearSyntax = function (source) {
-    var regexp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
+  $clearSyntax (source) {
+    let regexp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
     return source.replace(regexp, '')
-  };
+  }
 
   /**
    * 注册语法
@@ -992,13 +992,13 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
    * 但是这个正则是贪婪匹配，这样会造成很多匹配错误，我们必须将其改成 '(\\\w+)?'
    * 例如匹配 '{{aaa}}{{aaa}}' 的是否，贪婪匹配会将整个字符串匹配完成，而不是 '{{aaa}}'
    */
-  proto$0.$registerSyntax = function (name, syntax, shell) {
-    var self = this
+  $registerSyntax (name, syntax, shell) {
+    let self = this
 
     if (2 < arguments.length) {
       this._blocks[name] = {
-        syntax  : is('RegExp')(syntax) ? syntax : this._compileRegexp((("<%= openTag %>" + syntax) + "<%= closeTag %>"), 'igm'),
-        shell   : is('Function')(shell) ? shell : (("<%" + (this._compile(shell))) + "%>")
+        syntax  : is('RegExp')(syntax) ? syntax : this._compileRegexp(`<%= openTag %>${syntax}<%= closeTag %>`, 'igm'),
+        shell   : is('Function')(shell) ? shell : `<%${this._compile(shell)}%>`
       }
     }
     else if (is('PlainObject')(syntax)) {
@@ -1015,7 +1015,7 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
     }
 
     return this
-  };
+  }
 
   /**
    * 销毁语法
@@ -1023,14 +1023,14 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
    * @param {string} name 语法名称
    * @returns {Bone}
    */
-  proto$0.$unregisterSyntax = function (name) {
-    var blocks = this._blocks
+  $unregisterSyntax (name) {
+    let blocks = this._blocks
     if (blocks.hasOwnProperty(name)) {
       delete blocks[name]
     }
 
     return this
-  };
+  }
 
   /**
    * 查询/设置块级辅助函数
@@ -1041,16 +1041,16 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
    * @description
    * 只有语法版本才拥有 block 这个概念，原生版本可以通过各种函数达到目的
    */
-  proto$0.block = function (query, callback) {
+  block (query, callback) {
     if (1 < arguments.length) {
       if (is('String')(query) && is('Function')(callback)) {
         this
-          .$registerSyntax((("" + query) + "open"), (("(" + query) + ")\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*"), function ($all, $1, $2, $3, $4, $5) {
-            return (("<%" + $1) + ("($append, " + ($2 ? $2 + ', ' : '')) + ("function (" + ($5 || '')) + ") {'use strict';var $buffer='';%>")
+          .$registerSyntax(`${query}open`, `(${query})\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*`, function ($all, $1, $2, $3, $4, $5) {
+            return `<%${$1}($append, ${$2 ? $2 + ', ' : ''}function (${$5 || ''}) {'use strict';var $buffer='';%>`
           })
-          .$registerSyntax((("" + query) + "close"), ("/" + query), ("return $buffer;});"))
+          .$registerSyntax(`${query}close`, `/${query}`, `return $buffer;});`)
           ._blockHelpers[query] = function ($append) {
-            var args = Array.prototype.splice.call(arguments, 1)
+            let args = Array.prototype.splice.call(arguments, 1)
             $append(callback.apply(this, args))
           }
       }
@@ -1061,14 +1061,14 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
       }
 
       if (is('PlainObject')(query)) {
-        for (var name in query) {
+        for (let name in query) {
           this.block(name, query[name])
         }
       }
     }
 
     return this
-  };
+  }
 
   /**
    * 注销块级辅助函数
@@ -1076,19 +1076,19 @@ var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configura
    * @param {string} name 名称
    * @returns {Bone}
    */
-  proto$0.unblock = function (name) {
-    var helpers = this._blockHelpers,
+  unblock (name) {
+    let helpers = this._blockHelpers,
         blocks  = this._blocks
 
     if (helpers.hasOwnProperty(name)) {
       delete helpers[name]
-      delete blocks[(("" + name) + "open")]
-      delete blocks[(("" + name) + "close")]
+      delete blocks[`${name}open`]
+      delete blocks[`${name}close`]
     }
 
     return this
-  };
-MIXIN$0(Syntax.prototype,proto$0);proto$0=void 0;return Syntax;})();
+  }
+}
 
 // close no syntax config
 // 关闭没有语法的配置项
@@ -1098,109 +1098,6 @@ DEFAULTS.noSyntax = false
 // 扩展所有方法到 Bone 类中
 ~extend(Bone.prototype, Syntax.prototype)
 ;
-/**
- * Simple Syntax Defination - 定义简单语法
- */
-Bone.extend(function() {
-  var HELPER_SYNTAX       = '(=|-|!|#|!#)?\\s*([^|]+?(?:\\s*(?:\\|\\||\\&\\&)\\s*[^|]+?)*)\\s*\\|\\s*([^:\\|]+?)\\s*(?:\\:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?',
-      HELPER_REGEXP       = this._compileRegexp(HELPER_SYNTAX),
-      HELPER_INNER_SYNTAX = '\\s*([\\w\\W]+?\\s*\\\([\\w\\W]+?\\\))\\s*\\|\\s*([^:]+?)\\s*(:\\s*([^\\|]+?))?$',
-      HELPER_INNER_REGEXP = this._compileRegexp(HELPER_INNER_SYNTAX)
-
-  this
-  /**
-   * echo something
-   * syntax {{= 'hello world' }}
-   */
-  .$registerSyntax('echo', '=\\s*([\\w\\W]+?)\\s*', '=$1')
-  /**
-   * do some javascript
-   * syntax {{- var sayWhat = 'hello world' }}
-   */
-  .$registerSyntax('logic', '-\\s*([\\w\\W]+?)\\s*', '$1')
-  /**
-   * do not escape html, sometime it not safe
-   * syntax {{# "<script></script>" }}
-   */
-  .$registerSyntax('noescape', '#\\s*([\\w\\W]+?)\\s*', '#$1')
-  /**
-   * escape html, it can not be used when `DEAUTIFUL.escape === true`
-   * syntax {{!# "<script></script>" }}
-   */
-  .$registerSyntax('escape', '!#\\s*([\\w\\W]+?)\\s*', '!#$1')
-  /**
-   * if open tag and corresponding to ifclose (block syntax)
-   * syntax {{if true}} Hello World {{/if}}
-   */
-  .$registerSyntax('ifopen', 'if\\s*(.+?)\\s*', 'if ($1) {')
-  /**
-   * else tag between if and ifclose tag
-   * syntax {{if false}} {{else}} Hello World {{/if}}
-   */
-  .$registerSyntax('else', 'else', '} else {')
-  /**
-   * elseif tag,  a special tag for if tag
-   * syntax {{if false}} {{elseif true}} Hello World {{/if}}
-   */
-  .$registerSyntax('elseif', 'else\\s*if\\s*(.+?)\\s*', '} else if ($1) {')
-  /**
-   * if close tag
-   * syntax {{if true}} Hello World {{/if}}
-   */
-  .$registerSyntax('ifclose', '\\/if', '}')
-  /**
-   * each open tag. iterate data one by one
-   * syntax {{each data as value, key}} {{= key + '=>' + value }} {{/each}}
-   */
-  .$registerSyntax('eachopen', 'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', function($all, $1, $2, $3, $4) {
-    var string = (("each(" + $1) + (", function(" + ($3 || '$value')) + ("" + ($4 || ', $index')) + ") {")
-    return (("<%" + string) + "%>")
-  })
-  /**
-   * each close tag
-   * syntax {{each data as value, key}} {{= key + '=>' + value }} {{/each}}
-   */
-  .$registerSyntax('eachclose', '\\/each', '})')
-  /*
-   * include another template
-   * syntax {{include template/index.html [, ...(optional)] }}
-   */
-  .$registerSyntax('include', 'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3) {
-    return (("<%#include('" + ($1.replace(/[\'\"\`]/g, ''))) + ("', " + ($3 || '$data')) + ")%>")
-  })
-  /**
-   * helper syntax
-   * syntax {{ data | helperA: dataA, dataB, dataC | helperB: dataD, dataE, dataF }}
-   */
-  .$registerSyntax('helper', HELPER_SYNTAX, (function() {
-    return function($all, $1, $2, $3, $4, $5) {
-      var str = format.apply(this, arguments)
-
-      // 这里需要递推所有的辅助函数
-      while (HELPER_INNER_REGEXP.exec(str)) {
-        str = str.replace(HELPER_INNER_REGEXP, innerFormat)
-      }
-
-      return (("<%" + (toString($1))) + ("" + str) + "%>")
-    }
-
-    function format ($all, $1, $2, $3, $4, $5) {
-      return (("" + $3) + ("(" + (trim($2))) + ("" + ($4 ? ',' + $4 : '')) + (")" + ($5 ? $5.replace(/^\s*$/, '') : '')) + "")
-    }
-
-    function innerFormat ($all, $1, $2, $3, $4) {
-      return (("" + $2) + ("(" + $1) + ("," + $4) + ")")
-    }
-  })())
-
-  // add a each syntax helper
-  // 添加语法辅助函数
-  ~extend(this._helpers, {
-    each: function(data, callback) {
-      forEach(data, callback)
-    }
-  })
-});
 /**
  * 浏览器接口类
  * @class
@@ -1213,9 +1110,9 @@ Bone.extend(function() {
  * @param {string} options.closeTag 语法的结束标识
  * @param {Array} options.depends 追加渲染器的传值设定
  */
-var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){if(PRS$0){o["__proto__"]=p;}else {DP$0(o,"__proto__",{"value":p,"configurable":true,"enumerable":false,"writable":true});}return o};var OC$0 = Object.create;if(!PRS$0)MIXIN$0(Client, super$0);var proto$0={};
-  function Client () {
-    var self = this
+class Client extends Bone {
+  constructor () {
+    let self = this
     Bone.apply(this, arguments)
 
     // extends include func to support ajax request file
@@ -1225,7 +1122,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
         return self.renderById(filename, data, options)
       }
     })
-  }if(super$0!==null)SP$0(Client,super$0);Client.prototype = OC$0(super$0!==null?super$0.prototype:null,{"constructor":{"value":Client,"configurable":true,"writable":true}});DP$0(Client,"prototype",{"configurable":false,"enumerable":false,"writable":false});
+  }
 
   /**
    * 编译内联模板
@@ -1234,25 +1131,25 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
    * @param {Object} options 配置 (optional)
    * @returns {Function} 编译函数
    */
-  proto$0.compileById = function (templateId) {var options = arguments[1];if(options === void 0)options = {};
+  compileById (templateId, options = {}) {
     templateId = toString(templateId)
 
-    var conf   = extend({}, this._defaults, options, { filename: templateId }),
+    let conf   = extend({}, this._defaults, options, { filename: templateId }),
         render = true === conf.override || this._cache(templateId)
 
     if (is('Function')(render)) {
       return render
     }
 
-    var node = document.getElementById(templateId)
+    let node = document.getElementById(templateId)
 
     return node
       ? this.compile(node.innerHTML, conf)
       : (this._throw({
-          message: (("[Compile Template]: Template ID " + templateId) + " is not found.")
+          message: `[Compile Template]: Template ID ${templateId} is not found.`
         }),
         __render)
-  };
+  }
 
   /**
    * 渲染内联模板
@@ -1262,10 +1159,10 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
    * @param {Object} options 配置 (optional)
    * @returns {string} 内容
    */
-  proto$0.renderById = function (templateId) {var data = arguments[1];if(data === void 0)data = {};var options = arguments[2];if(options === void 0)options = {};
-    var render = this.compileById(templateId, options = {})
+  renderById (templateId, data = {}, options = {}) {
+    let render = this.compileById(templateId, options = {})
     return render(data)
-  };
+  }
 
   /**
    * 编译远程模板资源
@@ -1274,12 +1171,12 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
    * @param {Function} callback 回调函数
    * @param {Object} options 配置 (optional)
    */
-  proto$0.compileByAjax = function (sourceUrl, callback) {var options = arguments[2];if(options === void 0)options = {};
+  compileByAjax (sourceUrl, callback, options = {}) {
     if (!is('Function')(callback)) {
       return
     }
 
-    var self   = this,
+    let self   = this,
         conf   = extend({}, this._defaults, options),
         render = true === conf.override || this._cache(sourceUrl)
 
@@ -1290,18 +1187,18 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
       this.getSourceByAjax(sourceUrl, function (source) {
         source = self.$compileSyntax(source, !!conf.strict)
 
-        var origin = (match = [source, []])[0], requires = match[1], match = match[2]
+        let [origin, requires, match] = [source, []]
         while (match = /<%!?#?\s*include\s*\(\s*(\'([^\']+)?\'|\"([^\"]+)?\")(\s*,\s*([^\)]+)?)?\)%>/.exec(source)) {
           requires.push(match[3])
           source = source.replace(match[0], '')
         }
 
-        var total = requires.length
-        var __exec = function () {
+        let total = requires.length
+        let __exec = function () {
           0 >= (-- total) && __return()
         }
 
-        var __return = function () {
+        let __return = function () {
           render = self.$compile(origin)
           self._cache(sourceUrl, render)
           callback(render)
@@ -1314,7 +1211,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
               __exec()
             }
             else {
-              var childSource = findChildTemplate(file, origin)
+              let childSource = findChildTemplate(file, origin)
 
               if (childSource) {
                 self.compile(childSource, {
@@ -1325,7 +1222,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
                 __exec()
               }
               else {
-                var node = document.getElementById(file)
+                let node = document.getElementById(file)
 
                 if (node) {
                   self.compile(node.innerHTML, {
@@ -1351,17 +1248,17 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
     }
 
     function findChildTemplate (templateId, source) {
-      var node = document.createElement('div')
+      let node = document.createElement('div')
       node.innerHTML = source
 
-      var templateNodes = node.getElementsByTagName('script')
-      for (var i = templateNodes.length; i --;) {
+      let templateNodes = node.getElementsByTagName('script')
+      for (let i = templateNodes.length; i --;) {
         if (templateId === templateNodes[i].id) {
           return templateNodes[i].innerHTML
         }
       }
     }
-  };
+  }
 
   /**
    * 渲染远程模板资源
@@ -1371,7 +1268,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
    * @param {Function} callback 回调函数
    * @param {Object} options 配置 (optional)
    */
-  proto$0.renderByAjax = function (sourceUrl, data, callback) {var options = arguments[3];if(options === void 0)options = {};
+  renderByAjax (sourceUrl, data, callback, options = {}) {
     if (is('Function')(data)) {
       return this.renderByAjax(sourceUrl, {}, data, callback)
     }
@@ -1381,7 +1278,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
         callback(render(data || {}))
       }, options)
     }
-  };
+  }
 
   /**
    * 请求远程模板资源
@@ -1389,25 +1286,25 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
    * @param {string} sourceUrl 远程资源地址
    * @param {Function} callback 回调函数
    */
-  proto$0.getSourceByAjax = function (sourceUrl, callback, errorCallback) {
+  getSourceByAjax (sourceUrl, callback, errorCallback) {
     if (!is('Function')(callback)) {
       return
     }
 
-    var self = (xhr = [this, new XMLHttpRequest])[0], xhr = xhr[1]
+    let [self, xhr] = [this, new XMLHttpRequest]
 
     xhr.onreadystatechange = function() {
-      var status = this.status
+      let status = this.status
       if (this.DONE === this.readyState) {
         200 <= status && status < 400 && callback(this.responseText)
       }
     }
 
     xhr.onerror = function() {
-      var err = {
-        message   : (("[Compile Template]: Request file " + sourceUrl) + " some error occured."),
+      let err = {
+        message   : `[Compile Template]: Request file ${sourceUrl} some error occured.`,
         filename  : sourceUrl,
-        response  : ("[Reponse State]: " + (this.status))
+        response  : `[Reponse State]: ${this.status}`
       }
 
       self._throw(err)
@@ -1416,8 +1313,8 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
     }
 
     xhr.ontimeout = function() {
-      var err = {
-        message   : (("[Request Template]: Request template file " + sourceUrl) + " timeout."),
+      let err = {
+        message   : `[Request Template]: Request template file ${sourceUrl} timeout.`,
         filename  : sourceUrl
       }
 
@@ -1427,8 +1324,8 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
     }
 
     xhr.onabort = function() {
-      var err = {
-        message   : ("[Request Template]: Bowswer absort the request."),
+      let err = {
+        message   : `[Request Template]: Bowswer absort the request.`,
         filename  : sourceUrl
       }
 
@@ -1439,8 +1336,8 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
 
     xhr.open('GET', sourceUrl, true)
     xhr.send(null)
-  };
-MIXIN$0(Client.prototype,proto$0);proto$0=void 0;return Client;})(Bone);
+  }
+}
 
 /**
  * Exports Module
@@ -1456,7 +1353,7 @@ UMD('oTemplate', function() {
  * @param {Function} factory
  */
 function UMD (name, factory, root) {
-  var define = (module = [root.define, factory(root)])[0], module = module[1]
+  let [define, module] = [root.define, factory(root)]
 
   // AMD & CMD
   if (is('Function')(define)) {
@@ -1493,11 +1390,11 @@ function is (type) {
         return 'undefined' !== typeof value
 
       case 'Integer':
-        var y = parseInt(value, 10)
+        let y = parseInt(value, 10)
         return !isNaN(y) && value === y && value.toString() === y.toString()
 
       case 'PlainObject':
-        var ctor, prot
+        let ctor, prot
         if (false === is('Object')(value) || is('Undefined')(value)) {
             return false
         }
@@ -1519,7 +1416,7 @@ function is (type) {
         return true
 
       default:
-        return (("[object " + type) + "]") === Object.prototype.toString.call(value)
+        return `[object ${type}]` === Object.prototype.toString.call(value)
     }
   }
 }
@@ -1556,13 +1453,13 @@ function trim (string) {
  * {a:{a:{a:{a:1}}}} -> get('a.a.a.a') -> 1
  * {a:1}             -> get('a.a.a.a') -> undefined
  */
-function get (object, path) {var spliter = arguments[2];if(spliter === void 0)spliter = '.';
+function get (object, path, spliter = '.') {
   if (!is('String')(path)) {
     return undefined
   }
 
-  var re = (ns = [object, path.split(spliter)])[0], ns = ns[1]
-  for (var i = (l = [0, ns.length])[0], l = l[1]; i < l; i ++) {
+  let [re, ns] = [object, path.split(spliter)]
+  for (let [i, l] = [0, ns.length]; i < l; i ++) {
     if (is('Undefined')(re[ns[i]])) {
         return undefined
     }
@@ -1601,7 +1498,7 @@ function toString (anything) {
  * @param {string} string 需要转义的字符串
  * @returns {string}
  */
-function escapeSymbol () {var string = arguments[0];if(string === void 0)string = '';
+function escapeSymbol (string = '') {
   return string
     .replace(/("|'|\\)/g, '\\$1')
     .replace(/\r/g, '\\r')
@@ -1617,7 +1514,7 @@ function escapeSymbol () {var string = arguments[0];if(string === void 0)string 
 function escapeHTML (string) {
   // escape sources
   // 转义资源
-  var SOURCES = {
+  let SOURCES = {
     '<': '&lt;',
     '>': '&gt;',
     '&': '&amp;',
@@ -1643,7 +1540,7 @@ function indexOf (array, value) {
     return array.indexOf(value)
   }
   else {
-    for (var i = (l = [0, array.length])[0], l = l[1]; i < l; i ++) {
+    for (let [i, l] = [0, array.length]; i < l; i ++) {
       if (array[i] === value) {
         return i
       }
@@ -1660,11 +1557,11 @@ function indexOf (array, value) {
  * @return {Integer}                  键值，不存在返回 -1;
  */
 function inArrayBy (array, query, propName) {
-  var index = is('Object')(query)
+  let index = is('Object')(query)
     ? query[propName]
     : query
 
-  for (var i = (l = [0, array.length])[0], l = l[1]; i < l; i ++) {
+  for (let [i, l] = [0, array.length]; i < l; i ++) {
     if (index == array[i][propName]) {
       return i
     }
@@ -1679,14 +1576,14 @@ function inArrayBy (array, query, propName) {
  * @param {Array|Object} collection 需要遍历的结合
  * @param {Function} callback 回调函数
  */
-function forEach (collection) {var callback = arguments[1];if(callback === void 0)callback = new Function;
+function forEach (collection, callback = new Function) {
   if (is('Function')(callback)) {
     if (is('Array')(collection)) {
       if (Array.prototype.some) {
         collection.some(callback)
       }
       else {
-        for (var i = (l = [0, collection.length])[0], l = l[1]; i < l; i ++) {
+        for (let [i, l] = [0, collection.length]; i < l; i ++) {
           if (true === callback(collection[i], i)) {
             break
           }
@@ -1694,8 +1591,8 @@ function forEach (collection) {var callback = arguments[1];if(callback === void 
       }
     }
     else if (is('Object')(collection)) {
-      for (var i$0 in collection) {
-        if (true === callback(collection[i$0], i$0)) {
+      for (let i in collection) {
+        if (true === callback(collection[i], i)) {
           break
         }
       }
@@ -1710,9 +1607,9 @@ function forEach (collection) {var callback = arguments[1];if(callback === void 
  * @return {Array}
  */
 function unique (array) {
-  var n = (r = [{}, []])[0], r = r[1]
+  let [n, r] = [{}, []]
 
-  for (var i = array.length; i --;) {
+  for (let i = array.length; i --;) {
     if (!n.hasOwnProperty(array[i])) {
       r.push(array[i])
       n[array[i]] = 1
@@ -1729,8 +1626,8 @@ function unique (array) {
  * @param {Function} callback 回调函数
  * @returns {Object|Array}
  */
-function filter (collection) {var callback = arguments[1];if(callback === void 0)callback = new Function;
-  var isArr = is('Array')(collection),
+function filter (collection, callback = new Function) {
+  let isArr = is('Array')(collection),
       res   = isArr ? [] : {}
 
   forEach(collection, function (val, key) {
@@ -1750,13 +1647,13 @@ function filter (collection) {var callback = arguments[1];if(callback === void 0
  * @param {Array|Object} ... 对象
  * @returns {Array|Object} objectA 第一个传入的对象
  */
-function extend () {var SLICE$0 = Array.prototype.slice;var args = SLICE$0.call(arguments, 0);
-  var paramA = (paramB = [args[0], args[1]])[0], paramB = paramB[1]
+function extend (...args) {
+  let [paramA, paramB] = [args[0], args[1]]
 
   if (args.length > 2) {
     paramA = extend(paramA, paramB)
 
-    var next = Array.prototype.slice.call(args, 2)
+    let next = Array.prototype.slice.call(args, 2)
     return extend.apply({}, [paramA].concat(next))
   }
 
@@ -1768,7 +1665,7 @@ function extend () {var SLICE$0 = Array.prototype.slice;var args = SLICE$0.call(
       paramA = Object.assign(paramA, paramB);
     }
     else {
-      for (var i in paramB) {
+      for (let i in paramB) {
         paramA[i] = paramB[i]
       }
     }
@@ -1784,9 +1681,9 @@ function extend () {var SLICE$0 = Array.prototype.slice;var args = SLICE$0.call(
  * @param {boolean} type 是否捕获事件
  */
 function __throw (error, type) {
-  var message = ''
+  let message = ''
 
-  var _throw = function (message) {
+  let _throw = function (message) {
     setTimeout(function () {
       throw message
     })

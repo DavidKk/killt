@@ -1,17 +1,29 @@
 /**
- * 扩展新的 include 支持 ajax
+ * 浏览器接口类
+ * @class
+ * @param {Object} options 配置
+ * @param {string} options.env [unit, develop, produce]
+ * @param {boolean} options.noSyntax 是否使用使用原生语法
+ * @param {boolean} options.strict 是否通过严格模式编译语法
+ * @param {boolean} options.compress 压缩生成的HTML代码
+ * @param {string} options.openTag 语法的起始标识
+ * @param {string} options.closeTag 语法的结束标识
+ * @param {Array} options.depends 追加渲染器的传值设定
  */
-Bone.extend(function() {
-  let self = this
+class Client extends Bone {
+  constructor () {
+    let self = this
+    Bone.apply(this, arguments)
 
-  ~extend(this._helpers, {
-    include: function(filename, data, options) {
-      return self.renderById(filename, data, options)
-    }
-  })
-})
+    // extends include func to support ajax request file
+    // 扩展新的 include 支持 ajax
+    ~extend(this._helpers, {
+      include: function(filename, data, options) {
+        return self.renderById(filename, data, options)
+      }
+    })
+  }
 
-~extend(Bone.prototype, {
   /**
    * 编译内联模板
    * @function
@@ -19,7 +31,7 @@ Bone.extend(function() {
    * @param {Object} options 配置 (optional)
    * @returns {Function} 编译函数
    */
-  compileById: function(templateId, options = {}) {
+  compileById (templateId, options = {}) {
     templateId = toString(templateId)
 
     let conf   = extend({}, this._defaults, options, { filename: templateId }),
@@ -37,7 +49,7 @@ Bone.extend(function() {
           message: `[Compile Template]: Template ID ${templateId} is not found.`
         }),
         __render)
-  },
+  }
 
   /**
    * 渲染内联模板
@@ -47,10 +59,10 @@ Bone.extend(function() {
    * @param {Object} options 配置 (optional)
    * @returns {string} 内容
    */
-  renderById: function(templateId, data = {}, options = {}) {
+  renderById (templateId, data = {}, options = {}) {
     let render = this.compileById(templateId, options = {})
     return render(data)
-  },
+  }
 
   /**
    * 编译远程模板资源
@@ -59,7 +71,7 @@ Bone.extend(function() {
    * @param {Function} callback 回调函数
    * @param {Object} options 配置 (optional)
    */
-  compileByAjax: function(sourceUrl, callback, options = {}) {
+  compileByAjax (sourceUrl, callback, options = {}) {
     if (!is('Function')(callback)) {
       return
     }
@@ -146,7 +158,7 @@ Bone.extend(function() {
         }
       }
     }
-  },
+  }
 
   /**
    * 渲染远程模板资源
@@ -156,7 +168,7 @@ Bone.extend(function() {
    * @param {Function} callback 回调函数
    * @param {Object} options 配置 (optional)
    */
-  renderByAjax: function(sourceUrl, data, callback, options = {}) {
+  renderByAjax (sourceUrl, data, callback, options = {}) {
     if (is('Function')(data)) {
       return this.renderByAjax(sourceUrl, {}, data, callback)
     }
@@ -166,7 +178,7 @@ Bone.extend(function() {
         callback(render(data || {}))
       }, options)
     }
-  },
+  }
 
   /**
    * 请求远程模板资源
@@ -174,7 +186,7 @@ Bone.extend(function() {
    * @param {string} sourceUrl 远程资源地址
    * @param {Function} callback 回调函数
    */
-  getSourceByAjax: function(sourceUrl, callback, errorCallback) {
+  getSourceByAjax (sourceUrl, callback, errorCallback) {
     if (!is('Function')(callback)) {
       return
     }
@@ -224,5 +236,33 @@ Bone.extend(function() {
 
     xhr.open('GET', sourceUrl, true)
     xhr.send(null)
-  },
-})
+  }
+}
+
+/**
+ * Exports Module
+ */
+UMD('oTemplate', function() {
+  return new Client()
+}, root)
+
+/**
+ * UMD 模块定义
+ * @function
+ * @param {windows|global} root
+ * @param {Function} factory
+ */
+function UMD (name, factory, root) {
+  let [define, module] = [root.define, factory(root)]
+
+  // AMD & CMD
+  if (is('Function')(define)) {
+    define(function () {
+      return module
+    })
+  }
+  // no module definaction
+  else {
+    root[name] = module
+  }
+}

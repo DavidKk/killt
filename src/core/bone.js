@@ -96,7 +96,8 @@ class Bone {
       }
     })
 
-    // set any syntax - 设置语法
+    // set any syntax
+    // 设置语法
     if (is('Array')(Bone._extends)) {
       forEach(Bone._extends, function(_extends_) {
         self.extends(_extends_)
@@ -158,26 +159,13 @@ class Bone {
         line      = 1,
         buffer    = ''
 
-    /**
-     * 获取变量名
-     * @function
-     * @param {string} source Shell
-     * @returns {Array}
-     */
-    let getVariables = function (source) {
-      let variables = source
-            .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
-            .replace(/[^\w$]+/g, ',')
-            .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
-            .split(/^$|,+/)
-
-      return filter(variables, function(variable) {
-        return -1 === getVariables.KEYWORDS.indexOf(variable)
-      })
-    }
-
-    getVariables.KEYWORDS = [
-      '$scope', '$helpers', '$blocks', '$data', '$buffer', '$runtime', '$append',
+    const KEYWORDS = [
+      '$append',
+      '$blocks', '$buffer',
+      '$data',
+      '$helpers',
+      '$scope',
+      '$runtime',
 
       'abstract', 'arguments',
       'break', 'boolean', 'byte',
@@ -198,6 +186,24 @@ class Bone {
       'while', 'with',
       'yield'
     ]
+
+    /**
+     * 获取变量名
+     * @function
+     * @param {string} source Shell
+     * @returns {Array}
+     */
+    let getVariables = function (source) {
+      let variables = source
+            .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
+            .replace(/[^\w$]+/g, ',')
+            .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
+            .split(/^$|,+/)
+
+      return filter(variables, function(variable) {
+        return -1 === KEYWORDS.indexOf(variable)
+      })
+    }
 
     /**
      * 解析Source为JS字符串拼接
@@ -682,6 +688,31 @@ class Bone {
   }
 
   /**
+   * 创建新的该类
+   * @function
+   * @param {Object} options 配置
+   * @param {string} options.env [unit, develop, produce]
+   * @param {boolean} options.noSyntax 是否使用使用原生语法
+   * @param {boolean} options.strict 是否通过严格模式编译语法
+   * @param {boolean} options.compress 压缩生成的HTML代码
+   * @param {string} options.openTag 语法的起始标识
+   * @param {string} options.closeTag 语法的结束标识
+   * @param {Array} options.depends 追加渲染器的传值设定
+   * @return {Bone}
+   */
+  $divide (options) {
+    return new this.constructor(options)
+  }
+
+  /**
+   * current envirment - 配置环境
+   * @type {Object}
+   */
+  get ENV () {
+    return ENV
+  }
+
+  /**
    * 扩展库
    * @function
    * @param  {Function} _extends_ 扩展方法
@@ -691,6 +722,14 @@ class Bone {
     is('Function')(_extends_) && Bone._extends.push(_extends_)
     return this
   }
+
+  /**
+   * 编译语法
+   * @function
+   */
+  $compileSyntax () {
+    throw new Error('Function `$compileSyntax` does not be implemented.')
+  }
 }
 
 /**
@@ -698,9 +737,3 @@ class Bone {
  * @type {Array}
  */
 Bone._extends = []
-
-/**
- * current envirment - 配置环境
- * @type {Object}
- */
-Bone.ENV = ENV
