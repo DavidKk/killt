@@ -1,5 +1,6 @@
 {
   "name": "oTemplate",
+  "version": "1.0.2",
   "license": "MIT",
   "main": "dist",
   "ignore": [
@@ -48,14 +49,14 @@
     "engine",
     "javascript"
   ],
-  "_release": "8f49e1158a",
+  "_release": "1.0.2",
   "_resolution": {
-    "type": "branch",
-    "branch": "master",
-    "commit": "8f49e1158a45b6b62fa6db48d4044c68ef0c23af"
+    "type": "version",
+    "tag": "1.0.2",
+    "commit": "bce95e59eee093319cdbc069c918579b6a6c0d43"
   },
   "_source": "git://github.com/DavidKk/oTemplate.git",
-  "_target": "master",
+  "_target": "~1.0.2",
   "_originalSource": "oTemplate",
   "_direct": true
 }

@@ -35,7 +35,7 @@ function is (type) {
         if ('function' !== typeof ctor) {
             return false
         }
-        
+
         prot = ctor.prototype;
         if (false === is('Object')(prot)) {
             return false
@@ -144,29 +144,20 @@ function escapeSymbol (string = '') {
  * @returns {string}
  */
 function escapeHTML (string) {
-  return toString(string).replace(/&(?![\w#]+;)|[<>"']/g, escapeHTML.escapeFn)
-}
+  // escape sources
+  // 转义资源
+  let SOURCES = {
+    '<': '&lt;',
+    '>': '&gt;',
+    '&': '&amp;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '/': '&#x2f;'
+  }
 
-/**
- * 转义资源
- * @type {Object}
- */
-escapeHTML.SOURCES = {
-  '<': '&lt;',
-  '>': '&gt;',
-  '&': '&amp;',
-  '"': '&quot;',
-  "'": '&#x27;',
-  '/': '&#x2f;'
-}
-
-/**
- * 转义函数
- * @param {string} name 转义字符
- * @returns {string}
- */
-escapeHTML.escapeFn = function (name) {
-  return escapeHTML.SOURCES[name]
+  return toString(string).replace(/&(?![\w#]+;)|[<>"']/g, function(name) {
+    return SOURCES[name]
+  })
 }
 
 /**
@@ -358,29 +349,4 @@ function __throw (error, type) {
  */
 function __render () {
   return ''
-}
-
-/**
- * UMD 模块定义
- * @function
- * @param {windows|global} root
- * @param {Function} factory
- */
-function UMD (name, factory, root) {
-  let [define, module] = [root.define, factory(root)]
-
-  // AMD & CMD
-  if (is('Function')(define)) {
-    define(function () {
-      return module
-    })
-  }
-  // NodeJS
-  else if ('object' === typeof exports) {
-    module.exports = module
-  }
-  // no module definaction
-  else {
-    root[name] = module
-  }
 }
