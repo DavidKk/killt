@@ -1239,7 +1239,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
   proto$0.compileById = function (templateId) {var options = arguments[1];if(options === void 0)options = {};
     templateId = toString(templateId)
 
-    var conf   = extend({}, this._defaults, options, { filename: templateId }),
+    var conf   = extend({}, this.DEFAULTS, options, { filename: templateId }),
         render = true === conf.override || this._cache(templateId)
 
     if (is('Function')(render)) {
@@ -1282,7 +1282,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
     }
 
     var self   = this,
-        conf   = extend({}, this._defaults, options),
+        conf   = extend({}, this.DEFAULTS, options),
         render = true === conf.override || this._cache(sourceUrl)
 
     console.log(this)
@@ -1300,6 +1300,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
           source = self.$compileSyntax(source, conf.strict)
         }
 
+        console.log(conf.noSyntax)
         console.log(source)
 
         // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
