@@ -666,7 +666,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
     var caches = this._caches
     if (arguments.length > 1) {
       caches[name] = render
-      return
+      return this
     }
 
     return caches[name]
@@ -1326,6 +1326,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
 
         if (total > 0) {
           forEach(unique(dependencies), function (file) {
+    console.log(file)
             if (self._cache(file)) {
               __exec()
             }
