@@ -1312,6 +1312,8 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
           }
         })
 
+        dependencies = unique(dependencies)
+
         var total = dependencies.length
         var __exec = function () {
           0 >= (-- total) && __return()
@@ -1324,8 +1326,10 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
           total = undefined
         }
 
+    console.log(dependencies)
+    console.log(total)
         if (total > 0) {
-          forEach(unique(dependencies), function (file) {
+          forEach(dependencies, function (file) {
     console.log(file)
             if (self._cache(file)) {
               __exec()
