@@ -1300,6 +1300,8 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
           source = self.$compileSyntax(source, conf.strict)
         }
 
+        console.log(source)
+
         // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
         forEach(source.split('<%'), function(code) {
           var codes = (match = [code.split('%>')])[0], match = match[1]
