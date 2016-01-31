@@ -4,7 +4,7 @@ let fs = require('fs')
  * 服务器接口类
  * @class
  */
-class Server extends Bone {
+class oTemplate extends Bone {
   /**
    * 读取文件
    * @function
@@ -18,8 +18,10 @@ class Server extends Bone {
       })
     }
   }
+
+  reunder (filename, callback) {
+
+  }
 }
 
-module.exports = function() {
-  return new Server()
-}
+module.exports = new oTemplate()

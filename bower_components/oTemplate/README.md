@@ -29,7 +29,7 @@ bower install oTemplate
   <h1><%= title %></h1>
   <ul>
     <%each(list, function(value, index) {%>
-      <li><%= index %>: <%= @value %></li>
+      <li><%= index %>: <%= value %></li>
     <%})%>
   </ul>
 </script>

@@ -35,6 +35,13 @@ var DEFAULTS = {
   depends   : [],
 };
 /**
+ * extensions - 扩展集合
+ * @type {Array}
+ */
+var extensions = []
+
+
+/**
  * Base class for engine
  * @class
  * @param {Object} options 配置
@@ -132,11 +139,10 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       }
     })
 
-    // set any syntax
-    // 设置语法
-    if (is('Array')(Bone._extends)) {
-      forEach(Bone._extends, function(_extends_) {
-        self.extends(_extends_)
+    // set any extensions - 设置扩展
+    if (is('Array')(extensions) && extensions.length > 0) {
+      forEach(extensions, function(extension) {
+        self.extends(extension)
       })
     }
   }DPS$0(Bone.prototype,{ENV: {"get": $ENV_get$0, "configurable":true,"enumerable":true}});DP$0(Bone,"prototype",{"configurable":false,"enumerable":false,"writable":false});
@@ -754,8 +760,8 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @param  {Function} _extends_ 扩展方法
    * @return {Bone}
    */
-  static$0.extend = function (_extends_) {
-    is('Function')(_extends_) && Bone._extends.push(_extends_)
+  static$0.extend = function (extension) {
+    is('Function')(extension) && extensions.push(extension)
     return this
   };
 
@@ -766,13 +772,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
   proto$0.$compileSyntax = function () {
     throw new Error('Function `$compileSyntax` does not be implemented.')
   };
-MIXIN$0(Bone,static$0);MIXIN$0(Bone.prototype,proto$0);static$0=proto$0=void 0;return Bone;})();
-
-/**
- * extens plugins - 扩展集合
- * @type {Array}
- */
-Bone._extends = [];
+MIXIN$0(Bone,static$0);MIXIN$0(Bone.prototype,proto$0);static$0=proto$0=void 0;return Bone;})();;
 /**
  * Syntax - 语法类
  * @class
@@ -785,7 +785,7 @@ Bone._extends = [];
  * 需要的辅助函数。
  *
  * 自定义语法需注意：
- * 1. 正则表达式之间最好不要具有优先次序
+ * 1. 正则表达式之间注意优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
 var Syntax = (function(){function Syntax() {}DP$0(Syntax,"prototype",{"configurable":false,"enumerable":false,"writable":false});var proto$0={};
@@ -1133,7 +1133,6 @@ Bone.extend(function() {
       return (("" + $2) + ("(" + $1) + ("," + $4) + ")")
     }
   })())
-
   /**
    * echo something
    * syntax {{= 'hello world' }}
@@ -1285,8 +1284,6 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
         conf   = extend({}, this.DEFAULTS, options),
         render = true === conf.override || this._cache(sourceUrl)
 
-    console.log(this)
-
     if (is('Function')(render)) {
       callback(render)
     }
@@ -1300,9 +1297,6 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
           source = self.$compileSyntax(source, conf.strict)
         }
 
-        console.log(conf.noSyntax)
-        console.log(source)
-
         // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
         forEach(source.split('<%'), function(code) {
           var codes = (match = [code.split('%>')])[0], match = match[1]
@@ -1314,8 +1308,6 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
             dependencies.push(match[1].replace(/[\'\"\`]/g, ''))
           }
         })
-
-        dependencies = unique(dependencies)
 
         var total = dependencies.length
         var __exec = function () {
@@ -1329,32 +1321,39 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
           total = undefined
         }
 
-    console.log(dependencies)
-    console.log(total)
         if (total > 0) {
-          forEach(dependencies, function (file) {
-    console.log(file)
+          forEach(unique(dependencies), function (file) {
             if (self._cache(file)) {
               __exec()
             }
             else {
-              // var childSource = findChildTemplate(file, origin)
+              var childSource = findChildTemplate(file, origin)
 
-              // if (childSource) {
-              //   self.compile(childSource, {
-              //     filename: file,
-              //     override: !!conf.override
-              //   })
+              if (childSource) {
+                self.compile(childSource, {
+                  filename: file,
+                  override: !!conf.override
+                })
 
-              //   __exec()
-              // }
-              // else {
+                __exec()
+              }
+              else {
+                var node = document.getElementById(file)
 
-              // }
+                if (node) {
+                  self.compile(node.innerHTML, {
+                    filename: file,
+                    override: !!conf.override
+                  })
 
-              self.compileByAjax(file, __exec, extend(conf, {
-                override: !!conf.override
-              }))
+                  __exec()
+                }
+                else {
+                  self.compileByAjax(file, __exec, extend(conf, {
+                    override: !!conf.override
+                  }))
+                }
+              }
             }
           })
         }
@@ -1364,17 +1363,17 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
       })
     }
 
-    // function findChildTemplate (templateId, source) {
-    //   var node = document.createElement('div')
-    //   node.innerHTML = source
+    function findChildTemplate (templateId, source) {
+      var node = document.createElement('div')
+      node.innerHTML = source
 
-    //   var templateNodes = node.getElementsByTagName('script')
-    //   for (var i = templateNodes.length; i --;) {
-    //     if (templateId === templateNodes[i].id) {
-    //       return templateNodes[i].innerHTML
-    //     }
-    //   }
-    // }
+      var templateNodes = node.getElementsByTagName('script')
+      for (var i = templateNodes.length; i --;) {
+        if (templateId === templateNodes[i].id) {
+          return templateNodes[i].innerHTML
+        }
+      }
+    }
   };
 
   /**
