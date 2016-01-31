@@ -1135,7 +1135,7 @@ class Client extends Bone {
   compileById (templateId, options = {}) {
     templateId = toString(templateId)
 
-    let conf   = extend({}, this._defaults, options, { filename: templateId }),
+    let conf   = extend({}, this.DEFAULTS, options, { filename: templateId }),
         render = true === conf.override || this._cache(templateId)
 
     if (is('Function')(render)) {
@@ -1178,7 +1178,7 @@ class Client extends Bone {
     }
 
     let self   = this,
-        conf   = extend({}, this._defaults, options),
+        conf   = extend({}, this.DEFAULTS, options),
         render = true === conf.override || this._cache(sourceUrl)
 
     if (is('Function')(render)) {
