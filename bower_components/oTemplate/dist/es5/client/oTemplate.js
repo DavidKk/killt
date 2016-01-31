@@ -1285,6 +1285,8 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
         conf   = extend({}, this._defaults, options),
         render = true === conf.override || this._cache(sourceUrl)
 
+    console.log(this)
+
     if (is('Function')(render)) {
       callback(render)
     }
