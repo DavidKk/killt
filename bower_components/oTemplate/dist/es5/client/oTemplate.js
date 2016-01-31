@@ -666,7 +666,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
     var caches = this._caches
     if (arguments.length > 1) {
       caches[name] = render
-      return this
+      return
     }
 
     return caches[name]
