@@ -32,7 +32,6 @@ Bone.extend(function() {
       return `${$2}(${$1},${$4})`
     }
   })())
-
   /**
    * echo something
    * syntax {{= 'hello world' }}

@@ -1,4 +1,11 @@
 /**
+ * extensions - 扩展集合
+ * @type {Array}
+ */
+let extensions = []
+
+
+/**
  * Base class for engine
  * @class
  * @param {Object} options 配置
@@ -96,11 +103,10 @@ class Bone {
       }
     })
 
-    // set any syntax
-    // 设置语法
-    if (is('Array')(Bone._extends)) {
-      forEach(Bone._extends, function(_extends_) {
-        self.extends(_extends_)
+    // set any extensions - 设置扩展
+    if (is('Array')(extensions) && extensions.length > 0) {
+      forEach(extensions, function(extension) {
+        self.extends(extension)
       })
     }
   }
@@ -718,8 +724,8 @@ class Bone {
    * @param  {Function} _extends_ 扩展方法
    * @return {Bone}
    */
-  static extend (_extends_) {
-    is('Function')(_extends_) && Bone._extends.push(_extends_)
+  static extend (extension) {
+    is('Function')(extension) && extensions.push(extension)
     return this
   }
 
@@ -731,9 +737,3 @@ class Bone {
     throw new Error('Function `$compileSyntax` does not be implemented.')
   }
 }
-
-/**
- * extens plugins - 扩展集合
- * @type {Array}
- */
-Bone._extends = []
