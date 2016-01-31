@@ -1328,10 +1328,23 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
               __exec()
             }
             else {
-              var childSource = findChildTemplate(file, origin)
+              // var childSource = findChildTemplate(file, origin)
 
-              if (childSource) {
-                self.compile(childSource, {
+              // if (childSource) {
+              //   self.compile(childSource, {
+              //     filename: file,
+              //     override: !!conf.override
+              //   })
+
+              //   __exec()
+              // }
+              // else {
+
+              // }
+
+              var node = document.getElementById(file)
+              if (node) {
+                self.compile(node.innerHTML, {
                   filename: file,
                   override: !!conf.override
                 })
@@ -1339,21 +1352,9 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
                 __exec()
               }
               else {
-                var node = document.getElementById(file)
-
-                if (node) {
-                  self.compile(node.innerHTML, {
-                    filename: file,
-                    override: !!conf.override
-                  })
-
-                  __exec()
-                }
-                else {
-                  self.compileByAjax(file, __exec, extend(conf, {
-                    override: !!conf.override
-                  }))
-                }
+                self.compileByAjax(file, __exec, extend(conf, {
+                  override: !!conf.override
+                }))
               }
             }
           })
@@ -1364,17 +1365,17 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
       })
     }
 
-    function findChildTemplate (templateId, source) {
-      var node = document.createElement('div')
-      node.innerHTML = source
+    // function findChildTemplate (templateId, source) {
+    //   var node = document.createElement('div')
+    //   node.innerHTML = source
 
-      var templateNodes = node.getElementsByTagName('script')
-      for (var i = templateNodes.length; i --;) {
-        if (templateId === templateNodes[i].id) {
-          return templateNodes[i].innerHTML
-        }
-      }
-    }
+    //   var templateNodes = node.getElementsByTagName('script')
+    //   for (var i = templateNodes.length; i --;) {
+    //     if (templateId === templateNodes[i].id) {
+    //       return templateNodes[i].innerHTML
+    //     }
+    //   }
+    // }
   };
 
   /**
