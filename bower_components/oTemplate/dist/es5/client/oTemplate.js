@@ -1342,20 +1342,9 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
 
               // }
 
-              var node = document.getElementById(file)
-              if (node) {
-                self.compile(node.innerHTML, {
-                  filename: file,
-                  override: !!conf.override
-                })
-
-                __exec()
-              }
-              else {
-                self.compileByAjax(file, __exec, extend(conf, {
-                  override: !!conf.override
-                }))
-              }
+              self.compileByAjax(file, __exec, extend(conf, {
+                override: !!conf.override
+              }))
             }
           })
         }
