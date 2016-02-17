@@ -42,8 +42,9 @@ class Client extends Bone {
     }
 
     let node = document.getElementById(templateId)
+
     return node
-      ? this.compile(node.innerHTML, conf)
+      ? this.compile(node.innerHTML.replace(/^ *\n|\n *$/g, ''), conf)
       : (this._throw({
           message: `[Compile Template]: Template ID ${templateId} is not found.`
         }),

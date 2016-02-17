@@ -433,8 +433,6 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * 可以设置 options.override 为 true 来覆盖
    */
   proto$0.$compile = function () {var source = arguments[0];if(source === void 0)source = '';var options = arguments[1];if(options === void 0)options = {};
-    source = trim(source)
-
     var self    = this,
         origin  = source,
         conf    = extend({}, this.DEFAULTS, options),
@@ -728,7 +726,11 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       ++ line
 
       if (start <= line && line <= end) {
-        return (("" + (line === direction ? '>' : ' ')) + (" " + (zeros(line, max))) + ("|" + $all) + "")
+        if (line === direction) {
+          return (("> " + (zeros(line, max))) + ("|" + $all) + "")
+        }
+
+        return (("  " + (zeros(line, max))) + ("|" + $all) + "")
       }
 
       return ''
@@ -1569,12 +1571,6 @@ function extend () {var SLICE$0 = Array.prototype.slice;var args = SLICE$0.call(
 function __throw (error, type) {
   var message = ''
 
-  var _throw = function (message) {
-    setTimeout(function () {
-      throw message
-    })
-  }
-
   if (is('Object')(error)) {
     forEach(error, function (value, name) {
       message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
@@ -1594,6 +1590,12 @@ function __throw (error, type) {
   }
 
   return message
+
+  function _throw(message) {
+    setTimeout(function () {
+      throw message
+    })
+  }
 }
 
 /**

@@ -433,8 +433,6 @@ class Bone {
    * 可以设置 options.override 为 true 来覆盖
    */
   $compile (source = '', options = {}) {
-    source = trim(source)
-
     let self    = this,
         origin  = source,
         conf    = extend({}, this.DEFAULTS, options),
@@ -728,7 +726,11 @@ class Bone {
       ++ line
 
       if (start <= line && line <= end) {
-        return `${line === direction ? '>' : ' '} ${zeros(line, max)}|${$all}`
+        if (line === direction) {
+          return `> ${zeros(line, max)}|${$all}`
+        }
+
+        return `  ${zeros(line, max)}|${$all}`
       }
 
       return ''
@@ -1466,12 +1468,6 @@ function extend (...args) {
 function __throw (error, type) {
   let message = ''
 
-  let _throw = function (message) {
-    setTimeout(function () {
-      throw message
-    })
-  }
-
   if (is('Object')(error)) {
     forEach(error, function (value, name) {
       message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
@@ -1491,6 +1487,12 @@ function __throw (error, type) {
   }
 
   return message
+
+  function _throw(message) {
+    setTimeout(function () {
+      throw message
+    })
+  }
 }
 
 /**

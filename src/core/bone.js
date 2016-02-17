@@ -397,8 +397,6 @@ class Bone {
    * 可以设置 options.override 为 true 来覆盖
    */
   $compile (source = '', options = {}) {
-    source = trim(source)
-
     let self    = this,
         origin  = source,
         conf    = extend({}, this.DEFAULTS, options),
@@ -692,7 +690,11 @@ class Bone {
       ++ line
 
       if (start <= line && line <= end) {
-        return `${line === direction ? '>' : ' '} ${zeros(line, max)}|${$all}`
+        if (line === direction) {
+          return `> ${zeros(line, max)}|${$all}`
+        }
+
+        return `  ${zeros(line, max)}|${$all}`
       }
 
       return ''
