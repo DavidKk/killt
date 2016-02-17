@@ -112,5 +112,14 @@ describe('Test origin javascript syntax', function() {
 
       expect(source.trim()).toEqual('&lt;script&gt;&lt;/script&gt;')
     })
+
+    it('should not filter remarks when compress is false', function() {
+      var template = '<!-- <%= "Hello World" %> -->'
+      var source = _.render(template, {}, {
+        compress: false
+      })
+
+      expect(source).toEqual(template)
+    })
   })
 })

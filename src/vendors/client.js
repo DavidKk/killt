@@ -42,7 +42,6 @@ class Client extends Bone {
     }
 
     let node = document.getElementById(templateId)
-
     return node
       ? this.compile(node.innerHTML, conf)
       : (this._throw({

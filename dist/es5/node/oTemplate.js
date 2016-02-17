@@ -278,7 +278,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
      */
     var htmlToJs = function (source) {
       if ('' === source.replace(/<!--[\w\W]*?-->/g, '').replace(/^ +$/, '')) {
-        return ''
+        return (("$buffer+='" + source) + "';")
       }
 
       line += source.split(/\n/).length - 1

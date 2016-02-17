@@ -242,7 +242,7 @@ class Bone {
      */
     let htmlToJs = function (source) {
       if ('' === source.replace(/<!--[\w\W]*?-->/g, '').replace(/^ +$/, '')) {
-        return ''
+        return `$buffer+='${source}';`
       }
 
       line += source.split(/\n/).length - 1
@@ -457,7 +457,7 @@ class Bone {
       if (false === strip) {
         return function(data) {
           try {
-            var source = render.apply(scope, [data].concat(args))
+            let source = render.apply(scope, [data].concat(args))
             return source.replace(/<!--([\w\W]+?)-->/g, function($all, $1) {
               return `<!--${window.unescape($1)}-->`
             })

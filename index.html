@@ -15,13 +15,15 @@
     {{/mixin}}
   </script>
   <script id="templates/b.html" type="text/template">
-    <!--
-      <%= 'baidu.com' %>
-    -->
+    <!-- <%= "Hello World" %> -->
   </script>
   <script>
     window.onload = function() {
       var source = oTemplate.renderById('templates/b.html', {}, {
+        compress: false
+      })
+
+      var source = oTemplate.render('<!-- <%= "Hello World" %> -->', {}, {
         compress: false
       })
 
