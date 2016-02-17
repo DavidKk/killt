@@ -544,5 +544,14 @@ describe('Test the simple syntax', function () {
 
       expect(source).toEqual(result)
     })
+
+    it('should not filter remarks when compress is false', function() {
+      var template = '<!-- {{= "Hello World" }} -->'
+      var source = _.render(template, {}, {
+        compress: false
+      })
+
+      expect(source).toEqual(template)
+    })
   })
 })
