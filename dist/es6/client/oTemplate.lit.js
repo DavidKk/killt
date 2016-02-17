@@ -189,9 +189,9 @@ class Bone {
    */
   $compileShell (source = '', options = {}) {
     let origin    = source,
-        conf      = this.DEFAULTS,
-        isEscape  = is('Boolean')(options.escape) ? options.escape : conf.escape,
-        strip     = is('Boolean')(options.compress) ? options.compress : conf.compress,
+        conf      = extend({}, this.DEFAULTS, options),
+        isEscape  = !!conf.escape,
+        strip     = !!conf.compress,
         _helpers_ = this._helpers,
         _blocks_  = this._blockHelpers,
         _sources_ = this._sourceHelpers,
@@ -277,11 +277,7 @@ class Bone {
      * @returns {string}
      */
     let htmlToJs = function (source) {
-      source = source
-        .replace(/<!--[\w\W]*?-->/g, '')
-        .replace(/^ +$/, '')
-
-      if (source === '') {
+      if ('' === source.replace(/<!--[\w\W]*?-->/g, '').replace(/^ +$/, '')) {
         return ''
       }
 
@@ -289,6 +285,7 @@ class Bone {
       source = source.replace(/(["'\\])/g, '\\$1')
       source = true === strip
         ? source
+          .replace(/<!--[\w\W]*?-->/g, '')
           .replace(/[\r\t\n]/g, '')
           .replace(/ +/g, ' ')
         : source
@@ -441,6 +438,7 @@ class Bone {
     let self    = this,
         origin  = source,
         conf    = extend({}, this.DEFAULTS, options),
+        strip   = !!conf.compress,
         deps    = conf.depends,
         _args_  = ['$data'].concat(deps).join(','),
         args    = []
@@ -455,6 +453,12 @@ class Bone {
         args.push(undefined)
       }
     })
+
+    if (false === strip) {
+      source = source.replace(/<!--([\w\W]+?)-->/g, function($all, $1) {
+        return `<!--${window.escape($1)}-->`;
+      })
+    }
 
     if (true !== conf.noSyntax) {
       source = this.$compileSyntax(source, !!conf.strict)
@@ -486,24 +490,43 @@ class Bone {
         render = __render
       }
 
-      return function(data) {
-        try {
-          return render.apply(scope, [data].concat(args))
+      if (false === strip) {
+        return function(data) {
+          try {
+            var source = render.apply(scope, [data].concat(args))
+            return source.replace(/<!--([\w\W]+?)-->/g, function($all, $1) {
+              return `<!--${window.unescape($1)}-->`
+            })
+          }
+          catch (err) {
+            return __catch(err)
+          }
         }
-        catch (err) {
-          err = extend({}, err, {
-            source: self._table(scope.$source, err.line)
-          })
-
-          self._throw({
-            message   : `[Exec Render]: ${err.message}`,
-            line      : err.line,
-            template  : err.source,
-            shell     : self._table(err.shell, err.line)
-          })
-
-          return ''
+      }
+      else {
+        return function(data) {
+          try {
+            return render.apply(scope, [data].concat(args))
+          }
+          catch (err) {
+            return __catch(err)
+          }
         }
+      }
+
+      function __catch (err) {
+        err = extend({}, err, {
+          source: self._table(scope.$source, err.line)
+        })
+
+        self._throw({
+          message   : `[Exec Render]: ${err.message}`,
+          line      : err.line,
+          template  : err.source,
+          shell     : self._table(err.shell, err.line)
+        })
+
+        return ''
       }
     }
   }
@@ -1161,7 +1184,7 @@ class Client extends Bone {
    * @returns {string} 内容
    */
   renderById (templateId, data = {}, options = {}) {
-    let render = this.compileById(templateId, options = {})
+    let render = this.compileById(templateId, options)
     return render(data)
   }
 

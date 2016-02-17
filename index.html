@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <script src="dist/es5/client/oTemplate.js"></script>
+  <script id="templates/index.html" type="text/template">
+    {{use body, 'oTemplate' }}
+      <p>Hello World</p>
+    {{/use}}
+
+    {{mixin body, title}}
+      <h1>{{= title}}</h1>
+      {{block}}
+    {{/mixin}}
+  </script>
+  <script id="templates/b.html" type="text/template">
+    <!--
+      <%= 'baidu.com' %>
+    -->
+  </script>
+  <script>
+    window.onload = function() {
+      var source = oTemplate.renderById('templates/b.html', {}, {
+        compress: false
+      })
+
+      document.body.innerHTML = source;
+    }
+  </script>
+</head>
+<body>
+
+</body>
+</html>

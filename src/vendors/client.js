@@ -60,7 +60,7 @@ class Client extends Bone {
    * @returns {string} 内容
    */
   renderById (templateId, data = {}, options = {}) {
-    let render = this.compileById(templateId, options = {})
+    let render = this.compileById(templateId, options)
     return render(data)
   }
 
