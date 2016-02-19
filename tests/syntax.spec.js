@@ -158,7 +158,7 @@ describe('Test the simple syntax', function () {
     it('should escape the javascript syntax when noSyntax turned off', function () {
       var template = '<%= error %>'
 
-      var source = _.compile(template, {
+      var source = _.compileSource(template, {
         error: 123
       })
 
@@ -203,7 +203,7 @@ describe('Test the simple syntax', function () {
           + '<div>David</div>'
           + '<div>Jones</div>'
 
-      var source = _.render(template)
+      var source = _.renderSource(template)
       expect(source.replace(/\s+/g, '')).toEqual(result.replace(/\s+/g, ''))
     })
 
@@ -222,7 +222,7 @@ describe('Test the simple syntax', function () {
           + '&lt;script&gt;&lt;/script&gt;'
           + '&#60;&#115;&#99;&#114;&#105;&#112;&#116;&#62;&#60;&#47;&#115;&#99;&#114;&#105;&#112;&#116;&#62;'
 
-      var source = _.render(template, {
+      var source = _.renderSource(template, {
         script    : '<script></script>',
         ascii     : '\x3c\x73\x63\x72\x69\x70\x74\x3e\x3c\x2f\x73\x63\x72\x69\x70\x74\x3e',
         iso88591  : '&#60;&#115;&#99;&#114;&#105;&#112;&#116;&#62;&#60;&#47;&#115;&#99;&#114;&#105;&#112;&#116;&#62;',
@@ -251,7 +251,7 @@ describe('Test the simple syntax', function () {
       var template = '<div>{{ "World" | say }}</div>'
       var result = '<div>Hello World!!!</div>'
 
-      var source = _.render(template)
+      var source = _.renderSource(template)
       expect(source).toEqual(result)
     })
 
@@ -267,7 +267,7 @@ describe('Test the simple syntax', function () {
       var template = '<div>{{say "yes"}}Hello world{{/say}}</div>'
       var result = '<div>Hello world</div>'
 
-      var source = _.render(template)
+      var source = _.renderSource(template)
       expect(source).toEqual(result)
     })
 
@@ -295,7 +295,7 @@ describe('Test the simple syntax', function () {
           + '<span>2 Times.</span>'
           + '<span>3 Times.</span>'
 
-      var source = _.render(template)
+      var source = _.renderSource(template)
       expect(source).toEqual(result)
     })
 
@@ -320,7 +320,7 @@ describe('Test the simple syntax', function () {
           +   '<span>Say Hello!!!</span>'
           + '</div>'
 
-      var source = _.render(template)
+      var source = _.renderSource(template)
       expect(source).toEqual(result)
     })
 
@@ -411,7 +411,7 @@ describe('Test the simple syntax', function () {
           +   '<li>2: Javascript</li>'
           + '</ul>'
 
-      var source = _.renderById('templates/nested.html', {
+      var source = _.renderSync('templates/nested.html', {
         title: 'Keywords',
         list: ['Template', 'Template Engine', 'Javascript']
       })
@@ -438,7 +438,7 @@ describe('Test the simple syntax', function () {
           +   '<li>2: Javascript</li>'
           + '</ul>'
 
-      var render = _.compileById('templates/nested.html')
+      var render = _.compileSync('templates/nested.html')
 
       var source = render({
         title: 'Keywords',
@@ -465,7 +465,7 @@ describe('Test the simple syntax', function () {
         return 'what?' === what ? 'Welcome' : what
       })
 
-      var source = _.renderById('templates/nested.html', {
+      var source = _.renderSync('templates/nested.html', {
         title: 'Helper Defination'
       })
 
@@ -501,7 +501,7 @@ describe('Test the simple syntax', function () {
           +   '<li>2: Javascript</li>'
           + '</ul>'
 
-      var source = _.renderById('templates/nested.html', {
+      var source = _.renderSync('templates/nested.html', {
         title     : 'Hello World',
         subTitle  : 'Keywords',
         list      : ['Template', 'Template Engine', 'Javascript']
@@ -533,7 +533,7 @@ describe('Test the simple syntax', function () {
           + '<h4>force escape</h4>'
           + '<div>&lt;p&gt;Check it out!!!&lt;/p&gt;</div>'
 
-      var source = _.renderById('templates/nested.html', {
+      var source = _.renderSync('templates/nested.html', {
         title           : 'Hello World',
         noescapeContent : '<p>Check it out!!!</p>',
         escapeContent   : '<p>Check it out!!!</p>'
@@ -547,7 +547,7 @@ describe('Test the simple syntax', function () {
 
     it('should not filter remarks when compress is false', function() {
       var template = '<!-- {{= "Hello World" }} -->'
-      var source = _.render(template, {}, {
+      var source = _.renderSource(template, {}, {
         compress: false
       })
 

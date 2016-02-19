@@ -40,7 +40,6 @@ var DEFAULTS = {
  */
 var extensions = []
 
-
 /**
  * Base class for engine
  * @class
@@ -565,7 +564,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @returns {string}
    */
   proto$0.render = function (source) {var data = arguments[1];if(data === void 0)data = {};var options = arguments[2];if(options === void 0)options = {};
-    return this.compile(source, options)(data)
+    return Bone.prototype.compile.call(this, source, options)(data)
   };
 
   /**
@@ -1145,174 +1144,179 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
     // 扩展新的 include 支持 ajax
     ~extend(this._helpers, {
       include: function(filename, data, options) {
-        return self.renderById(filename, data, options)
+        return self.renderSync(filename, data, options)
       }
     })
   }if(super$0!==null)SP$0(Client,super$0);Client.prototype = OC$0(super$0!==null?super$0.prototype:null,{"constructor":{"value":Client,"configurable":true,"writable":true}});DP$0(Client,"prototype",{"configurable":false,"enumerable":false,"writable":false});
 
   /**
-   * 编译内联模板
+   * 编译模板
+   * @function
+   * @param {string} source 模板
+   * @param {Object} options 配置
+   * @returns {Function}
+   * @description
+   * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
+   * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
+   * 时才能真正修改渲染器的配置
+   */
+  proto$0.compileSource = function (source, options) {
+    return Bone.prototype.compile.apply(this, arguments)
+  };
+
+  /**
+   * 渲染模板
+   * @function
+   * @param {string} source 模板
+   * @param {Object} options 配置
+   * @returns {Function}
+   * @description
+   * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
+   * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
+   * 时才能真正修改渲染器的配置
+   */
+  proto$0.renderSource = function (source, options) {
+    return Bone.prototype.render.apply(this, arguments)
+  };
+
+  /**
+   * 编译模板
+   * @param  {string} template 模板
+   * @param  {Object} options  配置
+   * @return {Function}
+   */
+  proto$0.compile = function (template, callback) {var options = arguments[2];if(options === void 0)options = {};
+    var conf = extend({}, this.DEFAULTS, options, { filename: template }),
+        sync = !!conf.sync
+
+    if (is('Object')(callback)) {
+      return this.compile(template, null, callback)
+    }
+    if (false === sync && !is('Function')(callback)) {
+      return
+    }
+
+    template = toString(template)
+
+    var self   = this,
+        render = true === conf.override ? this._cache(template) : undefined
+
+    if (is('Function')(render)) {
+      return sync ? render : (callback(render), undefined)
+    }
+
+    var node = document.getElementById(template)
+    if (node) {
+      var source = node.innerHTML.replace(/^ *\n|\n *$/g, '')
+      render = this.compileSource(source, conf)
+      return sync ? render : (callback(render), undefined)
+    }
+
+    this.getSourceByAjax(template, function (source) {
+      var origin = (dependencies = [source, []])[0], dependencies = dependencies[1]
+
+      // source 经过这里会变得不纯正
+      // 主要用于确定需要导入的模板
+      if (false === conf.noSyntax) {
+        source = self.$compileSyntax(source, conf.strict)
+      }
+
+      // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
+      forEach(source.split('<%'), function (code) {
+        var codes = (match = [code.split('%>')])[0], match = match[1]
+
+        // logic block is fist part when `codes.length === 2`
+        // 逻辑模块
+        if (1 !== codes.length
+        && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
+          dependencies.push(match[1].replace(/[\'\"\`]/g, ''))
+        }
+      })
+
+      var total = dependencies.length
+      var __exec = function () {
+        0 >= (-- total) && __return()
+      }
+
+      var __return = function () {
+        render = self.$compile(origin)
+        self._cache(template, render)
+        false === sync && callback(render)
+        total = undefined
+      }
+
+      if (total > 0) {
+        forEach(unique(dependencies), function (child) {
+          if (self._cache(child)) {
+            __exec()
+          }
+          else {
+            self.compile(child, __exec, conf)
+          }
+        })
+      }
+      else {
+        __return()
+      }
+    },
+    {
+      sync: sync
+    })
+
+    return render
+  };
+
+  /**
+   * 阻塞编译模板
    * @function
    * @param {string} templateId 模板ID
    * @param {Object} options 配置 (optional)
    * @returns {Function} 编译函数
    */
-  proto$0.compileById = function (templateId) {var options = arguments[1];if(options === void 0)options = {};
-    templateId = toString(templateId)
-
-    var conf   = extend({}, this.DEFAULTS, options, { filename: templateId }),
-        render = true === conf.override || this._cache(templateId)
-
-    if (is('Function')(render)) {
-      return render
-    }
-
-    var node = document.getElementById(templateId)
-
-    return node
-      ? this.compile(node.innerHTML.replace(/^ *\n|\n *$/g, ''), conf)
-      : (this._throw({
-          message: (("[Compile Template]: Template ID " + templateId) + " is not found.")
-        }),
-        __render)
+  proto$0.compileSync = function (template, options) {
+    var conf = extend({}, options, { sync: true })
+    return this.compile(template, null, conf)
   };
 
   /**
-   * 渲染内联模板
+   * 阻塞渲染
    * @function
-   * @param {string} templateId 模板ID
+   * @param {string} template 模板地址或ID
    * @param {Object} data 数据 (optional)
    * @param {Object} options 配置 (optional)
-   * @returns {string} 内容
    */
-  proto$0.renderById = function (templateId) {var data = arguments[1];if(data === void 0)data = {};var options = arguments[2];if(options === void 0)options = {};
-    var render = this.compileById(templateId, options)
-    return render(data)
+  proto$0.renderSync = function (template, data, options) {
+    var render = this.compileSync(template, options)
+    return render(data || {})
   };
 
   /**
-   * 编译远程模板资源
+   * 异步编译模板
    * @function
-   * @param {string} sourceUrl 远程资源地址
+   * @param {string} template 模板地址或ID
    * @param {Function} callback 回调函数
    * @param {Object} options 配置 (optional)
    */
-  proto$0.compileByAjax = function (sourceUrl, callback) {var options = arguments[2];if(options === void 0)options = {};
-    if (!is('Function')(callback)) {
-      return
-    }
-
-    var self   = this,
-        conf   = extend({}, this.DEFAULTS, options),
-        render = true === conf.override || this._cache(sourceUrl)
-
-    if (is('Function')(render)) {
-      callback(render)
-    }
-    else {
-      this.getSourceByAjax(sourceUrl, function (source) {
-        var origin = (dependencies = [source, []])[0], dependencies = dependencies[1]
-
-        // source 经过这里会变得不纯正
-        // 主要用于确定需要导入的模板
-        if (false === conf.noSyntax) {
-          source = self.$compileSyntax(source, conf.strict)
-        }
-
-        // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
-        forEach(source.split('<%'), function(code) {
-          var codes = (match = [code.split('%>')])[0], match = match[1]
-
-          // logic block is fist part when `codes.length === 2`
-          // 逻辑模块
-          if (1 !== codes.length
-          && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
-            dependencies.push(match[1].replace(/[\'\"\`]/g, ''))
-          }
-        })
-
-        var total = dependencies.length
-        var __exec = function () {
-          0 >= (-- total) && __return()
-        }
-
-        var __return = function () {
-          render = self.$compile(origin)
-          self._cache(sourceUrl, render)
-          callback(render)
-          total = undefined
-        }
-
-        if (total > 0) {
-          forEach(unique(dependencies), function (file) {
-            if (self._cache(file)) {
-              __exec()
-            }
-            else {
-              var childSource = findChildTemplate(file, origin)
-
-              if (childSource) {
-                self.compile(childSource, {
-                  filename: file,
-                  override: !!conf.override
-                })
-
-                __exec()
-              }
-              else {
-                var node = document.getElementById(file)
-
-                if (node) {
-                  self.compile(node.innerHTML, {
-                    filename: file,
-                    override: !!conf.override
-                  })
-
-                  __exec()
-                }
-                else {
-                  self.compileByAjax(file, __exec, extend(conf, {
-                    override: !!conf.override
-                  }))
-                }
-              }
-            }
-          })
-        }
-        else {
-          __return()
-        }
-      })
-    }
-
-    function findChildTemplate (templateId, source) {
-      var node = document.createElement('div')
-      node.innerHTML = source
-
-      var templateNodes = node.getElementsByTagName('script')
-      for (var i = templateNodes.length; i --;) {
-        if (templateId === templateNodes[i].id) {
-          return templateNodes[i].innerHTML
-        }
-      }
-    }
+  proto$0.compileAsync = function (template, callback, options) {
+    var conf = extend({}, options, { sync: false })
+    this.compile(template, callback, conf)
   };
 
   /**
-   * 渲染远程模板资源
+   * 异步渲染
    * @function
-   * @param {string} sourceUrl 远程资源地址
+   * @param {string} template 模板地址或ID
    * @param {Object} data 数据 (optional)
    * @param {Function} callback 回调函数
    * @param {Object} options 配置 (optional)
    */
-  proto$0.renderByAjax = function (sourceUrl, data, callback) {var options = arguments[3];if(options === void 0)options = {};
+  proto$0.renderAsync = function (template, data, callback, options) {
     if (is('Function')(data)) {
-      return this.renderByAjax(sourceUrl, {}, data, callback)
+      return this.renderAsync(template, {}, data, callback)
     }
 
     if (is('Function')(callback)) {
-      this.compileByAjax(sourceUrl, function(render) {
+      this.compileAsync(template, function(render) {
         callback(render(data || {}))
       }, options)
     }
@@ -1324,7 +1328,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
    * @param {string} sourceUrl 远程资源地址
    * @param {Function} callback 回调函数
    */
-  proto$0.getSourceByAjax = function (sourceUrl, callback, errorCallback) {
+  proto$0.getSourceByAjax = function (sourceUrl, callback) {var options = arguments[2];if(options === void 0)options = {};
     if (!is('Function')(callback)) {
       return
     }
@@ -1333,8 +1337,8 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
 
     xhr.onreadystatechange = function() {
       var status = this.status
-      if (this.DONE === this.readyState) {
-        200 <= status && status < 400 && callback(this.responseText)
+      if (this.DONE === this.readyState && 200 <= status && status < 400) {
+        callback(this.responseText)
       }
     }
 
@@ -1346,8 +1350,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
       }
 
       self._throw(err)
-      is('Function')(errorCallback) && errorCallback(err)
-      errorCallback = undefined
+      is('Function')(options.catch) && options.catch(err)
     }
 
     xhr.ontimeout = function() {
@@ -1357,8 +1360,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
       }
 
       self._throw(err)
-      is('Function')(errorCallback) && errorCallback(err)
-      errorCallback = undefined
+      is('Function')(options.catch) && options.catch(err)
     }
 
     xhr.onabort = function() {
@@ -1368,11 +1370,10 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
       }
 
       self._throw(err)
-      is('Function')(errorCallback) && errorCallback(err)
-      errorCallback = undefined
+      is('Function')(options.catch) && options.catch(err)
     }
 
-    xhr.open('GET', sourceUrl, true)
+    xhr.open('GET', sourceUrl, !options.sync)
     xhr.send(null)
   };
 MIXIN$0(Client.prototype,proto$0);proto$0=void 0;return Client;})(Bone);

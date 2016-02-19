@@ -25,12 +25,12 @@ describe('Test in client', function() {
       +   '<%}%>'
       + '</script>'
 
-      var source = _.renderById('templates/nested.html')
+      var source = _.renderSync('templates/nested.html')
       expect(source).toEqual('<div>Hello world</div>')
     })
 
     it('should render remote templates', function(done) {
-      _.renderByAjax('templates/remote.html', {}, function(source) {
+      _.renderAsync('templates/remote.html', {}, function(source) {
         expect(source).toEqual('<div>Hello world</div>')
         done()
       })
@@ -54,7 +54,7 @@ describe('Test in client', function() {
       +   '<div>Hello World</div>'
       + '</script>'
 
-      _.renderByAjax('template/remote.html', {}, function(source) {
+      _.renderAsync('template/remote.html', {}, function(source) {
         expect(source).toEqual('<div>Hello World</div>')
         done()
       })
@@ -98,7 +98,7 @@ describe('Test in client', function() {
         +   '<div><%= mesage %></div>'
         + '</script>'
 
-      var source = _.renderById('templates/nested.html')
+      var source = _.renderSync('templates/nested.html')
       expect(source).toEqual('<div>Hello Nested Template!!!</div>')
     })
 
@@ -124,7 +124,7 @@ describe('Test in client', function() {
           + '})%>'
       })
 
-      _.renderByAjax('templates/nested.html', {}, function(source) {
+      _.renderAsync('templates/nested.html', {}, function(source) {
         expect(source).toEqual('<div>Hello Remote Template!!!</div>')
         done()
       })

@@ -40,7 +40,6 @@ var DEFAULTS = {
  */
 var extensions = []
 
-
 /**
  * Base class for engine
  * @class
@@ -565,7 +564,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    * @returns {string}
    */
   proto$0.render = function (source) {var data = arguments[1];if(data === void 0)data = {};var options = arguments[2];if(options === void 0)options = {};
-    return this.compile(source, options)(data)
+    return Bone.prototype.compile.call(this, source, options)(data)
   };
 
   /**

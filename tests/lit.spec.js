@@ -15,7 +15,7 @@ describe('Test origin javascript syntax', function() {
               + '<div>Hello world</div>'
             + '<% } %>'
 
-      var render = _.compile(template)
+      var render = _.compileSource(template)
       expect(render).toEqual(jasmine.any(Function))
       expect(render().trim()).toEqual('<div>Hello world</div>')
     })
@@ -27,7 +27,7 @@ describe('Test origin javascript syntax', function() {
             + '</div>'
           + '<% } %>'
 
-      var source = _.render(template, {
+      var source = _.renderSource(template, {
         message: 'Hello world'
       })
 
@@ -37,7 +37,7 @@ describe('Test origin javascript syntax', function() {
     it('should use private variables', function() {
       var template = '<%= $runtime %>\n<%= $runtime %>'
 
-      var source = _.render(template)
+      var source = _.renderSource(template)
       expect(source.trim()).toEqual('12')
     })
 
@@ -74,7 +74,7 @@ describe('Test origin javascript syntax', function() {
         var datas = {}
         datas[name] = index
 
-        var source = _.render('<%= ' + name + '%>', datas)
+        var source = _.renderSource('<%= ' + name + '%>', datas)
         expect(source).not.toEqual(index)
       })
     })
@@ -86,7 +86,7 @@ describe('Test origin javascript syntax', function() {
         return 'Hello ' + name
       })
 
-      var source = _.render(template, {
+      var source = _.renderSource(template, {
         data: 'World'
       })
 
@@ -96,7 +96,7 @@ describe('Test origin javascript syntax', function() {
     it('should escape html', function() {
       var template = '<%= data %>'
 
-      var source = _.render(template, {
+      var source = _.renderSource(template, {
         data: '<script></script>'
       })
 
@@ -106,7 +106,7 @@ describe('Test origin javascript syntax', function() {
     it('should escape ascii', function() {
       var template = '<%= data %>'
 
-      var source = _.render(template, {
+      var source = _.renderSource(template, {
         data: '\x3c\x73\x63\x72\x69\x70\x74\x3e\x3c\x2f\x73\x63\x72\x69\x70\x74\x3e'
       })
 
@@ -115,7 +115,7 @@ describe('Test origin javascript syntax', function() {
 
     it('should not filter remarks when compress is false', function() {
       var template = '<!-- <%= "Hello World" %> -->'
-      var source = _.render(template, {}, {
+      var source = _.renderSource(template, {}, {
         compress: false
       })
 

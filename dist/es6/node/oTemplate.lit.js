@@ -40,7 +40,6 @@ const DEFAULTS = {
  */
 let extensions = []
 
-
 /**
  * Base class for engine
  * @class
@@ -565,7 +564,7 @@ class Bone {
    * @returns {string}
    */
   render (source, data = {}, options = {}) {
-    return this.compile(source, options)(data)
+    return Bone.prototype.compile.call(this, source, options)(data)
   }
 
   /**
