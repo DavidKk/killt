@@ -56,12 +56,12 @@ oTemplate.render([String source], [Object Data], [Object options])
 
 // Nested
 script(id="/template/inline.html", type="template/text")
-oTemplate.compileById([String TemplateId], [Object options])
-oTemplate.renderById([String TemplateId], [Object data], [Object options])
+oTemplate.compileSync([String TemplateId], [Object options])
+oTemplate.renderSync([String TemplateId], [Object data], [Object options])
 
 // Ajax
-oTemplate.compileByAjax([String url], [Function callback], [Object options])
-oTemplate.renderByAjax([String url], [Object data], [Function callback], [Object options])
+oTemplate.compileAsync([String url], [Function callback], [Object options])
+oTemplate.renderAsync([String url], [Object data], [Function callback], [Object options])
 ```
 
 #### Compiled by template
@@ -69,7 +69,7 @@ oTemplate.renderByAjax([String url], [Object data], [Function callback], [Object
 var oTemplate = window.oTemplate
 var oTempalte = require('oTemplate')
 
-oTemplate.renderById('templates/list/default.html', {
+oTemplate.renderSync('templates/list/default.html', {
   title: 'Customer Title',
   list: {
     Author: 'David Jones',
@@ -80,7 +80,7 @@ oTemplate.renderById('templates/list/default.html', {
 
 ##### Compiled by Ajax
 ```
-oTemplate.renderByAjax('templates/list/default.html', function(html) {
+oTemplate.renderAsync('templates/list/default.html', function(html) {
   // do something...
 })
 ```
