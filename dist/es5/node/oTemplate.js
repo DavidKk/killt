@@ -402,7 +402,8 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       +        'throw {'
       +          'message: err.message,'
       +          'line: $runtime,'
-      +          (("shell: '" + (escapeSymbol(origin))) + "'")
+      +          (("shell: '" + (escapeSymbol(origin))) + "',")
+      +          'args: arguments'
       +        '};'
       +      '}'
 
@@ -437,7 +438,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
         conf    = extend({}, this.DEFAULTS, options),
         strip   = !!conf.compress,
         deps    = conf.depends,
-        _args_  = ['$data'].concat(deps).join(','),
+        _args_  = ['$data'].concat(deps),
         args    = []
 
     // 获取需求的参数，除 data 之外
@@ -473,14 +474,15 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       var render
 
       try {
-        render = new Function(_args_, shell)
+        render = new Function(_args_.join(','), shell)
       }
       catch (err) {
         self._throw({
           message   : ("[Compile Render]: " + (err.message)),
+          template  : options.filename,
           line      : ("Javascript syntax occur error, it can not find out the error line."),
           syntax    : self._table(origin),
-          template  : source,
+          source    : source,
           shell     : shell
         })
 
@@ -512,17 +514,19 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
       }
 
       function __catch (err) {
-        err = extend({}, err, {
-          source: self._table(scope.$source, err.line)
-        })
-
-        self._throw({
+        var _err = {
           message   : ("[Exec Render]: " + (err.message)),
+          template  : options.filename,
           line      : err.line,
-          template  : err.source,
-          shell     : self._table(err.shell, err.line)
+          source    : self._table(scope.$source, err.line),
+          shell     : self._table(err.shell, err.line),
+        }
+
+        forEach(_args_, function(name, key) {
+          _err[("arguments:" + name)] = err.args[key]
         })
 
+        self._throw(_err)
         return ''
       }
     }
@@ -673,7 +677,7 @@ var Bone = (function(){var DPS$0 = Object.defineProperties;var static$0={},proto
    */
   proto$0._throw = function (error) {var options = arguments[1];if(options === void 0)options = {};
     var conf    = extend({}, this.DEFAULTS, options),
-        message = __throw(error, conf.env === ENV.UNIT ? 'null' : 'log')
+        message = -1 === indexOf([ENV.UNIT], conf.env) && __throw(error)
 
     forEach(this._listeners, function(listener) {
       'error' === listener.type && listener.handle(error, message)
@@ -1565,36 +1569,32 @@ function extend () {var SLICE$0 = Array.prototype.slice;var args = SLICE$0.call(
  * 抛出异常
  * @function
  * @param {string|Object} error 错误异常
- * @param {boolean} type 是否捕获事件
  */
-function __throw (error, type) {
-  var message = ''
+function __throw (error) {
+  var messages = []
 
   if (is('Object')(error)) {
     forEach(error, function (value, name) {
-      message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
+      messages.push((("<" + (name.substr(0, 1).toUpperCase())) + ("" + (name.substr(1))) + ">"))
+      messages.push('\n')
+      messages.push(value)
+      messages.push('\n\n')
     })
   }
   else if (is('String')(error)) {
-    message = error
+    messages = error
   }
 
-  if ('log' === type) {
-    is('Defined')(console) && is('Function')(console.error)
-      ? console.error(message)
-      : _throw(message)
+  try {
+    console.error.apply(console, messages)
   }
-  else if ('catch' === type) {
-    _throw(message)
-  }
-
-  return message
-
-  function _throw(message) {
+  catch (err) {
     setTimeout(function () {
-      throw message
+      throw messages
     })
   }
+
+  return messages
 }
 
 /**

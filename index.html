@@ -15,22 +15,19 @@
     {{/mixin}}
   </script>
   <script id="template/abc.html" type="text/template">
-    {{include template/abcd.html, {title: title} }}
-  </script>
-  <script id="template/abcd.html" type="text/template">
-    <div>{{= title }}</div>
+    {{= title.qwe }}
   </script>
   <script>
     window.onload = function() {
-      // var source = oTemplate.renderById('template/index.html', {}, {
-      //   compress: false
-      // })
-
-      // document.body.innerHTML = source;
-
-      var render = oTemplate.renderAsync('template/abc.html', {title: 'qwe'}, function(render) {
-        console.log(render)
+      var source = oTemplate.render('template/abc.html', {qwe:123}, {
+        compress: false
       })
+
+      document.body.innerHTML = source;
+
+      // var render = oTemplate.renderAsync('template/abc.html', {title: 'qwe'}, function(render) {
+      //   console.log(render)
+      // })
     }
   </script>
 </head>

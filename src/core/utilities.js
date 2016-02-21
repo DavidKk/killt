@@ -310,36 +310,32 @@ function extend (...args) {
  * 抛出异常
  * @function
  * @param {string|Object} error 错误异常
- * @param {boolean} type 是否捕获事件
  */
-function __throw (error, type) {
-  let message = ''
+function __throw (error) {
+  let messages = []
 
   if (is('Object')(error)) {
     forEach(error, function (value, name) {
-      message += '<' + name.substr(0, 1).toUpperCase() + name.substr(1) + '>\n' + value + '\n\n'
+      messages.push(`<${name.substr(0, 1).toUpperCase()}${name.substr(1)}>`)
+      messages.push('\n')
+      messages.push(value)
+      messages.push('\n\n')
     })
   }
   else if (is('String')(error)) {
-    message = error
+    messages = error
   }
 
-  if ('log' === type) {
-    is('Defined')(console) && is('Function')(console.error)
-      ? console.error(message)
-      : _throw(message)
+  try {
+    console.error.apply(console, messages)
   }
-  else if ('catch' === type) {
-    _throw(message)
-  }
-
-  return message
-
-  function _throw(message) {
+  catch (err) {
     setTimeout(function () {
-      throw message
+      throw messages
     })
   }
+
+  return messages
 }
 
 /**

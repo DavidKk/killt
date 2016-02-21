@@ -366,7 +366,8 @@ class Bone {
       +        'throw {'
       +          'message: err.message,'
       +          'line: $runtime,'
-      +          `shell: '${escapeSymbol(origin)}'`
+      +          `shell: '${escapeSymbol(origin)}',`
+      +          'args: arguments'
       +        '};'
       +      '}'
 
@@ -401,7 +402,7 @@ class Bone {
         conf    = extend({}, this.DEFAULTS, options),
         strip   = !!conf.compress,
         deps    = conf.depends,
-        _args_  = ['$data'].concat(deps).join(','),
+        _args_  = ['$data'].concat(deps),
         args    = []
 
     // 获取需求的参数，除 data 之外
@@ -437,14 +438,15 @@ class Bone {
       let render
 
       try {
-        render = new Function(_args_, shell)
+        render = new Function(_args_.join(','), shell)
       }
       catch (err) {
         self._throw({
           message   : `[Compile Render]: ${err.message}`,
+          template  : options.filename,
           line      : `Javascript syntax occur error, it can not find out the error line.`,
           syntax    : self._table(origin),
-          template  : source,
+          source    : source,
           shell     : shell
         })
 
@@ -476,17 +478,19 @@ class Bone {
       }
 
       function __catch (err) {
-        err = extend({}, err, {
-          source: self._table(scope.$source, err.line)
-        })
-
-        self._throw({
+        let _err = {
           message   : `[Exec Render]: ${err.message}`,
+          template  : options.filename,
           line      : err.line,
-          template  : err.source,
-          shell     : self._table(err.shell, err.line)
+          source    : self._table(scope.$source, err.line),
+          shell     : self._table(err.shell, err.line),
+        }
+
+        forEach(_args_, function(name, key) {
+          _err[`arguments:${name}`] = err.args[key]
         })
 
+        self._throw(_err)
         return ''
       }
     }
@@ -637,7 +641,7 @@ class Bone {
    */
   _throw (error, options = {}) {
     let conf    = extend({}, this.DEFAULTS, options),
-        message = __throw(error, conf.env === ENV.UNIT ? 'null' : 'log')
+        message = -1 === indexOf([ENV.UNIT], conf.env) && __throw(error)
 
     forEach(this._listeners, function(listener) {
       'error' === listener.type && listener.handle(error, message)

@@ -56,8 +56,9 @@ class Client extends Bone {
 
   /**
    * 编译模板
-   * @param  {string} template 模板
-   * @param  {Object} options  配置
+   * @param {string} template 模板
+   * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
+   * @param {Object} options 配置
    * @return {Function}
    */
   compile (template, callback, options = {}) {
@@ -139,6 +140,33 @@ class Client extends Bone {
     })
 
     return render
+  }
+
+  /**
+   * 渲染模板
+   * @param {string} template 模板
+   * @param {Object} data 数据
+   * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
+   * @param {Object} options 配置
+   * @return {string}
+   */
+  render (template, data, callback, options = {}) {
+    let conf = extend({}, this.DEFAULTS, options, { filename: template }),
+        sync = !!conf.sync
+
+    if (is('Object')(callback)) {
+      let render = this.compile(template, null, extend(callback, { sync: true }))
+      return render(data || {})
+    }
+
+    if (false === sync && !is('Function')(callback)) {
+      return
+    }
+
+    this.compile(template, function(render) {
+      let source = render(data || {})
+      callback(source)
+    }, conf)
   }
 
   /**
