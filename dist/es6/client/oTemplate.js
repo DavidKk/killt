@@ -1300,6 +1300,7 @@ class Client extends Bone {
     if (is('Object')(callback)) {
       return this.compile(template, null, callback)
     }
+
     if (false === sync && !is('Function')(callback)) {
       return
     }
@@ -1307,7 +1308,7 @@ class Client extends Bone {
     template = toString(template)
 
     let self   = this,
-        render = true === conf.override ? this._cache(template) : undefined
+        render = true === conf.override ? undefined : this._cache(template)
 
     if (is('Function')(render)) {
       return sync ? render : (callback(render), undefined)
@@ -1359,7 +1360,19 @@ class Client extends Bone {
             __exec()
           }
           else {
-            self.compile(child, __exec, conf)
+            let childSource = findChildTemplate(child, origin)
+
+            if (childSource) {
+              self.compileSource(childSource, {
+                filename: child,
+                override: !!conf.override
+              })
+
+              __exec()
+            }
+            else {
+              self.compile(child, __exec, conf)
+            }
           }
         })
       }
@@ -1372,6 +1385,18 @@ class Client extends Bone {
     })
 
     return render
+
+    function findChildTemplate (templateId, source) {
+      let node = document.createElement('div')
+      node.innerHTML = source
+
+      let templateNodes = node.getElementsByTagName('script')
+      for (let i = templateNodes.length; i --;) {
+        if (templateId === templateNodes[i].id) {
+          return templateNodes[i].innerHTML
+        }
+      }
+    }
   }
 
   /**

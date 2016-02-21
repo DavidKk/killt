@@ -48,6 +48,25 @@ describe('Test in client', function() {
       })
     })
 
+    it('should render remote templates which include the nested templates', function(done) {
+      _.renderAsync('template/remote.html', {}, function(source) {
+        expect(source).toEqual('<div>Hello World</div><script id="template/nested.html" type="text/template"><div>Hello World</div></script>')
+        done()
+      })
+
+      jasmine.Ajax.requests
+      .mostRecent()
+      .respondWith({
+        status: 200,
+        statusText: 'HTTP/1.1 200 OK',
+        contentType: 'text/xml;charset=UTF-8',
+        responseText: '<%# include("template/nested.html") %>'
+        + '<script id="template/nested.html" type="text/template">'
+        +   '<div>Hello World</div>'
+        + '</script>'
+      })
+    })
+
     it('should render remote templates which include the nested templates in body', function(done) {
       document.body.innerHTML =
         '<script id="template/nested.html" type="text/template">'

@@ -1300,6 +1300,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
     if (is('Object')(callback)) {
       return this.compile(template, null, callback)
     }
+
     if (false === sync && !is('Function')(callback)) {
       return
     }
@@ -1307,7 +1308,7 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
     template = toString(template)
 
     var self   = this,
-        render = true === conf.override ? this._cache(template) : undefined
+        render = true === conf.override ? undefined : this._cache(template)
 
     if (is('Function')(render)) {
       return sync ? render : (callback(render), undefined)
@@ -1359,7 +1360,19 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
             __exec()
           }
           else {
-            self.compile(child, __exec, conf)
+            var childSource = findChildTemplate(child, origin)
+
+            if (childSource) {
+              self.compileSource(childSource, {
+                filename: child,
+                override: !!conf.override
+              })
+
+              __exec()
+            }
+            else {
+              self.compile(child, __exec, conf)
+            }
           }
         })
       }
@@ -1372,6 +1385,18 @@ var Client = (function(super$0){var SP$0 = Object.setPrototypeOf||function(o,p){
     })
 
     return render
+
+    function findChildTemplate (templateId, source) {
+      var node = document.createElement('div')
+      node.innerHTML = source
+
+      var templateNodes = node.getElementsByTagName('script')
+      for (var i = templateNodes.length; i --;) {
+        if (templateId === templateNodes[i].id) {
+          return templateNodes[i].innerHTML
+        }
+      }
+    }
   };
 
   /**
