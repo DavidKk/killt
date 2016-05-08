@@ -1,6 +1,6 @@
 {
   "name": "killt",
-  "version": "1.0.4",
+  "version": "1.0.4-beta",
   "license": "MIT",
   "description": "Template engine for Javascript.",
   "homepage": "https://github.com/DavidKk/killt",

@@ -1,17 +1,17 @@
 Todo:
  ☐ 添加 mixin 功能 @doing
- ☐ 添加 nodejs 兼容
+ ☐ 添加测速页面
+ ☐ 嵌套模板功能
  ☐ 优化性能
   ☐ 旧浏览器只兼容不给性能最大优化
- ☐ 添加测速页面
 
 Think:
  ☐ 添加 socpe 功能
    ☐ 解决上级作用域问题
- ☐ 嵌套模板功能
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
+ ✔ 添加 ndoejs 兼容 @done (16-05-08 23:38) @project(Todo)
  ✔ 解决模板逻辑冲突问题 @done (16-01-27 01:27) @project(Todo)
  ✔ 添加实例页面 @done (16-01-27 01:26) @project(Todo)
  ✔ 一个文件可以同时用于测试与事例展示 @done (16-01-27 01:26) @project(Todo)

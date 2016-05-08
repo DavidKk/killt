@@ -1,7 +1,11 @@
+## 1.0.5
+
+
 ## 1.0.4
 
 - 将 renderById 与 renderByAjax 整合方法，新增 renderSync 与 renderAsync 方法处理异步与同步渲染
 - 报错添加，文件模板名称与出错时的数据
+- 兼容 nodejs
 
 ## 1.0.3
 - 修复 `compileByAjax` 无法请求远程模板问题
