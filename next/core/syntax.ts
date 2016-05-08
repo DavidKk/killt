@@ -1,12 +1,3 @@
-extend(DEFAULTS, {
-  /** open tag for syntax - 起始标识 */
-  openTag   : '{{',
-  /** close tag for syntax - 结束标识 */
-  closeTag  : '}}',
-  /** close no syntax config - 关闭没有语法的配置项 */
-  noSyntax  : false,
-})
-
 /**
  * Syntax - 语法类
  * @class
@@ -22,23 +13,23 @@ extend(DEFAULTS, {
  * 1. 正则表达式之间注意优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
-class Syntax extends Engine {
+class Syntax extend Engine {
   /**
    * 通过配置作为数据来替换模板
    * @function
    * @param {string} source 模板
    * @param {Object} data 数据 (optional)，若数据不为 object 则设为默认配置数据
-   * @returns {string} 结果字符串
+   * @returns {string}
    * @description
    *
    * '<%= openTag %>hi<%= closeTag %>'
    * if my defauts is { openTag: '{{', closeTag: '}}' }
    * the result is '{{hi}}'
    */
-  _compile (source, data) {
-    data = is('PlainObject')(data) ? data : this.setting
+  private _compile (source: string, data: Object): string {
+    data = is('PlainObject')(data) ? data : this.DEFAULTS
 
-    return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, (all, $1) => {
+    return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, (all: string, $1: string) => {
       return get(data, $1) || ''
     })
   }
@@ -48,32 +39,31 @@ class Syntax extends Engine {
    * @function
    * @param {string} patternTemplate regexp 模板
    * @param {menu} attributes {igm}
-   * @returns {regexp} 结果正则
+   * @returns {regexp}
    * @description
    * '<%= openTag %>hi<%= closeTag %>'
    * if my defauts is { openTag: '{{', closeTag: '}}' }
    * replace string to '{{hi}}'
    * the return result is /{{hi}}/
    */
-  _compileRegexp (patternTemplate, attributes) {
-    let pattern = this._compile(patternTemplate)
+  private _compileRegexp (patternTemplate: string, attributes: any): RegExp {
+    let pattern: string = this._compile(patternTemplate)
     return new RegExp(pattern, attributes)
   }
-
+  
   /**
    * 编译语法模板
    * @function
    * @param {string} source 语法模板
    * @param {boolean} strict 是否为严格模式
    * @param {string} origin 原有的模板
-   * @return {string} 结果字符串
+   * @return {string}
    */
-  _compileSyntax (source, strict = true, origin = source) {
-    let matched = false
+  private _compileSyntax (source: string, strict: boolean = true, origin: string = source): string {
+    let matched: boolean = false
 
-    forEach(this._blocks, (handle) => {
+    forEach(this._blocks, (handle: Object): string {
       let dress = source.replace(handle.syntax, handle.shell)
-
       if (dress !== source) {
         source = dress
         matched = true
@@ -84,8 +74,8 @@ class Syntax extends Engine {
     // not match any syntax or helper
     // 语法错误，没有匹配到相关语法
     if (false === matched) {
-      let pos  = origin.search(source)
-      let line = inline(origin, pos)
+      let pos   : number = origin.search(source)
+      let line  : number = inline(origin, pos)
 
       this._throw({
         message : `[Syntax Error]: ${source} did not match any syntax in line ${line}.`,
@@ -106,7 +96,7 @@ class Syntax extends Engine {
    *                            若不为 false 编译时会验证语法正确性若不正确则返回空字符串;
    *                            若为 false 模式则会去除所有没有匹配到的语法,
    *                            默认为 true，除 false 之外所有均看成 true
-   * @return {string}           结果字符串
+   * @return {string}
    * @example
    *
    * Strict Mode
@@ -120,10 +110,12 @@ class Syntax extends Engine {
    * when strict not equal false, it will return '',
    * when strict equal false, it will return '<div></div>'
    */
-  $compileSyntax (source, strict = true) {
-    let origin  = source
-    let conf    = this.options()
-    let valid
+  public $compileSyntax (source: string, strict: boolean = true): string {
+    let self    : Syntax          = this
+    let origin  : string          = source
+    let conf    : Object          = this.DEFAULTS
+    let blocks  : Array<Object>   = this._blocks
+    let valid   : boolean
 
     source = escapeTags(source)
 
@@ -134,15 +126,14 @@ class Syntax extends Engine {
      * split tags, because regexp may match all the string.
      * it can make every regexp match each string between tags(openTag & closeTag)
      */
-    forEach(source.split(conf.openTag), (code) => {
-      let codes = code.split(conf.closeTag)
+    forEach(source.split(conf.openTag), (code: string) => {
+      let codes: Array<string> = code.split(conf.closeTag)
 
       // logic code block
       // 逻辑代码块
       if (1 !== codes.length) {
-        source = source.replace(`${conf.openTag}${codes[0]}${conf.closeTag}`, ($all) => {
-          valid = this._compileSyntax($all, strict, origin)
-          return valid
+        source = source.replace(`${conf.openTag}${codes[0]}${conf.closeTag}`, function($all) {
+          return (valid = self._compileSyntax($all, strict, origin))
         })
       }
 
@@ -162,14 +153,14 @@ class Syntax extends Engine {
 
     // error open or close tag
     // 语法错误，缺少闭合
-    let tagReg = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm')
-    let pos    = source.search(tagReg)
+    let tagReg  : RegExp  = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm')
+    let pos     : Number  = source.search(tagReg)
 
     if (-1 !== pos) {
       // return empty string in static mode
       // 严格模式下错误直接返回空字符串
       if (true === strict) {
-        let line = inline(source, pos)
+        let line: number = inline(source, pos)
 
         this._throw({
           message : `[Syntax Error]: Syntax error in line ${line}.`,
@@ -189,12 +180,12 @@ class Syntax extends Engine {
     /**
      * 转义原生的语法标签
      * @param {string} source 模板
-     * @return {string} 结果字符串
+     * @return {string}
      */
-    function escapeTags (source) {
+    function escapeTags (source: string): string {
       return source
-      .replace(/<%/g, '&lt;%')
-      .replace(/%>/g, '%&gt;')
+        .replace(/<%/g, '&lt;%')
+        .replace(/%>/g, '%&gt;')
     }
   }
 
@@ -202,10 +193,10 @@ class Syntax extends Engine {
    * 清除所有语法
    * @function
    * @param {string} source 语法模板
-   * @returns {string} 结果字符串
+   * @returns {string}
    */
-  $clearSyntax (source) {
-    let regexp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
+  public $clearSyntax (source: string): string {
+    let regexp: RegExp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
     return source.replace(regexp, '')
   }
 
@@ -215,7 +206,7 @@ class Syntax extends Engine {
    * @param {string} name 语法名称
    * @param {string|array|object|regexp} syntax 语法正则 (请注意贪婪与贪婪模式)，当为 RegExp时，记得用 openTag 和 closeTag 包裹
    * @param {string|function} shell 元脚本, 当为 Function 时记得加上 `<%` 和 `%>` 包裹
-   * @returns {Syntax} 模板引擎对象
+   * @returns {Bone}
    * @description
    * '(\\\w+)' will be compiled to /{{(\\\w+)}}/igm
    * but please use the non-greedy regex, and modify it to'(\\\w+)?'
@@ -226,7 +217,9 @@ class Syntax extends Engine {
    * 但是这个正则是贪婪匹配，这样会造成很多匹配错误，我们必须将其改成 '(\\\w+)?'
    * 例如匹配 '{{aaa}}{{aaa}}' 的是否，贪婪匹配会将整个字符串匹配完成，而不是 '{{aaa}}'
    */
-  $registerSyntax (name, syntax, shell) {
+  public $registerSyntax (name: string, syntax: any, shell: any): Syntax {
+    let self: Syntax = this
+
     if (2 < arguments.length) {
       this._blocks[name] = {
         syntax  : is('RegExp')(syntax) ? syntax : this._compileRegexp(`<%= openTag %>${syntax}<%= closeTag %>`, 'igm'),
@@ -234,15 +227,15 @@ class Syntax extends Engine {
       }
     }
     else if (is('PlainObject')(syntax)) {
-      forEach(syntax, (shell, syntax) => {
-        this.$registerSyntax(name, syntax, shell)
+      forEach(syntax, function (shell, syntax) {
+        self.$registerSyntax(name, syntax, shell)
       })
     }
     else if (is('Array')(syntax)) {
-      forEach(syntax, (compiler) => {
+      forEach(syntax, function (compiler) {
         is('String')(compiler.syntax)
-        && (is('String')(compiler.shell) || is('Function')(compiler.shell))
-        && this.$registerSyntax(name, compiler.syntax, compiler.shell)
+        && is('String')(compiler.shell) || is('Function')(compiler.shell)
+        && self.$registerSyntax(name, compiler.syntax, compiler.shell)
       })
     }
 
@@ -253,10 +246,10 @@ class Syntax extends Engine {
    * 销毁语法
    * @function
    * @param {string} name 语法名称
-   * @returns {Syntax} 模板引擎对象
+   * @returns {Bone}
    */
-  $unregisterSyntax (name) {
-    let blocks = this._blocks
+  public $unregisterSyntax (name: string): Syntax {
+    let blocks: Object = this._blocks
 
     if (blocks.hasOwnProperty(name)) {
       blocks[name] = undefined
@@ -269,23 +262,23 @@ class Syntax extends Engine {
   /**
    * 查询/设置块级辅助函数
    * @function
-   * @param {string|Object} query 需要查找或设置的函数名|需要设置辅助函数集合
+   * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
    * @param {function} callback 回调函数
-   * @returns {Syntax|function} 模板引擎对象或块级辅助函数
+   * @returns {this|function}
    * @description
    * 只有语法版本才拥有 block 这个概念，原生版本可以通过各种函数达到目的
    */
-  block (query, callback) {
+  public block (query: any, callback: Function): any {
     if (1 < arguments.length) {
       if (is('String')(query) && is('Function')(callback)) {
         this
-        .$registerSyntax(`${query}open`, `(${query})\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*`, ($all, $1, $2, $3, $4, $5) => {
+        .$registerSyntax(`${query}open`, `(${query})\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*`, function ($all, $1, $2, $3, $4, $5) {
           return `<%${$1}($append, ${$2 ? $2 + ', ' : ''}function (${$5 || ''}) {'use strict';var $buffer='';%>`
         })
-        .$registerSyntax(`${query}close`, `/${query}`, 'return $buffer;});')
+        .$registerSyntax(`${query}close`, `/${query}`, `return $buffer;});`)
 
-        this._blockHelpers[query] = function ($append) {
-          let args = Array.prototype.splice.call(arguments, 1)
+        this._blockHelpers[query] = function ($append: Function) {
+          let args: Array = Array.prototype.splice.call(arguments, 1)
           $append(callback.apply(this, args))
         }
       }
@@ -309,16 +302,16 @@ class Syntax extends Engine {
    * 注销块级辅助函数
    * @function
    * @param {string} name 名称
-   * @returns {Syntax} 模板引擎自身
+   * @returns {Bone}
    */
   unblock (name) {
-    let helpers = this._blockHelpers
-    let blocks  = this._blocks
+    let helpers   : Object = this._blockHelpers
+    let blocks    : Object = this._blocks
 
     if (helpers.hasOwnProperty(name)) {
-      helpers[name] = undefined
-      blocks[`${name}open`] = undefined
-      blocks[`${name}close`] = undefined
+      helpers[name]           = undefined
+      blocks[`${name}open`]   = undefined
+      blocks[`${name}close`]  = undefined
 
       delete helpers[name]
       delete blocks[`${name}open`]

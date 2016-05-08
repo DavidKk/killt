@@ -1,7 +1,6 @@
 # Folders to ignore
 node_modules
 bower_components
-document
 
 # Numerous always-ignore extensions
 *.bak

@@ -1,17 +1,19 @@
 /**
  * 判断类型
  * @typedef {isType}
+ * @function
  * @param {*} value 需要判断的值
- * @returns {boolean} 是否为该类型
+ * @returns {boolean}
  */
 
 /**
  * 判断对象是否为 type 类型
- * @param {string} type 类型
- * @return {isType} 判断类型函数
+ * @function
+ * @param {string} type
+ * @return {isType}
  */
-function is (type) {
-  return function (value) {
+function is (type: string): Function {
+  return function (value: any): boolean {
     switch (type) {
       case 'Undefined':
         return 'undefined' === typeof value
@@ -20,11 +22,12 @@ function is (type) {
         return 'undefined' !== typeof value
 
       case 'Integer':
-        let y = parseInt(value, 10)
+        let y: number = parseInt(value, 10)
         return !isNaN(y) && value === y && value.toString() === y.toString()
 
       case 'PlainObject':
-        let ctor, prot
+        let ctor: Function, prot: Object
+
         if (false === is('Object')(value) || is('Undefined')(value)) {
             return false
         }
@@ -34,7 +37,7 @@ function is (type) {
             return false
         }
 
-        prot = ctor.prototype
+        prot = ctor.prototype;
         if (false === is('Object')(prot)) {
             return false
         }
@@ -53,25 +56,28 @@ function is (type) {
 
 /**
  * 获取所在行
- * @param {string} string 需要查找的值
+ * @function
+ * @param {string} content 需要查找的值
  * @param {number} position 编译
- * @returns {number} 行数
+ * @returns {number}
  */
-function inline (string, position) {
-  return (string.substr(0, position).match(/\n/g) || []).length + 1
+function inline (content: string, position: number): number {
+  return (content.substr(0, position).match(/\n/g) || []).length +1
 }
 
 /**
  * 去除空格
- * @param {string} string 字符串
- * @return {string} 结果字符串
+ * @function
+ * @param {string} content
+ * @return {string}
  */
-function trim (string) {
-  return toString(string).replace(/^\s+|\s+$/, '')
+function trim (content: string): string {
+  return toString(content).replace(/^\s+|\s+$/, '')
 }
 
 /**
  * 查找对象中的属性
+ * @function
  * @param {Object} object 获取的对象
  * @param {string} path 查找路径
  * @param {string} spliter 分隔符 (默认为 `.`)
@@ -80,13 +86,15 @@ function trim (string) {
  * {a:{a:{a:{a:1}}}} -> get('a.a.a.a') -> 1
  * {a:1}             -> get('a.a.a.a') -> undefined
  */
-function get (object, path, spliter = '.') {
+function get (object: Object, path: string, spliter: string = '.'): any {
   if (!is('String')(path)) {
     return undefined
   }
+  
+  let re: Object          = object
+  let ns: Array<string>   = path.split(spliter)
 
-  let [re, ns] = [object, path.split(spliter)]
-  for (let i = 0, l = ns.length; i < l; i ++) {
+  for (let i: number = 0, l: number = ns.length; i < l; i ++) {
     if (is('Undefined')(re[ns[i]])) {
         return undefined
     }
@@ -99,17 +107,17 @@ function get (object, path, spliter = '.') {
 
 /**
  * 强制转化成字符串
+ * @function
  * @param {*} anything 传入的值
- * @returns {string} 结果字符串
+ * @returns {string}
  */
-function toString (anything) {
+function toString (anything: any): string {
   if (is('String')(anything)) {
     return anything
   }
 
   if (is('Number')(anything)) {
-    anything += ''
-    return anything
+    return anything += ''
   }
 
   if (is('Function')(anything)) {
@@ -121,73 +129,75 @@ function toString (anything) {
 
 /**
  * 转义标点符号
- * @param {string} string 需要转义的字符串
- * @returns {string} 结果字符串
+ * @function
+ * @param {string} content 需要转义的字符串
+ * @returns {string}
  */
-function escapeSymbol (string = '') {
-  return string
-  .replace(/("|'|\\)/g, '\\$1')
-  .replace(/\r/g, '\\r')
-  .replace(/\n/g, '\\n')
+function escapeSymbol (content: string = '') {
+  return content
+    .replace(/("|'|\\)/g, '\\$1')
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n')
 }
 
 /**
  * 转义HTML字符
- * @param {string} string HTML字符
- * @returns {string} 结果字符串
+ * @function
+ * @param {string} content HTML字符
+ * @returns {string}
  */
-function escapeHTML (string) {
-  return toString(string).replace(/&(?![\w#]+;)|[<>"']/g, function (name) {
-    return escapeHTML.SOURCES[name]
-  })
-}
+function escapeHTML (content: string): string {
+  // escape sources
+  // 转义资源
+  let SOURCES: Object = {
+    '<': '&lt;',
+    '>': '&gt;',
+    '&': '&amp;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '/': '&#x2f;'
+  }
 
-// escape sources
-// 转义资源
-escapeHTML.SOURCES = {
-  '<'   : '&lt;',
-  '>'   : '&gt;',
-  '&'   : '&amp;',
-  '"'   : '&quot;',
-  '\''  : '&#x27;',
-  '/'   : '&#x2f;'
+  return toString(content).replace(/&(?![\w#]+;)|[<>"']/g, (name: string) => {
+    return SOURCES[name]
+  })
 }
 
 /**
  * 获取元素在数组中所在位置的键值
+ * @function
  * @param {array} array 数组
  * @param {*} value 要获取键值的元素
  * @returns {integer} 键值，不存在返回 -1;
  */
-function indexOf (array, value) {
-  if (Array.prototype.indexOf && is('Function')(array.indexOf)) {
-    return array.indexOf(value)
+function indexOf (collection: Array<any>, value: any): number {
+  if (Array.prototype.indexOf && is('Function')(collection.indexOf)) {
+    return collection.indexOf(value)
   }
-
-  for (let [i, l] = [0, array.length]; i < l; i ++) {
-    if (array[i] === value) {
-      return i
+  else {
+    for (let i: number = 0, l: number = collection.length; i < l; i ++) {
+      if (collection[i] === value) {
+        return i
+      }
     }
-  }
 
-  return -1
+    return -1
+  }
 }
 
 /**
  * inArray 增强版，获取数组中元素拥有与要查询元素相同的属性值的键值
- * @param {Array} array 数组
+ * @function
  * @param {Object|integer} query 对象或数字(数字用于数组下标)
- * @param {string} propName 属性名
- * @return {Integer} 键值，不存在返回 -1
+ * @return {Integer}                  键值，不存在返回 -1;
  */
-function inArrayBy (array, query, propName) {
-  let index = is('Object')(query)
-  ? query[propName]
-  : query
+function inArrayBy (collection: Array<any>, query: any, propName: string): number {
+  let index: number = is('Object')(query)
+    ? query[propName]
+    : query
 
-  /* eslint eqeqeq: 0 */
-  for (let [i, l] = [0, array.length]; i < l; i ++) {
-    if (index == array[i][propName]) {
+  for (let i: number = 0, l: number = collection.length; i < l; i ++) {
+    if (index == collection[i][propName]) {
       return i
     }
   }
@@ -197,17 +207,18 @@ function inArrayBy (array, query, propName) {
 
 /**
  * 遍历数组或对象
+ * @function
  * @param {Array|Object} collection 需要遍历的结合
  * @param {Function} callback 回调函数
  */
-function forEach (collection, callback) {
+function forEach (collection: any, callback: Function = new Function) {
   if (is('Function')(callback)) {
     if (is('Array')(collection)) {
       if (Array.prototype.some) {
         collection.some(callback)
       }
       else {
-        for (let [i, l] = [0, collection.length]; i < l; i ++) {
+        for (let i: number = 0, l: number = collection.length; i < l; i ++) {
           if (true === callback(collection[i], i)) {
             break
           }
@@ -226,16 +237,18 @@ function forEach (collection, callback) {
 
 /**
  * 数组去重
+ * @function
  * @param {Array} array 需要去重数组
- * @return {Array} 结果数组
+ * @return {Array}
  */
-function unique (array) {
-  let [n, r] = [{}, []]
+function unique (collection: Array<any>): Array<any> {
+  let n: Object     = {}
+  let r: Array<any> = [] 
 
-  for (let i = array.length; i --;) {
-    if (!n.hasOwnProperty(array[i])) {
-      r.push(array[i])
-      n[array[i]] = 1
+  for (let i: number = collection.length; i --;) {
+    if (!n.hasOwnProperty(collection[i])) {
+      r.push(collection[i])
+      n[collection[i]] = 1
     }
   }
 
@@ -244,15 +257,16 @@ function unique (array) {
 
 /**
  * 集合过滤
+ * @function
  * @param {Object|Array} collection 需要过滤的元素
  * @param {Function} callback 回调函数
- * @returns {Object|Array} 结果数据或对象
+ * @returns {Object|Array}
  */
-function filter (collection, callback) {
-  let isArr = is('Array')(collection)
-  let res   = isArr ? [] : {}
+function filter (collection: any, callback: Function = new Function): any {
+  let isArr : boolean = is('Array')(collection)
+  let res   : any     = isArr ? [] : {}
 
-  forEach(collection, function (val, key) {
+  forEach(collection, (val: any, key: string) => {
     if (callback(val, key)) {
       res[isArr ? res.length : key] = val
     }
@@ -263,17 +277,20 @@ function filter (collection, callback) {
 
 /**
  * 合并数组或对象
+ * @function
  * @param {Array|Object} objectA 对象
  * @param {Array|Object} objectB 对象
+ * @param {Array|Object} ... 对象
  * @returns {Array|Object} objectA 第一个传入的对象
  */
-function extend (...args) {
-  let [paramA, paramB] = [args[0], args[1]]
+function extend (...args): any {
+  let paramA: any = args[0]
+  let paramB: any = args[1]
 
-  if (2 < args.length) {
+  if (args.length > 2) {
     paramA = extend(paramA, paramB)
 
-    let next = Array.prototype.slice.call(args, 2)
+    let next: any = Array.prototype.slice.call(args, 2)
     return extend.apply({}, [paramA].concat(next))
   }
 
@@ -282,7 +299,7 @@ function extend (...args) {
   }
   else if (is('Object')(paramA) && is('Object')(paramB)) {
     if (is('Function')(Object.assign)) {
-      paramA = Object.assign(paramA, paramB)
+      paramA = Object.assign(paramA, paramB);
     }
     else {
       for (let i in paramB) {
@@ -296,12 +313,11 @@ function extend (...args) {
 
 /**
  * 抛出异常
+ * @function
  * @param {string|Object} error 错误异常
- * @return {string} 错误信息
  */
 function __throw (error) {
-  /* eslint no-console: 0 */
-  let messages = []
+  let messages: Array<any> = []
 
   if (is('Object')(error)) {
     forEach(error, function (value, name) {
@@ -329,8 +345,9 @@ function __throw (error) {
 
 /**
  * 伪渲染函数
+ * @function
  * @return {string} 空字符串
  */
-function __render () {
+function __render (): string {
   return ''
 }

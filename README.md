@@ -1,15 +1,15 @@
-# oTemplate
+# killt
 
-oTempalte is a light template engine for Javascript.
+killt is a light template engine for Javascript.
 
 ### Examples & Docs
 
-[http://davidkk.github.io/oTemplate](http://davidkk.github.io/oTemplate)
+[http://davidkk.github.io/killt](http://davidkk.github.io/killt)
 
 ### Install
 
 ```
-bower install oTemplate
+bower install killt
 ```
 
 ### Features
@@ -51,25 +51,25 @@ bower install oTemplate
 ### Compile and Render
 ```
 // Source
-oTempalte.compile([String source], [Object options])
-oTemplate.render([String source], [Object Data], [Object options])
+killt.compile([String source], [Object options])
+killt.render([String source], [Object Data], [Object options])
 
 // Nested
 script(id="/template/inline.html", type="template/text")
-oTemplate.compileSync([String TemplateId], [Object options])
-oTemplate.renderSync([String TemplateId], [Object data], [Object options])
+killt.compileSync([String TemplateId], [Object options])
+killt.renderSync([String TemplateId], [Object data], [Object options])
 
 // Ajax
-oTemplate.compileAsync([String url], [Function callback], [Object options])
-oTemplate.renderAsync([String url], [Object data], [Function callback], [Object options])
+killt.compileAsync([String url], [Function callback], [Object options])
+killt.renderAsync([String url], [Object data], [Function callback], [Object options])
 ```
 
 #### Compiled by template
 ```
-var oTemplate = window.oTemplate
-var oTempalte = require('oTemplate')
+var killt = window.killt
+var killt = require('killt')
 
-oTemplate.renderSync('templates/list/default.html', {
+killt.renderSync('templates/list/default.html', {
   title: 'Customer Title',
   list: {
     Author: 'David Jones',
@@ -80,7 +80,7 @@ oTemplate.renderSync('templates/list/default.html', {
 
 ##### Compiled by Ajax
 ```
-oTemplate.renderAsync('templates/list/default.html', function(html) {
+killt.renderAsync('templates/list/default.html', function(html) {
   // do something...
 })
 ```
@@ -88,7 +88,7 @@ oTemplate.renderAsync('templates/list/default.html', function(html) {
 #### Customize Helpers
 
 ```
-oTemplate.helper('hate', function(who) {
+killt.helper('hate', function(who) {
   return 'Hate ' + who + '!!!'
 })
 
@@ -102,7 +102,7 @@ oTemplate.helper('hate', function(who) {
 #### Customize Block (full version, not in lite version)
 
 ```
-oTemplate.block('like', function(who, blockShell) {
+killt.block('like', function(who, blockShell) {
   return who ? 'Like ' + who + '!!!' : blockShell()
 })
 
@@ -116,7 +116,7 @@ oTemplate.block('like', function(who, blockShell) {
 #### Customize Syntax (full version, not in lite version)
 
 ```
-oTemplate.$registerSyntax('fuck', 'fuck\\s*([\\w\\W]+?)\\s*', 'fuck($1)')
+killt.$registerSyntax('fuck', 'fuck\\s*([\\w\\W]+?)\\s*', 'fuck($1)')
 
 // HTML
 {{fuck 'Q'}}
@@ -125,11 +125,11 @@ oTemplate.$registerSyntax('fuck', 'fuck\\s*([\\w\\W]+?)\\s*', 'fuck($1)')
 <% fuck('Q'); %>
 ```
 
-Note: `fuck` is a helper, so u must use `oTemplate.helper('fuck', function() {})` to add a helper.
+Note: `fuck` is a helper, so u must use `killt.helper('fuck', function() {})` to add a helper.
 
 ### Details
 
-[See the code and the detailed annotate...](https://github.com/DavidKk/oTemplate/blob/master/dist/es6/client/oTemplate.js)
+[See the code and the detailed annotate...](https://github.com/DavidKk/killt/blob/master/dist/es6/client/killt.js)
 
 ### Updates
 

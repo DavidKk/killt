@@ -1,3 +1,4 @@
+
 /**
  * current envirment - 配置环境
  * @type {Object}
@@ -26,10 +27,6 @@ const DEFAULTS = {
   escape    : true,
   /** compress the html code - 压缩生成的HTML代码 */
   compress  : true,
-  /** open tag for syntax - 起始标识 */
-  openTag   : '{{',
-  /** close tag for syntax - 结束标识 */
-  closeTag  : '}}',
   /** addition render arguments (must be use `$` to define variable name) - 追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量) */
   depends   : [],
 }

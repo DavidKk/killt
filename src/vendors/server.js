@@ -4,7 +4,7 @@ let fs = require('fs')
  * 服务器接口类
  * @class
  */
-class oTemplate extends Bone {
+class Server extends (Syntax || Engine) {
   /**
    * 读取文件
    * @function
@@ -13,15 +13,11 @@ class oTemplate extends Bone {
    */
   readFile (filename, callback) {
     if (is('Function')(callback)) {
-      fs.readFile(filename, function(err, buffer) {
+      fs.readFile(filename, function (err, buffer) {
         callback(buffer.toString())
       })
     }
   }
-
-  reunder (filename, callback) {
-
-  }
 }
 
-module.exports = new oTemplate()
+module.exports = new Server()

@@ -1,20 +1,20 @@
 /**
  * Simple Syntax Defination - 定义简单语法
  */
-Bone.extend(function() {
-  let HELPER_SYNTAX       = '(=|-|!|#|!#)?\\s*([^|]+?(?:\\s*(?:\\|\\||\\&\\&)\\s*[^|]+?)*)\\s*\\|\\s*([^:\\|]+?)\\s*(?:\\:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?',
-      HELPER_REGEXP       = this._compileRegexp(HELPER_SYNTAX),
-      HELPER_INNER_SYNTAX = '\\s*([\\w\\W]+?\\s*\\\([\\w\\W]+?\\\))\\s*\\|\\s*([^:]+?)\\s*(:\\s*([^\\|]+?))?$',
-      HELPER_INNER_REGEXP = this._compileRegexp(HELPER_INNER_SYNTAX)
+Engine.extend((engine) => {
+  const HELPER_SYNTAX       = '(=|-|!|#|!#)?\\s*([^|]+?(?:\\s*(?:\\|\\||\\&\\&)\\s*[^|]+?)*)\\s*\\|\\s*([^:\\|]+?)\\s*(?:\\:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?'
+  // const HELPER_REGEXP       = engine._compileRegexp(HELPER_SYNTAX)
+  const HELPER_INNER_SYNTAX = '\\s*([\\w\\W]+?\\s*\\\([\\w\\W]+?\\\))\\s*\\|\\s*([^:]+?)\\s*(:\\s*([^\\|]+?))?$'
+  const HELPER_INNER_REGEXP = engine._compileRegexp(HELPER_INNER_SYNTAX)
 
-  this
+  engine
   /**
    * helper syntax
    * syntax {{ data | helperA: dataA, dataB, dataC | helperB: dataD, dataE, dataF }}
    */
-  .$registerSyntax('helper', HELPER_SYNTAX, (function() {
-    return function($all, $1, $2, $3, $4, $5) {
-      let str = format.apply(this, arguments)
+  .$registerSyntax('helper', HELPER_SYNTAX, (function () {
+    return function ($all, $1, $2, $3, $4, $5) {
+      let str = format($all, $1, $2, $3, $4, $5)
 
       // 这里需要递推所有的辅助函数
       while (HELPER_INNER_REGEXP.exec(str)) {
@@ -76,7 +76,7 @@ Bone.extend(function() {
    * each open tag. iterate data one by one
    * syntax {{each data as value, key}} {{= key + '=>' + value }} {{/each}}
    */
-  .$registerSyntax('eachopen', 'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', function($all, $1, $2, $3, $4) {
+  .$registerSyntax('eachopen', 'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', ($all, $1, $2, $3, $4) => {
     let string = `each(${$1}, function(${$3 || '$value'}${$4 || ', $index'}) {`
     return `<%${string}%>`
   })
@@ -89,14 +89,14 @@ Bone.extend(function() {
    * include another template
    * syntax {{include template/index.html [, ...(optional)] }}
    */
-  .$registerSyntax('include', 'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3) {
+  .$registerSyntax('include', 'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', ($all, $1, $2, $3) => {
     return `<%#include('${$1.replace(/[\'\"\`]/g, '')}', ${$3 || '$data'})%>`
   })
 
   // add a each syntax helper
   // 添加语法辅助函数
-  ~extend(this._helpers, {
-    each: function(data, callback) {
+  ~extend(engine._helpers, {
+    each (data, callback) {
       forEach(data, callback)
     }
   })

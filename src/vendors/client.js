@@ -10,48 +10,46 @@
  * @param {string} options.closeTag 语法的结束标识
  * @param {Array} options.depends 追加渲染器的传值设定
  */
-class Client extends Bone {
-  constructor () {
-    let self = this
-    Bone.apply(this, arguments)
+class Client extends (Syntax || Engine) {
+  constructor (options) {
+    super(options)
 
     // extends include func to support ajax request file
     // 扩展新的 include 支持 ajax
     ~extend(this._helpers, {
-      include: function(filename, data, options) {
-        return self.renderSync(filename, data, options)
+      include: (filename, data, options) => {
+        return this.renderSync(filename, data, options)
       }
     })
   }
 
   /**
    * 编译模板
-   * @function
    * @param {string} source 模板
    * @param {Object} options 配置
-   * @returns {Function}
+   * @returns {Function} 模板函数
    * @description
    * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
    * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
    * 时才能真正修改渲染器的配置
    */
   compileSource (source, options) {
-    return Bone.prototype.compile.apply(this, arguments)
+    return super.compile.call(this, source, options)
   }
 
   /**
    * 渲染模板
-   * @function
    * @param {string} source 模板
+   * @param {Object} data 数据
    * @param {Object} options 配置
-   * @returns {Function}
+   * @returns {string} 结果字符串
    * @description
    * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
    * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
    * 时才能真正修改渲染器的配置
    */
-  renderSource (source, options) {
-    return Bone.prototype.render.apply(this, arguments)
+  renderSource (source, data, options) {
+    return super.render.call(this, source, data, options)
   }
 
   /**
@@ -59,11 +57,11 @@ class Client extends Bone {
    * @param {string} template 模板
    * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
    * @param {Object} options 配置
-   * @return {Function}
+   * @return {Function} 模板函数
    */
   compile (template, callback, options = {}) {
-    let conf = extend({}, this.DEFAULTS, options, { filename: template }),
-        sync = !!conf.sync
+    let conf = this.options(options, { filename: template })
+    let sync = !!conf.sync
 
     if (is('Object')(callback)) {
       return this.compile(template, null, callback)
@@ -75,31 +73,36 @@ class Client extends Bone {
 
     template = toString(template)
 
-    let self   = this,
-        render = true === conf.override ? undefined : this._cache(template)
+    let render = true === conf.override ? undefined : this._cache(template)
 
     if (is('Function')(render)) {
-      return sync ? render : (callback(render), undefined)
+      if (sync) {
+        return render
+      }
+
+      callback(render)
+      return
     }
 
     let node = document.getElementById(template)
+
     if (node) {
       let source = node.innerHTML.replace(/^ *\n|\n *$/g, '')
       render = this.compileSource(source, conf)
       return sync ? render : (callback(render), undefined)
     }
 
-    this.getSourceByAjax(template, function (source) {
+    this.getSourceByAjax(template, (source) => {
       let [origin, dependencies] = [source, []]
 
       // source 经过这里会变得不纯正
       // 主要用于确定需要导入的模板
       if (false === conf.noSyntax) {
-        source = self.$compileSyntax(source, conf.strict)
+        source = this.$compileSyntax(source, conf.strict)
       }
 
       // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
-      forEach(source.split('<%'), function (code) {
+      forEach(source.split('<%'), (code) => {
         let [codes, match] = [code.split('%>')]
 
         // logic block is fist part when `codes.length === 2`
@@ -111,35 +114,36 @@ class Client extends Bone {
       })
 
       let total = dependencies.length
-      let __exec = function () {
-        0 >= (-- total) && __return()
-      }
 
-      let __return = function () {
-        render = self.$compile(origin)
-        self._cache(template, render)
+      let __return = () => {
+        render = this.$compile(origin)
+        this._cache(template, render)
         false === sync && callback(render)
         total = undefined
       }
 
-      if (total > 0) {
-        forEach(unique(dependencies), function (child) {
-          if (self._cache(child)) {
+      let __exec = () => {
+        0 >= -- total && __return()
+      }
+
+      if (0 < total) {
+        forEach(unique(dependencies), (child) => {
+          if (this._cache(child)) {
             __exec()
           }
           else {
             let childSource = findChildTemplate(child, origin)
 
             if (childSource) {
-              self.compileSource(childSource, {
-                filename: child,
-                override: !!conf.override
+              this.compileSource(childSource, {
+                filename  : child,
+                override  : !!conf.override,
               })
 
               __exec()
             }
             else {
-              self.compile(child, __exec, conf)
+              this.compile(child, __exec, conf)
             }
           }
         })
@@ -173,11 +177,11 @@ class Client extends Bone {
    * @param {Object} data 数据
    * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
    * @param {Object} options 配置
-   * @return {string}
+   * @return {string} 结果字符串
    */
   render (template, data, callback, options = {}) {
-    let conf = extend({}, this.DEFAULTS, options, { filename: template }),
-        sync = !!conf.sync
+    let conf = this.options(options, { filename: template })
+    let sync = !!conf.sync
 
     if (is('Object')(callback)) {
       let render = this.compile(template, null, extend(callback, { sync: true }))
@@ -188,7 +192,7 @@ class Client extends Bone {
       return
     }
 
-    this.compile(template, function(render) {
+    this.compile(template, (render) => {
       let source = render(data || {})
       callback(source)
     }, conf)
@@ -196,10 +200,9 @@ class Client extends Bone {
 
   /**
    * 阻塞编译模板
-   * @function
-   * @param {string} templateId 模板ID
+   * @param {string} template 模板ID
    * @param {Object} options 配置 (optional)
-   * @returns {Function} 编译函数
+   * @return {Function} 编译函数
    */
   compileSync (template, options) {
     let conf = extend({}, options, { sync: true })
@@ -208,10 +211,10 @@ class Client extends Bone {
 
   /**
    * 阻塞渲染
-   * @function
    * @param {string} template 模板地址或ID
    * @param {Object} data 数据 (optional)
    * @param {Object} options 配置 (optional)
+   * @return {string} 结果字符串
    */
   renderSync (template, data, options) {
     let render = this.compileSync(template, options)
@@ -220,7 +223,6 @@ class Client extends Bone {
 
   /**
    * 异步编译模板
-   * @function
    * @param {string} template 模板地址或ID
    * @param {Function} callback 回调函数
    * @param {Object} options 配置 (optional)
@@ -232,11 +234,11 @@ class Client extends Bone {
 
   /**
    * 异步渲染
-   * @function
    * @param {string} template 模板地址或ID
    * @param {Object} data 数据 (optional)
    * @param {Function} callback 回调函数
    * @param {Object} options 配置 (optional)
+   * @return {string} 结果字符串
    */
   renderAsync (template, data, callback, options) {
     if (is('Function')(data)) {
@@ -244,7 +246,7 @@ class Client extends Bone {
     }
 
     if (is('Function')(callback)) {
-      this.compileAsync(template, function(render) {
+      this.compileAsync(template, (render) => {
         callback(render(data || {}))
       }, options)
     }
@@ -252,52 +254,53 @@ class Client extends Bone {
 
   /**
    * 请求远程模板资源
-   * @function
    * @param {string} sourceUrl 远程资源地址
    * @param {Function} callback 回调函数
+   * @param {Object} options 配置
    */
   getSourceByAjax (sourceUrl, callback, options = {}) {
     if (!is('Function')(callback)) {
       return
     }
 
-    let [self, xhr] = [this, new XMLHttpRequest]
+    let xhr = new XMLHttpRequest()
 
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
       let status = this.status
-      if (this.DONE === this.readyState && 200 <= status && status < 400) {
+
+      if (this.DONE === this.readyState && 200 <= status && 400 > status) {
         callback(this.responseText)
       }
     }
 
-    xhr.onerror = function() {
+    xhr.onerror = () => {
       let err = {
         message   : `[Compile Template]: Request file ${sourceUrl} some error occured.`,
         filename  : sourceUrl,
         response  : `[Reponse State]: ${this.status}`
       }
 
-      self._throw(err)
+      this._throw(err)
       is('Function')(options.catch) && options.catch(err)
     }
 
-    xhr.ontimeout = function() {
+    xhr.ontimeout = () => {
       let err = {
         message   : `[Request Template]: Request template file ${sourceUrl} timeout.`,
         filename  : sourceUrl
       }
 
-      self._throw(err)
+      this._throw(err)
       is('Function')(options.catch) && options.catch(err)
     }
 
-    xhr.onabort = function() {
+    xhr.onabort = () => {
       let err = {
-        message   : `[Request Template]: Bowswer absort the request.`,
+        message   : '[Request Template]: Bowswer absort the request.',
         filename  : sourceUrl
       }
 
-      self._throw(err)
+      this._throw(err)
       is('Function')(options.catch) && options.catch(err)
     }
 
@@ -309,22 +312,22 @@ class Client extends Bone {
 /**
  * Exports Module
  */
-UMD('oTemplate', function() {
+umd('killt', function () {
   return new Client()
 }, root)
 
 /**
- * UMD 模块定义
- * @function
- * @param {windows|global} root
- * @param {Function} factory
+ * umd 模块定
+ * @param {string} name 名称
+ * @param {function} factory 工厂
+ * @param {windows|global} root 当前域
  */
-function UMD (name, factory, root) {
+function umd (name, factory, root) {
   let [define, module] = [root.define, factory(root)]
 
   // AMD & CMD
   if (is('Function')(define)) {
-    define(function () {
+    define(() => {
       return module
     })
   }

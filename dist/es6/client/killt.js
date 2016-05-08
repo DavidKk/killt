@@ -1,4 +1,342 @@
-~(function(root) {'use strict'
+~(function (root) {
+'use strict'
+/**
+ * 判断类型
+ * @typedef {isType}
+ * @param {*} value 需要判断的值
+ * @returns {boolean} 是否为该类型
+ */
+
+/**
+ * 判断对象是否为 type 类型
+ * @param {string} type 类型
+ * @return {isType} 判断类型函数
+ */
+function is (type) {
+  return function (value) {
+    switch (type) {
+      case 'Undefined':
+        return 'undefined' === typeof value
+
+      case 'Defined':
+        return 'undefined' !== typeof value
+
+      case 'Integer':
+        let y = parseInt(value, 10)
+        return !isNaN(y) && value === y && value.toString() === y.toString()
+
+      case 'PlainObject':
+        let ctor, prot
+        if (false === is('Object')(value) || is('Undefined')(value)) {
+            return false
+        }
+
+        ctor = value.constructor
+        if ('function' !== typeof ctor) {
+            return false
+        }
+
+        prot = ctor.prototype
+        if (false === is('Object')(prot)) {
+            return false
+        }
+
+        if (false === prot.hasOwnProperty('isPrototypeOf')) {
+            return false
+        }
+
+        return true
+
+      default:
+        return `[object ${type}]` === Object.prototype.toString.call(value)
+    }
+  }
+}
+
+/**
+ * 获取所在行
+ * @param {string} string 需要查找的值
+ * @param {number} position 编译
+ * @returns {number} 行数
+ */
+function inline (string, position) {
+  return (string.substr(0, position).match(/\n/g) || []).length + 1
+}
+
+/**
+ * 去除空格
+ * @param {string} string 字符串
+ * @return {string} 结果字符串
+ */
+function trim (string) {
+  return toString(string).replace(/^\s+|\s+$/, '')
+}
+
+/**
+ * 查找对象中的属性
+ * @param {Object} object 获取的对象
+ * @param {string} path 查找路径
+ * @param {string} spliter 分隔符 (默认为 `.`)
+ * @returns {*} 若不存在返回 undefined，若存在则返回该指向的值
+ * @example
+ * {a:{a:{a:{a:1}}}} -> get('a.a.a.a') -> 1
+ * {a:1}             -> get('a.a.a.a') -> undefined
+ */
+function get (object, path, spliter = '.') {
+  if (!is('String')(path)) {
+    return undefined
+  }
+
+  let [re, ns] = [object, path.split(spliter)]
+  for (let i = 0, l = ns.length; i < l; i ++) {
+    if (is('Undefined')(re[ns[i]])) {
+        return undefined
+    }
+
+    re = re[ns[i]]
+  }
+
+  return is('Undefined')(re) ? undefined : re
+}
+
+/**
+ * 强制转化成字符串
+ * @param {*} anything 传入的值
+ * @returns {string} 结果字符串
+ */
+function toString (anything) {
+  if (is('String')(anything)) {
+    return anything
+  }
+
+  if (is('Number')(anything)) {
+    anything += ''
+    return anything
+  }
+
+  if (is('Function')(anything)) {
+    return toString(anything.call(anything))
+  }
+
+  return ''
+}
+
+/**
+ * 转义标点符号
+ * @param {string} string 需要转义的字符串
+ * @returns {string} 结果字符串
+ */
+function escapeSymbol (string = '') {
+  return string
+  .replace(/("|'|\\)/g, '\\$1')
+  .replace(/\r/g, '\\r')
+  .replace(/\n/g, '\\n')
+}
+
+/**
+ * 转义HTML字符
+ * @param {string} string HTML字符
+ * @returns {string} 结果字符串
+ */
+function escapeHTML (string) {
+  return toString(string).replace(/&(?![\w#]+;)|[<>"']/g, function (name) {
+    return escapeHTML.SOURCES[name]
+  })
+}
+
+// escape sources
+// 转义资源
+escapeHTML.SOURCES = {
+  '<'   : '&lt;',
+  '>'   : '&gt;',
+  '&'   : '&amp;',
+  '"'   : '&quot;',
+  '\''  : '&#x27;',
+  '/'   : '&#x2f;'
+}
+
+/**
+ * 获取元素在数组中所在位置的键值
+ * @param {array} array 数组
+ * @param {*} value 要获取键值的元素
+ * @returns {integer} 键值，不存在返回 -1;
+ */
+function indexOf (array, value) {
+  if (Array.prototype.indexOf && is('Function')(array.indexOf)) {
+    return array.indexOf(value)
+  }
+
+  for (let [i, l] = [0, array.length]; i < l; i ++) {
+    if (array[i] === value) {
+      return i
+    }
+  }
+
+  return -1
+}
+
+/**
+ * inArray 增强版，获取数组中元素拥有与要查询元素相同的属性值的键值
+ * @param {Array} array 数组
+ * @param {Object|integer} query 对象或数字(数字用于数组下标)
+ * @param {string} propName 属性名
+ * @return {Integer} 键值，不存在返回 -1
+ */
+function inArrayBy (array, query, propName) {
+  let index = is('Object')(query)
+  ? query[propName]
+  : query
+
+  /* eslint eqeqeq: 0 */
+  for (let [i, l] = [0, array.length]; i < l; i ++) {
+    if (index == array[i][propName]) {
+      return i
+    }
+  }
+
+  return -1
+}
+
+/**
+ * 遍历数组或对象
+ * @param {Array|Object} collection 需要遍历的结合
+ * @param {Function} callback 回调函数
+ */
+function forEach (collection, callback) {
+  if (is('Function')(callback)) {
+    if (is('Array')(collection)) {
+      if (Array.prototype.some) {
+        collection.some(callback)
+      }
+      else {
+        for (let [i, l] = [0, collection.length]; i < l; i ++) {
+          if (true === callback(collection[i], i)) {
+            break
+          }
+        }
+      }
+    }
+    else if (is('Object')(collection)) {
+      for (let i in collection) {
+        if (true === callback(collection[i], i)) {
+          break
+        }
+      }
+    }
+  }
+}
+
+/**
+ * 数组去重
+ * @param {Array} array 需要去重数组
+ * @return {Array} 结果数组
+ */
+function unique (array) {
+  let [n, r] = [{}, []]
+
+  for (let i = array.length; i --;) {
+    if (!n.hasOwnProperty(array[i])) {
+      r.push(array[i])
+      n[array[i]] = 1
+    }
+  }
+
+  return r
+}
+
+/**
+ * 集合过滤
+ * @param {Object|Array} collection 需要过滤的元素
+ * @param {Function} callback 回调函数
+ * @returns {Object|Array} 结果数据或对象
+ */
+function filter (collection, callback) {
+  let isArr = is('Array')(collection)
+  let res   = isArr ? [] : {}
+
+  forEach(collection, function (val, key) {
+    if (callback(val, key)) {
+      res[isArr ? res.length : key] = val
+    }
+  })
+
+  return res
+}
+
+/**
+ * 合并数组或对象
+ * @param {Array|Object} objectA 对象
+ * @param {Array|Object} objectB 对象
+ * @returns {Array|Object} objectA 第一个传入的对象
+ */
+function extend (...args) {
+  let [paramA, paramB] = [args[0], args[1]]
+
+  if (2 < args.length) {
+    paramA = extend(paramA, paramB)
+
+    let next = Array.prototype.slice.call(args, 2)
+    return extend.apply({}, [paramA].concat(next))
+  }
+
+  if (is('Array')(paramA) && is('Array')(paramB)) {
+    Array.prototype.splice.apply(paramA, [paramA.length, 0].concat(paramB))
+  }
+  else if (is('Object')(paramA) && is('Object')(paramB)) {
+    if (is('Function')(Object.assign)) {
+      paramA = Object.assign(paramA, paramB)
+    }
+    else {
+      for (let i in paramB) {
+        paramA[i] = paramB[i]
+      }
+    }
+  }
+
+  return paramA
+}
+
+/**
+ * 抛出异常
+ * @param {string|Object} error 错误异常
+ * @return {string} 错误信息
+ */
+function __throw (error) {
+  /* eslint no-console: 0 */
+  let messages = []
+
+  if (is('Object')(error)) {
+    forEach(error, function (value, name) {
+      messages.push(`<${name.substr(0, 1).toUpperCase()}${name.substr(1)}>`)
+      messages.push('\n')
+      messages.push(value)
+      messages.push('\n\n')
+    })
+  }
+  else if (is('String')(error)) {
+    messages = error
+  }
+
+  try {
+    console.error.apply(console, messages)
+  }
+  catch (err) {
+    setTimeout(function () {
+      throw messages
+    })
+  }
+
+  return messages
+}
+
+/**
+ * 伪渲染函数
+ * @return {string} 空字符串
+ */
+function __render () {
+  return ''
+}
+
 /**
  * current envirment - 配置环境
  * @type {Object}
@@ -27,18 +365,42 @@ const DEFAULTS = {
   escape    : true,
   /** compress the html code - 压缩生成的HTML代码 */
   compress  : true,
-  /** open tag for syntax - 起始标识 */
-  openTag   : '{{',
-  /** close tag for syntax - 结束标识 */
-  closeTag  : '}}',
   /** addition render arguments (must be use `$` to define variable name) - 追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量) */
   depends   : [],
-};
+}
 /**
  * extensions - 扩展集合
  * @type {Array}
  */
 let extensions = []
+
+const KEYWORDS = [
+  '$append',
+  '$blocks', '$buffer',
+  '$data',
+  '$helpers',
+  '$scope',
+  '$runtime',
+
+  'abstract', 'arguments',
+  'break', 'boolean', 'byte',
+  'case', 'catch', 'char', 'class', 'continue', 'console', 'const',
+  'debugger', 'default', 'delete', 'do', 'double',
+  'else', 'enum', 'export', 'extends',
+  'false', 'final', 'finally', 'float', 'for', 'function',
+  'goto',
+  'if', 'implements', 'import', 'in', 'instanceof', 'int', 'interface',
+  'let', 'long',
+  'native', 'new', 'null',
+  'package', 'private', 'protected', 'public',
+  'return',
+  'short', 'static', 'super', 'switch', 'synchronized',
+  'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof',
+  'undefined',
+  'var', 'void', 'volatile',
+  'while', 'with',
+  'yield'
+]
 
 /**
  * Base class for engine
@@ -52,98 +414,89 @@ let extensions = []
  * @param {string} options.closeTag 语法的结束标识
  * @param {Array} options.depends 追加渲染器的传值设定
  */
-class Bone {
+class Engine {
+  /**
+   * render caches - 编译器缓存
+   * @type {Object}
+   */
+  _caches = {}
+
+  /**
+   * block syntax - 块状语法
+   * @type {Object}
+   */
+  _blocks = {}
+
+  /**
+   * block helpers - 块状辅助函数
+   * @type {Object}
+   */
+  _blockHelpers = {}
+
+  /**
+   * source helpers - 资源辅助函数
+   * @type {Object}
+   */
+  _sourceHelpers = {}
+
+  /**
+   * helpers - 辅助函数
+   * @type {Object}
+   */
+  _helpers = {
+    $escape () {
+      return escapeHTML.apply(escapeHTML, arguments)
+    },
+
+    $noescape (string) {
+      return toString(string)
+    },
+
+    $toString (string, isEscape) {
+      string = toString(string)
+
+      return isEscape
+      ? this.$escape(string)
+      : string
+    },
+  }
+
+  /**
+   * event listener - 事件监听方法
+   * @type {Array}
+   */
+  _listeners = []
+
+  /**
+   * defualt config - 默认配置
+   * @type {Object}
+   */
+  setting = extend({}, DEFAULTS)
+
   /**
    * 构造函数
    * @function
    * @param {Object} options 配置 (optional)
    */
   constructor (options = {}) {
-    let self = this
-
-    /**
-     * render caches - 编译器缓存
-     * @type {Object}
-     */
-    this._caches = {}
-
-    /**
-     * block syntax - 块状语法
-     * @type {Object}
-     */
-    this._blocks = {}
-
-    /**
-     * block helpers - 块状辅助函数
-     * @type {Object}
-     */
-    this._blockHelpers = {}
-
-    /**
-     * source helpers - 资源辅助函数
-     * @type {Object}
-     */
-    this._sourceHelpers = {}
-
-    /**
-     * helpers - 辅助函数
-     * @type {Object}
-     */
-    this._helpers = {}
-
-    /**
-     * defualt config - 默认配置
-     * @type {Object}
-     */
-    this.DEFAULTS = {}
-
-    /**
-     * event listener - 事件监听方法
-     * @type {Array}
-     */
-    this._listeners = []
-
     // set the config - 设置配置
-    ~extend(this.DEFAULTS, DEFAULTS, options)
-
-    // set any helpers - 设置基础辅助函数
-    ~extend(this._helpers, {
-      $escape: function() {
-        return escapeHTML.apply(escapeHTML, arguments)
-      },
-      $noescape: function(string) {
-        return toString(string)
-      },
-      $toString: function(string, isEscape) {
-        string = toString(string)
-
-        let conf = self.DEFAULTS
-        return true === (is('Boolean')(isEscape) ? isEscape : conf.escape)
-          ? self.helper('$escape')(string)
-          : string
-      },
-      include: function(filename, data = {}, options = {}) {
-        let conf = self.DEFAULTS,
-            node = document.getElementById(filename)
-
-        if (node) {
-          self._throw({
-            message: `[Include Error]: Template ID ${filename} is not found.`
-          })
-
-          return ''
-        }
-
-        return self.render(node.innerHTML, data, options)
-      }
-    })
+    this.setting = extend(this.setting, options)
 
     // set any extensions - 设置扩展
-    if (is('Array')(extensions) && extensions.length > 0) {
-      forEach(extensions, function(extension) {
-        self.extends(extension)
+    if (is('Array')(extensions) && 0 < extensions.length) {
+      forEach(extensions, (extension) => {
+        this.extends(extension)
       })
     }
+  }
+
+  /**
+   * 获取当前配置
+   * @param  {Object} options 配置
+   * @return {Object} 整合后的配置
+   */
+  options (...args) {
+    return extend.apply({}, [{}, this.setting].concat(args))
   }
 
   /**
@@ -151,118 +504,88 @@ class Bone {
    * @function
    * @param {string|Object} query 设置/获取的配置值名称
    * @param {*} value 需要配置的值 (optional)
-   * @returns {Bone|*} 设置则返回 Bone,获取则返回相应的配置
+   * @returns {Engine|*} 设置则返回 Engine,获取则返回相应的配置
    */
   config (query, value) {
     if (1 < arguments.length) {
       if (is('String')(query)) {
-        if ((query === 'openTag' && query === '<%') || (query === 'closeTag' && query === '%>')) {
+        if ('openTag' === query && '<%' === query
+        || 'closeTag' === query && '%>' === query) {
           return this
         }
 
-        this.DEFAULTS[query] = value
+        this.setting[query] = value
         return this
       }
     }
 
-    let self = this
     if (is('PlainObject')(query)) {
-      forEach(query, function(name, value) {
-        self.config(name, value)
+      forEach(query, (name, value) => {
+        this.config(name, value)
       })
 
       return this
     }
 
     if (is('String')(query)) {
-      return this.DEFAULTS[query]
+      return this.setting[query]
     }
   }
 
   /**
    * 编译脚本
-   * @function
    * @param {string} source 脚本模板
    * @param {Object} options 配置
-   * @returns {string}
+   * @return {string} 逻辑模板
    */
   $compileShell (source = '', options = {}) {
-    let origin    = source,
-        conf      = extend({}, this.DEFAULTS, options),
-        isEscape  = !!conf.escape,
-        strip     = !!conf.compress,
-        _helpers_ = this._helpers,
-        _blocks_  = this._blockHelpers,
-        _sources_ = this._sourceHelpers,
-        helpers   = [],
-        blocks    = [],
-        variables = [],
-        line      = 1,
-        buffer    = ''
-
-    const KEYWORDS = [
-      '$append',
-      '$blocks', '$buffer',
-      '$data',
-      '$helpers',
-      '$scope',
-      '$runtime',
-
-      'abstract', 'arguments',
-      'break', 'boolean', 'byte',
-      'case', 'catch', 'char', 'class', 'continue', 'console', 'const',
-      'debugger', 'default', 'delete', 'do', 'double',
-      'else', 'enum', 'export', 'extends',
-      'false', 'final', 'finally', 'float', 'for', 'function',
-      'goto',
-      'if', 'implements', 'import', 'in', 'instanceof', 'int', 'interface',
-      'let', 'long',
-      'native', 'new', 'null',
-      'package', 'private', 'protected', 'public',
-      'return',
-      'short', 'static', 'super', 'switch', 'synchronized',
-      'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof',
-      'undefined',
-      'var', 'void', 'volatile',
-      'while', 'with',
-      'yield'
-    ]
+    let origin    = source
+    let conf      = this.options(options)
+    let isEscape  = !!conf.escape
+    let strip     = !!conf.compress
+    let _helpers_ = this._helpers
+    let _blocks_  = this._blockHelpers
+    let _sources_ = this._sourceHelpers
+    let helpers   = []
+    let blocks    = []
+    let variables = []
+    let line      = 1
+    let buffer    = ''
 
     /**
      * 获取变量名
-     * @function
      * @param {string} source Shell
-     * @returns {Array}
+     * @return {Array} 变量名称集合
      */
-    let getVariables = function (source) {
+    let getVariables = (source) => {
       let variables = source
-            .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
-            .replace(/[^\w$]+/g, ',')
-            .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
-            .split(/^$|,+/)
+      .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
+      .replace(/[^\w$]+/g, ',')
+      .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
+      .split(/^$|,+/)
 
-      return filter(variables, function(variable) {
+      return filter(variables, (variable) => {
         return -1 === KEYWORDS.indexOf(variable)
       })
     }
 
     /**
      * 解析Source为JS字符串拼接
-     * @function
      * @param {string} source HTML
-     * @returns {string}
+     * @return {string} 非编译数据字符串
      */
-    let sourceToJs = function (source) {
+    let sourceToJs = (source) => {
       let match
+
       while (match = /<%source\\s*([\w\W]+?)?\\s*%>(.+?)<%\/source%>/igm.exec(source)) {
         let helperName = match[1]
         let str = match[2]
 
-        str = helperName && _sources_.hasOwnProperty(helperName)
-          ? _sources_[helperName](str)
-          : str
+        if (helperName && _sources_.hasOwnProperty(helperName)) {
+          str = _sources_[helperName](str)
+        }
 
-        str = `<%=unescape('${window.escape(str)}')%>`
+        str = `<%=unescape('${root.escape(str)}')%>`
         source = source.replace(match[0], str)
       }
 
@@ -271,41 +594,48 @@ class Bone {
 
     /**
      * 解析HTML为JS字符串拼接
-     * @function
      * @param {string} source HTML
-     * @returns {string}
+     * @return {string} HTML字符串
      */
-    let htmlToJs = function (source) {
+    let htmlToJs = (source) => {
       if ('' === source.replace(/<!--[\w\W]*?-->/g, '').replace(/^ +$/, '')) {
         return `$buffer+='${source}';`
       }
 
+      // Storage running line
       line += source.split(/\n/).length - 1
-      source = source.replace(/(["'\\])/g, '\\$1')
-      source = true === strip
-        ? source
-          .replace(/<!--[\w\W]*?-->/g, '')
-          .replace(/[\r\t\n]/g, '')
-          .replace(/ +/g, ' ')
-        : source
-          .replace(/\t/g, '\\t')
-          .replace(/\r/g, '\\r')
-          .replace(/\n/g, '\\n')
 
+      // encode
+      source = source.replace(/(["'\\])/g, '\\$1')
+
+      // check compress or not
+      if (true === strip) {
+        source = source
+        .replace(/<!--[\w\W]*?-->/g, '')
+        .replace(/[\r\t\n]/g, '')
+        .replace(/ +/g, ' ')
+      }
+      else {
+        source = source
+        .replace(/\t/g, '\\t')
+        .replace(/\r/g, '\\r')
+        .replace(/\n/g, '\\n')
+      }
+
+      // concat every block
       return `$buffer+='${source}';`
     }
 
     /**
      * 解析脚本为JS字符串拼接
-     * @function
      * @param {string} source JS shell
-     * @returns {string}
+     * @return {string} 逻辑字符串
      */
-    let shellToJs = function (source) {
+    let shellToJs = (source) => {
       source = trim(source || '')
 
       // analyze and define variables
-      forEach(getVariables(source), function(name) {
+      forEach(getVariables(source), (name) => {
         if (!name) {
           return
         }
@@ -330,7 +660,7 @@ class Bone {
 
       // echo
       if (/^=\s*[\w\W]+?\s*$/.exec(source)) {
-        source = `$buffer+=$helpers.$toString(${source.replace(/^=|;$/g, '')}, ${isEscape});`
+        source = `$buffer+=$helpers.$toString(${source.replace(/^=|;$/g, '')}, !!${isEscape});`
       }
       // no escape HTML code
       else if (/^#\s*[\w\W]+?\s*$/.exec(source)) {
@@ -342,8 +672,9 @@ class Bone {
       }
       // echo helper
       else if (/^\s*([\w\W]+)\s*\([^\)]*?\)\s*$/.exec(source)) {
-        source = `$buffer+=$helpers.$toString(${source}, ${isEscape});`
+        source = `$buffer+=$helpers.$toString(${source}, !!${isEscape});`
       }
+      // nothing to match
       else {
         source += ';'
       }
@@ -358,7 +689,8 @@ class Bone {
 
     source = sourceToJs(source)
 
-    forEach(source.split('<%'), function(code) {
+    // split logic and html
+    forEach(source.split('<%'), (code) => {
       code = code.split('%>')
 
       let [p1, p2] = [code[0], code[1]]
@@ -373,21 +705,22 @@ class Bone {
     })
 
     // define variables
-    forEach(unique(variables), function(name) {
+    forEach(unique(variables), (name) => {
       buffer = `var ${name}=$data.${name};${buffer}`
     })
 
     // define helpers
-    forEach(unique(helpers), function(name) {
+    forEach(unique(helpers), (name) => {
       buffer = `var ${name}=$helpers.${name};${buffer}`
     })
 
     // define block helpers
-    forEach(unique(blocks), function(name) {
+    forEach(unique(blocks), (name) => {
       buffer = `var ${name}=$blocks.${name};${buffer}`
     })
 
     // use strict
+    /* eslint no-multi-spaces: 0 */
     buffer = 'try {'
       +        '"use strict";'
       +        'var $scope=this,'
@@ -416,10 +749,9 @@ class Bone {
 
   /**
    * 编译模板为函数
-   * @function
    * @param {string} source 资源
    * @param {Object} options 编译配置 (optional)
-   * @returns {Function}
+   * @return {Function} 模板方法
    * @description
    *
    * Render and it's options will be cached together,
@@ -433,16 +765,15 @@ class Bone {
    * 可以设置 options.override 为 true 来覆盖
    */
   $compile (source = '', options = {}) {
-    let self    = this,
-        origin  = source,
-        conf    = extend({}, this.DEFAULTS, options),
-        strip   = !!conf.compress,
-        deps    = conf.depends,
-        _args_  = ['$data'].concat(deps),
-        args    = []
+    let origin  = source
+    let conf    = this.options(options)
+    let strip   = !!conf.compress
+    let deps    = conf.depends
+    let _args_  = ['$data'].concat(deps)
+    let args    = []
 
     // 获取需求的参数，除 data 之外
-    ~forEach(deps, function(name) {
+    ~forEach(deps, (name) => {
       if ('$' === name.charAt(0)) {
         name = name.replace('$', '')
         args.push(conf[name])
@@ -453,8 +784,8 @@ class Bone {
     })
 
     if (false === strip) {
-      source = source.replace(/<!--([\w\W]+?)-->/g, function($all, $1) {
-        return `<!--${window.escape($1)}-->`;
+      source = source.replace(/<!--([\w\W]+?)-->/g, ($all, $1) => {
+        return `<!--${root.escape($1)}-->`
       })
     }
 
@@ -464,24 +795,36 @@ class Bone {
 
     let shell = this.$compileShell(source, conf)
 
-    return buildRender({
-      $source   : origin,
-      $helpers  : this._helpers || {},
-      $blocks   : this._blockHelpers || {}
-    })
-
-    function buildRender (scope) {
+    let buildRender = (scope) => {
       let render
 
+      let __catch = (err) => {
+        let _err = {
+          message   : `[Exec Render]: ${err.message}`,
+          template  : options.filename,
+          line      : err.line,
+          source    : this._table(scope.$source, err.line),
+          shell     : this._table(err.shell, err.line),
+        }
+
+        forEach(_args_, (name, key) => {
+          _err[`arguments:${name}`] = err.args[key]
+        })
+
+        this._throw(_err)
+        return ''
+      }
+
       try {
+        /* eslint no-new-func: 0 */
         render = new Function(_args_.join(','), shell)
       }
       catch (err) {
-        self._throw({
+        this._throw({
           message   : `[Compile Render]: ${err.message}`,
           template  : options.filename,
-          line      : `Javascript syntax occur error, it can not find out the error line.`,
-          syntax    : self._table(origin),
+          line      : 'Javascript syntax occur error, it can not find out the error line.',
+          syntax    : this._table(origin),
           source    : source,
           shell     : shell
         })
@@ -490,11 +833,11 @@ class Bone {
       }
 
       if (false === strip) {
-        return function(data) {
+        return (data) => {
           try {
             let source = render.apply(scope, [data].concat(args))
-            return source.replace(/<!--([\w\W]+?)-->/g, function($all, $1) {
-              return `<!--${window.unescape($1)}-->`
+            return source.replace(/<!--([\w\W]+?)-->/g, ($all, $1) => {
+              return `<!--${root.unescape($1)}-->`
             })
           }
           catch (err) {
@@ -502,34 +845,22 @@ class Bone {
           }
         }
       }
-      else {
-        return function(data) {
-          try {
-            return render.apply(scope, [data].concat(args))
-          }
-          catch (err) {
-            return __catch(err)
-          }
+
+      return (data) => {
+        try {
+          return render.apply(scope, [data].concat(args))
         }
-      }
-
-      function __catch (err) {
-        let _err = {
-          message   : `[Exec Render]: ${err.message}`,
-          template  : options.filename,
-          line      : err.line,
-          source    : self._table(scope.$source, err.line),
-          shell     : self._table(err.shell, err.line),
+        catch (err) {
+          return __catch(err)
         }
-
-        forEach(_args_, function(name, key) {
-          _err[`arguments:${name}`] = err.args[key]
-        })
-
-        self._throw(_err)
-        return ''
       }
     }
+
+    return buildRender({
+      $source   : origin,
+      $helpers  : this._helpers || {},
+      $blocks   : this._blockHelpers || {}
+    })
   }
 
   /**
@@ -537,7 +868,7 @@ class Bone {
    * @function
    * @param {string} source 模板
    * @param {Object} options 配置
-   * @returns {Function}
+   * @return {Function} 模板方法
    * @description
    * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
    * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
@@ -546,9 +877,9 @@ class Bone {
   compile (source, options = {}) {
     source = toString(source)
 
-    let conf     = extend({}, this.DEFAULTS, options),
-        filename = conf.filename,
-        render   = true === conf.override || this._cache(filename)
+    let conf     = this.options(options)
+    let filename = conf.filename
+    let render   = true === conf.override || this._cache(filename)
 
     if (is('Function')(render)) {
       return render
@@ -565,18 +896,18 @@ class Bone {
    * @param {string} source 模板
    * @param {Object} data 数据 (optional)
    * @param {Object} options 配置 (optional)
-   * @returns {string}
+   * @return {string} 模板字符串
    */
   render (source, data = {}, options = {}) {
-    return Bone.prototype.compile.call(this, source, options)(data)
+    return Engine.prototype.compile.call(this, source, options)(data)
   }
 
   /**
    * 查找/设置辅助函数
    * @function
-   * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
+   * @param {string|Object} query 需要查找或设置的函数名|需要设置辅助函数集合
    * @param {Function} callback 回调函数
-   * @returns {Bone|Function}
+   * @returns {Engine|Function} 模板引擎或辅助方法
    */
   helper (query, callback) {
     if (1 < arguments.length) {
@@ -603,7 +934,7 @@ class Bone {
    * 注销辅助函数
    * @function
    * @param {string} name 名称
-   * @returns {Bone}
+   * @return {Engine} 模板引擎对象
    */
   unhelper (name) {
     let helpers = this._helpers
@@ -619,13 +950,13 @@ class Bone {
    * @function
    * @param {string} type 监听类型
    * @param {Function} handle 监听函数
-   * @returns {Bone}
+   * @return {Engine} 模板引擎对象
    */
   on (type, handle) {
     if (is('String')(type) && is('Function')(handle)) {
       this._listeners.push({
-        type: type,
-        handle: handle
+        type    : type,
+        handle  : handle,
       })
     }
 
@@ -636,12 +967,12 @@ class Bone {
    * 撤销监听事件
    * @function
    * @param {Function} handle 监听函数
-   * @returns {Bone}
+   * @return {Engine} 模板引擎本身
    */
   off (handle) {
     if (is('Function')(handle)) {
       let index = inArrayBy(this._listeners, handle, 'handle')
-      -1 !== index && this._listeners.splice(index, 1)
+      ;-1 !== index && this._listeners.splice(index, 1)
     }
 
     return this
@@ -651,17 +982,17 @@ class Bone {
    * 添加错误事件监听
    * @function
    * @param {Function} handle 监听函数
-   * @returns {OTempalte}
+   * @return {Engine} 模板引擎本身
    */
   onError (handle) {
     return this.on('error', handle)
   }
 
   /**
-   * 扩展 Bone
+   * 扩展 Engine
    * @function
    * @param {Function} callback 回调
-   * @returns {Bone}
+   * @return {Engine} 模板引擎本身
    */
   extends (callback) {
     callback.call(this, this)
@@ -670,18 +1001,19 @@ class Bone {
 
   /**
    * 抛出错误
-   * @private
-   * @function
    * @param {Object} error 错误信息
    * @param {Object} options 配置 (optional)
    */
   _throw (error, options = {}) {
-    let conf    = extend({}, this.DEFAULTS, options),
-        message = -1 === indexOf([ENV.UNIT], conf.env) && __throw(error)
+    let conf    = this.options(options)
 
-    forEach(this._listeners, function(listener) {
-      'error' === listener.type && listener.handle(error, message)
-    })
+    if (-1 === indexOf([ENV.UNITEST, ENV.PRODUCT], conf.env)) {
+      let message = __throw(error)
+
+      forEach(this._listeners, (listener) => {
+        'error' === listener.type && listener.handle(error, message)
+      })
+    }
   }
 
   /**
@@ -690,11 +1022,11 @@ class Bone {
    * @function
    * @param {string} name 方法名称
    * @param {Function} render 渲染函数
-   * @returns {Function|Bone}
+   * @return {Function|Engine} 返回缓存的模板方法|当前对象
    */
   _cache (name, render) {
     let caches = this._caches
-    if (arguments.length > 1) {
+    if (1 < arguments.length) {
       caches[name] = render
       return this
     }
@@ -706,30 +1038,47 @@ class Bone {
    * add the line number to the string - 给每行开头添加序列号
    * @private
    * @function
-   * @param  {string} str 需要添加序列号的字符串
-   * @returns {string}
+   * @param {string} string 需要添加序列号的字符串
+   * @param {number} scope 显示范围
+   * @return {string} 错误信息
    */
-  _table (string, direction) {
-    let line  = 0,
-        match = string.match(/([^\n]*)?\n|([^\n]+)$/g)
+  _table (string, scope) {
+    let line  = 0
+    let match = string.match(/([^\n]*)?\n|([^\n]+)$/g)
 
     if (!match) {
       return `> ${line}|${string}`
     }
 
-    let max = match.length,
-        [start, end] = [0, max]
+    let max = match.length
+    let [start, end] = [0, max]
 
-    if (0 < direction && direction < max) {
-      start = direction -3
-      end   = direction +3
+    if (0 < scope && scope < max) {
+      start = scope - 3
+      end   = scope + 3
     }
 
-    return string.replace(/([^\n]*)?\n|([^\n]+)$/g, function ($all) {
+    /**
+     * Zeros - 补零
+     * @param {integer} num 需要补零的数字
+     * @param {integer} max 补零参考数字易为最大补零数字
+     * @param {string} zero 需要填补的 "零"
+     * @return {string} 补零后的字符串
+     */
+    let zeros = function (num, max, zero = ' ') {
+      num = num.toString()
+      max = max.toString().replace(/\d/g, zero)
+
+      let res = max.split('')
+      res.splice(0 - num.length, num.length, num)
+      return res.join('')
+    }
+
+    return string.replace(/([^\n]*)?\n|([^\n]+)$/g, ($all) => {
       ++ line
 
       if (start <= line && line <= end) {
-        if (line === direction) {
+        if (line === scope) {
           return `> ${zeros(line, max)}|${$all}`
         }
 
@@ -738,23 +1087,6 @@ class Bone {
 
       return ''
     })
-
-    /**
-     * Zeros - 补零
-     * @function
-     * @param {integer} num 需要补零的数字
-     * @param {integer} max 补零参考数字易为最大补零数字
-     * @param {string} zero 需要填补的 "零"
-     * @returns {string}
-     */
-    function zeros (num, max, zero = ' ') {
-      num = num.toString()
-      max = max.toString().replace(/\d/g, zero)
-
-      let res = max.split('')
-      res.splice(- num.length, num.length, num)
-      return res.join('')
-    }
   }
 
   /**
@@ -768,7 +1100,7 @@ class Bone {
    * @param {string} options.openTag 语法的起始标识
    * @param {string} options.closeTag 语法的结束标识
    * @param {Array} options.depends 追加渲染器的传值设定
-   * @return {Bone}
+   * @return {Engine} 新的模板引擎对象
    */
   $divide (options) {
     return new this.constructor(options)
@@ -785,22 +1117,27 @@ class Bone {
   /**
    * 扩展库
    * @function
-   * @param  {Function} _extends_ 扩展方法
-   * @return {Bone}
+   * @param  {Function} extension 扩展方法
+   * @return {Engine} 模板引擎本身
    */
   static extend (extension) {
     is('Function')(extension) && extensions.push(extension)
     return this
   }
 
-  /**
-   * 编译语法
-   * @function
-   */
   $compileSyntax () {
     throw new Error('Function `$compileSyntax` does not be implemented.')
   }
-};
+}
+extend(DEFAULTS, {
+  /** open tag for syntax - 起始标识 */
+  openTag   : '{{',
+  /** close tag for syntax - 结束标识 */
+  closeTag  : '}}',
+  /** close no syntax config - 关闭没有语法的配置项 */
+  noSyntax  : false,
+})
+
 /**
  * Syntax - 语法类
  * @class
@@ -816,13 +1153,13 @@ class Bone {
  * 1. 正则表达式之间注意优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
-class Syntax {
+class Syntax extends Engine {
   /**
    * 通过配置作为数据来替换模板
    * @function
    * @param {string} source 模板
    * @param {Object} data 数据 (optional)，若数据不为 object 则设为默认配置数据
-   * @returns {string}
+   * @returns {string} 结果字符串
    * @description
    *
    * '<%= openTag %>hi<%= closeTag %>'
@@ -830,9 +1167,9 @@ class Syntax {
    * the result is '{{hi}}'
    */
   _compile (source, data) {
-    data = is('PlainObject')(data) ? data : this.DEFAULTS
+    data = is('PlainObject')(data) ? data : this.setting
 
-    return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, function (all, $1) {
+    return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, (all, $1) => {
       return get(data, $1) || ''
     })
   }
@@ -842,7 +1179,7 @@ class Syntax {
    * @function
    * @param {string} patternTemplate regexp 模板
    * @param {menu} attributes {igm}
-   * @returns {regexp}
+   * @returns {regexp} 结果正则
    * @description
    * '<%= openTag %>hi<%= closeTag %>'
    * if my defauts is { openTag: '{{', closeTag: '}}' }
@@ -860,13 +1197,14 @@ class Syntax {
    * @param {string} source 语法模板
    * @param {boolean} strict 是否为严格模式
    * @param {string} origin 原有的模板
-   * @return {string}
+   * @return {string} 结果字符串
    */
   _compileSyntax (source, strict = true, origin = source) {
     let matched = false
 
-    forEach(this._blocks, function (handle) {
+    forEach(this._blocks, (handle) => {
       let dress = source.replace(handle.syntax, handle.shell)
+
       if (dress !== source) {
         source = dress
         matched = true
@@ -877,8 +1215,8 @@ class Syntax {
     // not match any syntax or helper
     // 语法错误，没有匹配到相关语法
     if (false === matched) {
-      let pos  = origin.search(source),
-          line = inline(origin, pos)
+      let pos  = origin.search(source)
+      let line = inline(origin, pos)
 
       this._throw({
         message : `[Syntax Error]: ${source} did not match any syntax in line ${line}.`,
@@ -899,7 +1237,7 @@ class Syntax {
    *                            若不为 false 编译时会验证语法正确性若不正确则返回空字符串;
    *                            若为 false 模式则会去除所有没有匹配到的语法,
    *                            默认为 true，除 false 之外所有均看成 true
-   * @return {string}
+   * @return {string}           结果字符串
    * @example
    *
    * Strict Mode
@@ -914,11 +1252,9 @@ class Syntax {
    * when strict equal false, it will return '<div></div>'
    */
   $compileSyntax (source, strict = true) {
-    let self    = this,
-        origin  = source,
-        conf    = this.DEFAULTS,
-        blocks  = this._blocks,
-        valid
+    let origin  = source
+    let conf    = this.options()
+    let valid
 
     source = escapeTags(source)
 
@@ -929,14 +1265,15 @@ class Syntax {
      * split tags, because regexp may match all the string.
      * it can make every regexp match each string between tags(openTag & closeTag)
      */
-    forEach(source.split(conf.openTag), function(code) {
+    forEach(source.split(conf.openTag), (code) => {
       let codes = code.split(conf.closeTag)
 
       // logic code block
       // 逻辑代码块
       if (1 !== codes.length) {
-        source = source.replace(`${conf.openTag}${codes[0]}${conf.closeTag}`, function($all) {
-          return (valid = self._compileSyntax($all, strict, origin))
+        source = source.replace(`${conf.openTag}${codes[0]}${conf.closeTag}`, ($all) => {
+          valid = this._compileSyntax($all, strict, origin)
+          return valid
         })
       }
 
@@ -956,8 +1293,8 @@ class Syntax {
 
     // error open or close tag
     // 语法错误，缺少闭合
-    let tagReg = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
-        pos    = source.search(tagReg)
+    let tagReg = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm')
+    let pos    = source.search(tagReg)
 
     if (-1 !== pos) {
       // return empty string in static mode
@@ -983,12 +1320,12 @@ class Syntax {
     /**
      * 转义原生的语法标签
      * @param {string} source 模板
-     * @return {string}
+     * @return {string} 结果字符串
      */
     function escapeTags (source) {
       return source
-        .replace(/<%/g, '&lt;%')
-        .replace(/%>/g, '%&gt;')
+      .replace(/<%/g, '&lt;%')
+      .replace(/%>/g, '%&gt;')
     }
   }
 
@@ -996,7 +1333,7 @@ class Syntax {
    * 清除所有语法
    * @function
    * @param {string} source 语法模板
-   * @returns {string}
+   * @returns {string} 结果字符串
    */
   $clearSyntax (source) {
     let regexp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
@@ -1009,7 +1346,7 @@ class Syntax {
    * @param {string} name 语法名称
    * @param {string|array|object|regexp} syntax 语法正则 (请注意贪婪与贪婪模式)，当为 RegExp时，记得用 openTag 和 closeTag 包裹
    * @param {string|function} shell 元脚本, 当为 Function 时记得加上 `<%` 和 `%>` 包裹
-   * @returns {Bone}
+   * @returns {Syntax} 模板引擎对象
    * @description
    * '(\\\w+)' will be compiled to /{{(\\\w+)}}/igm
    * but please use the non-greedy regex, and modify it to'(\\\w+)?'
@@ -1021,8 +1358,6 @@ class Syntax {
    * 例如匹配 '{{aaa}}{{aaa}}' 的是否，贪婪匹配会将整个字符串匹配完成，而不是 '{{aaa}}'
    */
   $registerSyntax (name, syntax, shell) {
-    let self = this
-
     if (2 < arguments.length) {
       this._blocks[name] = {
         syntax  : is('RegExp')(syntax) ? syntax : this._compileRegexp(`<%= openTag %>${syntax}<%= closeTag %>`, 'igm'),
@@ -1030,15 +1365,15 @@ class Syntax {
       }
     }
     else if (is('PlainObject')(syntax)) {
-      forEach(syntax, function (shell, syntax) {
-        self.$registerSyntax(name, syntax, shell)
+      forEach(syntax, (shell, syntax) => {
+        this.$registerSyntax(name, syntax, shell)
       })
     }
     else if (is('Array')(syntax)) {
-      forEach(syntax, function (compiler) {
+      forEach(syntax, (compiler) => {
         is('String')(compiler.syntax)
-        && is('String')(compiler.shell) || is('Function')(compiler.shell)
-        && self.$registerSyntax(name, compiler.syntax, compiler.shell)
+        && (is('String')(compiler.shell) || is('Function')(compiler.shell))
+        && this.$registerSyntax(name, compiler.syntax, compiler.shell)
       })
     }
 
@@ -1049,11 +1384,13 @@ class Syntax {
    * 销毁语法
    * @function
    * @param {string} name 语法名称
-   * @returns {Bone}
+   * @returns {Syntax} 模板引擎对象
    */
   $unregisterSyntax (name) {
     let blocks = this._blocks
+
     if (blocks.hasOwnProperty(name)) {
+      blocks[name] = undefined
       delete blocks[name]
     }
 
@@ -1063,9 +1400,9 @@ class Syntax {
   /**
    * 查询/设置块级辅助函数
    * @function
-   * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
+   * @param {string|Object} query 需要查找或设置的函数名|需要设置辅助函数集合
    * @param {function} callback 回调函数
-   * @returns {this|function}
+   * @returns {Syntax|function} 模板引擎对象或块级辅助函数
    * @description
    * 只有语法版本才拥有 block 这个概念，原生版本可以通过各种函数达到目的
    */
@@ -1073,10 +1410,10 @@ class Syntax {
     if (1 < arguments.length) {
       if (is('String')(query) && is('Function')(callback)) {
         this
-        .$registerSyntax(`${query}open`, `(${query})\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*`, function ($all, $1, $2, $3, $4, $5) {
+        .$registerSyntax(`${query}open`, `(${query})\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*`, ($all, $1, $2, $3, $4, $5) => {
           return `<%${$1}($append, ${$2 ? $2 + ', ' : ''}function (${$5 || ''}) {'use strict';var $buffer='';%>`
         })
-        .$registerSyntax(`${query}close`, `/${query}`, `return $buffer;});`)
+        .$registerSyntax(`${query}close`, `/${query}`, 'return $buffer;});')
 
         this._blockHelpers[query] = function ($append) {
           let args = Array.prototype.splice.call(arguments, 1)
@@ -1103,13 +1440,17 @@ class Syntax {
    * 注销块级辅助函数
    * @function
    * @param {string} name 名称
-   * @returns {Bone}
+   * @returns {Syntax} 模板引擎自身
    */
   unblock (name) {
-    let helpers = this._blockHelpers,
-        blocks  = this._blocks
+    let helpers = this._blockHelpers
+    let blocks  = this._blocks
 
     if (helpers.hasOwnProperty(name)) {
+      helpers[name] = undefined
+      blocks[`${name}open`] = undefined
+      blocks[`${name}close`] = undefined
+
       delete helpers[name]
       delete blocks[`${name}open`]
       delete blocks[`${name}close`]
@@ -1118,32 +1459,23 @@ class Syntax {
     return this
   }
 }
-
-// close no syntax config
-// 关闭没有语法的配置项
-DEFAULTS.noSyntax = false
-
-// extends all method to Bone class
-// 扩展所有方法到 Bone 类中
-~extend(Bone.prototype, Syntax.prototype)
-;
 /**
  * Simple Syntax Defination - 定义简单语法
  */
-Bone.extend(function() {
-  let HELPER_SYNTAX       = '(=|-|!|#|!#)?\\s*([^|]+?(?:\\s*(?:\\|\\||\\&\\&)\\s*[^|]+?)*)\\s*\\|\\s*([^:\\|]+?)\\s*(?:\\:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?',
-      HELPER_REGEXP       = this._compileRegexp(HELPER_SYNTAX),
-      HELPER_INNER_SYNTAX = '\\s*([\\w\\W]+?\\s*\\\([\\w\\W]+?\\\))\\s*\\|\\s*([^:]+?)\\s*(:\\s*([^\\|]+?))?$',
-      HELPER_INNER_REGEXP = this._compileRegexp(HELPER_INNER_SYNTAX)
+Engine.extend((engine) => {
+  const HELPER_SYNTAX       = '(=|-|!|#|!#)?\\s*([^|]+?(?:\\s*(?:\\|\\||\\&\\&)\\s*[^|]+?)*)\\s*\\|\\s*([^:\\|]+?)\\s*(?:\\:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?'
+  // const HELPER_REGEXP       = engine._compileRegexp(HELPER_SYNTAX)
+  const HELPER_INNER_SYNTAX = '\\s*([\\w\\W]+?\\s*\\\([\\w\\W]+?\\\))\\s*\\|\\s*([^:]+?)\\s*(:\\s*([^\\|]+?))?$'
+  const HELPER_INNER_REGEXP = engine._compileRegexp(HELPER_INNER_SYNTAX)
 
-  this
+  engine
   /**
    * helper syntax
    * syntax {{ data | helperA: dataA, dataB, dataC | helperB: dataD, dataE, dataF }}
    */
-  .$registerSyntax('helper', HELPER_SYNTAX, (function() {
-    return function($all, $1, $2, $3, $4, $5) {
-      let str = format.apply(this, arguments)
+  .$registerSyntax('helper', HELPER_SYNTAX, (function () {
+    return function ($all, $1, $2, $3, $4, $5) {
+      let str = format($all, $1, $2, $3, $4, $5)
 
       // 这里需要递推所有的辅助函数
       while (HELPER_INNER_REGEXP.exec(str)) {
@@ -1205,7 +1537,7 @@ Bone.extend(function() {
    * each open tag. iterate data one by one
    * syntax {{each data as value, key}} {{= key + '=>' + value }} {{/each}}
    */
-  .$registerSyntax('eachopen', 'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', function($all, $1, $2, $3, $4) {
+  .$registerSyntax('eachopen', 'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', ($all, $1, $2, $3, $4) => {
     let string = `each(${$1}, function(${$3 || '$value'}${$4 || ', $index'}) {`
     return `<%${string}%>`
   })
@@ -1218,18 +1550,18 @@ Bone.extend(function() {
    * include another template
    * syntax {{include template/index.html [, ...(optional)] }}
    */
-  .$registerSyntax('include', 'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', function($all, $1, $2, $3) {
+  .$registerSyntax('include', 'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', ($all, $1, $2, $3) => {
     return `<%#include('${$1.replace(/[\'\"\`]/g, '')}', ${$3 || '$data'})%>`
   })
 
   // add a each syntax helper
   // 添加语法辅助函数
-  ~extend(this._helpers, {
-    each: function(data, callback) {
+  ~extend(engine._helpers, {
+    each (data, callback) {
       forEach(data, callback)
     }
   })
-});
+})
 /**
  * 浏览器接口类
  * @class
@@ -1242,48 +1574,46 @@ Bone.extend(function() {
  * @param {string} options.closeTag 语法的结束标识
  * @param {Array} options.depends 追加渲染器的传值设定
  */
-class Client extends Bone {
-  constructor () {
-    let self = this
-    Bone.apply(this, arguments)
+class Client extends (Syntax || Engine) {
+  constructor (options) {
+    super(options)
 
     // extends include func to support ajax request file
     // 扩展新的 include 支持 ajax
     ~extend(this._helpers, {
-      include: function(filename, data, options) {
-        return self.renderSync(filename, data, options)
+      include: (filename, data, options) => {
+        return this.renderSync(filename, data, options)
       }
     })
   }
 
   /**
    * 编译模板
-   * @function
    * @param {string} source 模板
    * @param {Object} options 配置
-   * @returns {Function}
+   * @returns {Function} 模板函数
    * @description
    * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
    * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
    * 时才能真正修改渲染器的配置
    */
   compileSource (source, options) {
-    return Bone.prototype.compile.apply(this, arguments)
+    return super.compile.call(this, source, options)
   }
 
   /**
    * 渲染模板
-   * @function
    * @param {string} source 模板
+   * @param {Object} data 数据
    * @param {Object} options 配置
-   * @returns {Function}
+   * @returns {string} 结果字符串
    * @description
    * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
    * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
    * 时才能真正修改渲染器的配置
    */
-  renderSource (source, options) {
-    return Bone.prototype.render.apply(this, arguments)
+  renderSource (source, data, options) {
+    return super.render.call(this, source, data, options)
   }
 
   /**
@@ -1291,11 +1621,11 @@ class Client extends Bone {
    * @param {string} template 模板
    * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
    * @param {Object} options 配置
-   * @return {Function}
+   * @return {Function} 模板函数
    */
   compile (template, callback, options = {}) {
-    let conf = extend({}, this.DEFAULTS, options, { filename: template }),
-        sync = !!conf.sync
+    let conf = this.options(options, { filename: template })
+    let sync = !!conf.sync
 
     if (is('Object')(callback)) {
       return this.compile(template, null, callback)
@@ -1307,31 +1637,36 @@ class Client extends Bone {
 
     template = toString(template)
 
-    let self   = this,
-        render = true === conf.override ? undefined : this._cache(template)
+    let render = true === conf.override ? undefined : this._cache(template)
 
     if (is('Function')(render)) {
-      return sync ? render : (callback(render), undefined)
+      if (sync) {
+        return render
+      }
+
+      callback(render)
+      return
     }
 
     let node = document.getElementById(template)
+
     if (node) {
       let source = node.innerHTML.replace(/^ *\n|\n *$/g, '')
       render = this.compileSource(source, conf)
       return sync ? render : (callback(render), undefined)
     }
 
-    this.getSourceByAjax(template, function (source) {
+    this.getSourceByAjax(template, (source) => {
       let [origin, dependencies] = [source, []]
 
       // source 经过这里会变得不纯正
       // 主要用于确定需要导入的模板
       if (false === conf.noSyntax) {
-        source = self.$compileSyntax(source, conf.strict)
+        source = this.$compileSyntax(source, conf.strict)
       }
 
       // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
-      forEach(source.split('<%'), function (code) {
+      forEach(source.split('<%'), (code) => {
         let [codes, match] = [code.split('%>')]
 
         // logic block is fist part when `codes.length === 2`
@@ -1343,35 +1678,36 @@ class Client extends Bone {
       })
 
       let total = dependencies.length
-      let __exec = function () {
-        0 >= (-- total) && __return()
-      }
 
-      let __return = function () {
-        render = self.$compile(origin)
-        self._cache(template, render)
+      let __return = () => {
+        render = this.$compile(origin)
+        this._cache(template, render)
         false === sync && callback(render)
         total = undefined
       }
 
-      if (total > 0) {
-        forEach(unique(dependencies), function (child) {
-          if (self._cache(child)) {
+      let __exec = () => {
+        0 >= -- total && __return()
+      }
+
+      if (0 < total) {
+        forEach(unique(dependencies), (child) => {
+          if (this._cache(child)) {
             __exec()
           }
           else {
             let childSource = findChildTemplate(child, origin)
 
             if (childSource) {
-              self.compileSource(childSource, {
-                filename: child,
-                override: !!conf.override
+              this.compileSource(childSource, {
+                filename  : child,
+                override  : !!conf.override,
               })
 
               __exec()
             }
             else {
-              self.compile(child, __exec, conf)
+              this.compile(child, __exec, conf)
             }
           }
         })
@@ -1405,11 +1741,11 @@ class Client extends Bone {
    * @param {Object} data 数据
    * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
    * @param {Object} options 配置
-   * @return {string}
+   * @return {string} 结果字符串
    */
   render (template, data, callback, options = {}) {
-    let conf = extend({}, this.DEFAULTS, options, { filename: template }),
-        sync = !!conf.sync
+    let conf = this.options(options, { filename: template })
+    let sync = !!conf.sync
 
     if (is('Object')(callback)) {
       let render = this.compile(template, null, extend(callback, { sync: true }))
@@ -1420,7 +1756,7 @@ class Client extends Bone {
       return
     }
 
-    this.compile(template, function(render) {
+    this.compile(template, (render) => {
       let source = render(data || {})
       callback(source)
     }, conf)
@@ -1428,10 +1764,9 @@ class Client extends Bone {
 
   /**
    * 阻塞编译模板
-   * @function
-   * @param {string} templateId 模板ID
+   * @param {string} template 模板ID
    * @param {Object} options 配置 (optional)
-   * @returns {Function} 编译函数
+   * @return {Function} 编译函数
    */
   compileSync (template, options) {
     let conf = extend({}, options, { sync: true })
@@ -1440,10 +1775,10 @@ class Client extends Bone {
 
   /**
    * 阻塞渲染
-   * @function
    * @param {string} template 模板地址或ID
    * @param {Object} data 数据 (optional)
    * @param {Object} options 配置 (optional)
+   * @return {string} 结果字符串
    */
   renderSync (template, data, options) {
     let render = this.compileSync(template, options)
@@ -1452,7 +1787,6 @@ class Client extends Bone {
 
   /**
    * 异步编译模板
-   * @function
    * @param {string} template 模板地址或ID
    * @param {Function} callback 回调函数
    * @param {Object} options 配置 (optional)
@@ -1464,11 +1798,11 @@ class Client extends Bone {
 
   /**
    * 异步渲染
-   * @function
    * @param {string} template 模板地址或ID
    * @param {Object} data 数据 (optional)
    * @param {Function} callback 回调函数
    * @param {Object} options 配置 (optional)
+   * @return {string} 结果字符串
    */
   renderAsync (template, data, callback, options) {
     if (is('Function')(data)) {
@@ -1476,7 +1810,7 @@ class Client extends Bone {
     }
 
     if (is('Function')(callback)) {
-      this.compileAsync(template, function(render) {
+      this.compileAsync(template, (render) => {
         callback(render(data || {}))
       }, options)
     }
@@ -1484,52 +1818,53 @@ class Client extends Bone {
 
   /**
    * 请求远程模板资源
-   * @function
    * @param {string} sourceUrl 远程资源地址
    * @param {Function} callback 回调函数
+   * @param {Object} options 配置
    */
   getSourceByAjax (sourceUrl, callback, options = {}) {
     if (!is('Function')(callback)) {
       return
     }
 
-    let [self, xhr] = [this, new XMLHttpRequest]
+    let xhr = new XMLHttpRequest()
 
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
       let status = this.status
-      if (this.DONE === this.readyState && 200 <= status && status < 400) {
+
+      if (this.DONE === this.readyState && 200 <= status && 400 > status) {
         callback(this.responseText)
       }
     }
 
-    xhr.onerror = function() {
+    xhr.onerror = () => {
       let err = {
         message   : `[Compile Template]: Request file ${sourceUrl} some error occured.`,
         filename  : sourceUrl,
         response  : `[Reponse State]: ${this.status}`
       }
 
-      self._throw(err)
+      this._throw(err)
       is('Function')(options.catch) && options.catch(err)
     }
 
-    xhr.ontimeout = function() {
+    xhr.ontimeout = () => {
       let err = {
         message   : `[Request Template]: Request template file ${sourceUrl} timeout.`,
         filename  : sourceUrl
       }
 
-      self._throw(err)
+      this._throw(err)
       is('Function')(options.catch) && options.catch(err)
     }
 
-    xhr.onabort = function() {
+    xhr.onabort = () => {
       let err = {
-        message   : `[Request Template]: Bowswer absort the request.`,
+        message   : '[Request Template]: Bowswer absort the request.',
         filename  : sourceUrl
       }
 
-      self._throw(err)
+      this._throw(err)
       is('Function')(options.catch) && options.catch(err)
     }
 
@@ -1541,22 +1876,22 @@ class Client extends Bone {
 /**
  * Exports Module
  */
-UMD('oTemplate', function() {
+umd('killt', function () {
   return new Client()
 }, root)
 
 /**
- * UMD 模块定义
- * @function
- * @param {windows|global} root
- * @param {Function} factory
+ * umd 模块定
+ * @param {string} name 名称
+ * @param {function} factory 工厂
+ * @param {windows|global} root 当前域
  */
-function UMD (name, factory, root) {
+function umd (name, factory, root) {
   let [define, module] = [root.define, factory(root)]
 
   // AMD & CMD
   if (is('Function')(define)) {
-    define(function () {
+    define(() => {
       return module
     })
   }
@@ -1564,352 +1899,5 @@ function UMD (name, factory, root) {
   else {
     root[name] = module
   }
-};
-/**
- * 判断类型
- * @typedef {isType}
- * @function
- * @param {*} value 需要判断的值
- * @returns {boolean}
- */
-
-/**
- * 判断对象是否为 type 类型
- * @function
- * @param {string} type
- * @return {isType}
- */
-function is (type) {
-  return function (value) {
-    switch(type) {
-      case 'Undefined':
-        return 'undefined' === typeof value
-
-      case 'Defined':
-        return 'undefined' !== typeof value
-
-      case 'Integer':
-        let y = parseInt(value, 10)
-        return !isNaN(y) && value === y && value.toString() === y.toString()
-
-      case 'PlainObject':
-        let ctor, prot
-        if (false === is('Object')(value) || is('Undefined')(value)) {
-            return false
-        }
-
-        ctor = value.constructor
-        if ('function' !== typeof ctor) {
-            return false
-        }
-
-        prot = ctor.prototype;
-        if (false === is('Object')(prot)) {
-            return false
-        }
-
-        if (false === prot.hasOwnProperty('isPrototypeOf')) {
-            return false
-        }
-
-        return true
-
-      default:
-        return `[object ${type}]` === Object.prototype.toString.call(value)
-    }
-  }
 }
-
-/**
- * 获取所在行
- * @function
- * @param {string} string 需要查找的值
- * @param {number} position 编译
- * @returns {number}
- */
-function inline (string, position) {
-  return (string.substr(0, position).match(/\n/g) || []).length +1
-}
-
-/**
- * 去除空格
- * @function
- * @param {string} string
- * @return {string}
- */
-function trim (string) {
-  return toString(string).replace(/^\s+|\s+$/, '')
-}
-
-/**
- * 查找对象中的属性
- * @function
- * @param {Object} object 获取的对象
- * @param {string} path 查找路径
- * @param {string} spliter 分隔符 (默认为 `.`)
- * @returns {*} 若不存在返回 undefined，若存在则返回该指向的值
- * @example
- * {a:{a:{a:{a:1}}}} -> get('a.a.a.a') -> 1
- * {a:1}             -> get('a.a.a.a') -> undefined
- */
-function get (object, path, spliter = '.') {
-  if (!is('String')(path)) {
-    return undefined
-  }
-
-  let [re, ns] = [object, path.split(spliter)]
-  for (let [i, l] = [0, ns.length]; i < l; i ++) {
-    if (is('Undefined')(re[ns[i]])) {
-        return undefined
-    }
-
-    re = re[ns[i]]
-  }
-
-  return is('Undefined')(re) ? undefined : re
-}
-
-/**
- * 强制转化成字符串
- * @function
- * @param {*} anything 传入的值
- * @returns {string}
- */
-function toString (anything) {
-  if (is('String')(anything)) {
-    return anything
-  }
-
-  if (is('Number')(anything)) {
-    return anything += ''
-  }
-
-  if (is('Function')(anything)) {
-    return toString(anything.call(anything))
-  }
-
-  return ''
-}
-
-/**
- * 转义标点符号
- * @function
- * @param {string} string 需要转义的字符串
- * @returns {string}
- */
-function escapeSymbol (string = '') {
-  return string
-    .replace(/("|'|\\)/g, '\\$1')
-    .replace(/\r/g, '\\r')
-    .replace(/\n/g, '\\n')
-}
-
-/**
- * 转义HTML字符
- * @function
- * @param {string} string HTML字符
- * @returns {string}
- */
-function escapeHTML (string) {
-  // escape sources
-  // 转义资源
-  let SOURCES = {
-    '<': '&lt;',
-    '>': '&gt;',
-    '&': '&amp;',
-    '"': '&quot;',
-    "'": '&#x27;',
-    '/': '&#x2f;'
-  }
-
-  return toString(string).replace(/&(?![\w#]+;)|[<>"']/g, function(name) {
-    return SOURCES[name]
-  })
-}
-
-/**
- * 获取元素在数组中所在位置的键值
- * @function
- * @param {array} array 数组
- * @param {*} value 要获取键值的元素
- * @returns {integer} 键值，不存在返回 -1;
- */
-function indexOf (array, value) {
-  if (Array.prototype.indexOf && is('Function')(array.indexOf)) {
-    return array.indexOf(value)
-  }
-  else {
-    for (let [i, l] = [0, array.length]; i < l; i ++) {
-      if (array[i] === value) {
-        return i
-      }
-    }
-
-    return -1
-  }
-}
-
-/**
- * inArray 增强版，获取数组中元素拥有与要查询元素相同的属性值的键值
- * @function
- * @param {Object|integer} query 对象或数字(数字用于数组下标)
- * @return {Integer}                  键值，不存在返回 -1;
- */
-function inArrayBy (array, query, propName) {
-  let index = is('Object')(query)
-    ? query[propName]
-    : query
-
-  for (let [i, l] = [0, array.length]; i < l; i ++) {
-    if (index == array[i][propName]) {
-      return i
-    }
-  }
-
-  return -1
-}
-
-/**
- * 遍历数组或对象
- * @function
- * @param {Array|Object} collection 需要遍历的结合
- * @param {Function} callback 回调函数
- */
-function forEach (collection, callback = new Function) {
-  if (is('Function')(callback)) {
-    if (is('Array')(collection)) {
-      if (Array.prototype.some) {
-        collection.some(callback)
-      }
-      else {
-        for (let [i, l] = [0, collection.length]; i < l; i ++) {
-          if (true === callback(collection[i], i)) {
-            break
-          }
-        }
-      }
-    }
-    else if (is('Object')(collection)) {
-      for (let i in collection) {
-        if (true === callback(collection[i], i)) {
-          break
-        }
-      }
-    }
-  }
-}
-
-/**
- * 数组去重
- * @function
- * @param {Array} array 需要去重数组
- * @return {Array}
- */
-function unique (array) {
-  let [n, r] = [{}, []]
-
-  for (let i = array.length; i --;) {
-    if (!n.hasOwnProperty(array[i])) {
-      r.push(array[i])
-      n[array[i]] = 1
-    }
-  }
-
-  return r
-}
-
-/**
- * 集合过滤
- * @function
- * @param {Object|Array} collection 需要过滤的元素
- * @param {Function} callback 回调函数
- * @returns {Object|Array}
- */
-function filter (collection, callback = new Function) {
-  let isArr = is('Array')(collection),
-      res   = isArr ? [] : {}
-
-  forEach(collection, function (val, key) {
-    if (callback(val, key)) {
-      res[isArr ? res.length : key] = val
-    }
-  })
-
-  return res
-}
-
-/**
- * 合并数组或对象
- * @function
- * @param {Array|Object} objectA 对象
- * @param {Array|Object} objectB 对象
- * @param {Array|Object} ... 对象
- * @returns {Array|Object} objectA 第一个传入的对象
- */
-function extend (...args) {
-  let [paramA, paramB] = [args[0], args[1]]
-
-  if (args.length > 2) {
-    paramA = extend(paramA, paramB)
-
-    let next = Array.prototype.slice.call(args, 2)
-    return extend.apply({}, [paramA].concat(next))
-  }
-
-  if (is('Array')(paramA) && is('Array')(paramB)) {
-    Array.prototype.splice.apply(paramA, [paramA.length, 0].concat(paramB))
-  }
-  else if (is('Object')(paramA) && is('Object')(paramB)) {
-    if (is('Function')(Object.assign)) {
-      paramA = Object.assign(paramA, paramB);
-    }
-    else {
-      for (let i in paramB) {
-        paramA[i] = paramB[i]
-      }
-    }
-  }
-
-  return paramA
-}
-
-/**
- * 抛出异常
- * @function
- * @param {string|Object} error 错误异常
- */
-function __throw (error) {
-  let messages = []
-
-  if (is('Object')(error)) {
-    forEach(error, function (value, name) {
-      messages.push(`<${name.substr(0, 1).toUpperCase()}${name.substr(1)}>`)
-      messages.push('\n')
-      messages.push(value)
-      messages.push('\n\n')
-    })
-  }
-  else if (is('String')(error)) {
-    messages = error
-  }
-
-  try {
-    console.error.apply(console, messages)
-  }
-  catch (err) {
-    setTimeout(function () {
-      throw messages
-    })
-  }
-
-  return messages
-}
-
-/**
- * 伪渲染函数
- * @function
- * @return {string} 空字符串
- */
-function __render () {
-  return ''
-}})(this);
+})('undefined' === typeof global ? 'undefined' === typeof window ? {} : window : global)
