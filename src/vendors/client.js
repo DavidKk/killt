@@ -25,10 +25,9 @@ class Client extends (Syntax || Engine) {
 
   /**
    * 编译模板
-   * @function
    * @param {string} source 模板
    * @param {Object} options 配置
-   * @returns {Function}
+   * @returns {Function} 模板函数
    * @description
    * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
    * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
@@ -40,10 +39,9 @@ class Client extends (Syntax || Engine) {
 
   /**
    * 渲染模板
-   * @function
    * @param {string} source 模板
    * @param {Object} options 配置
-   * @returns {Function}
+   * @returns {string} 结果字符串
    * @description
    * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
    * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
@@ -58,7 +56,7 @@ class Client extends (Syntax || Engine) {
    * @param {string} template 模板
    * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
    * @param {Object} options 配置
-   * @return {Function}
+   * @return {Function} 模板函数
    */
   compile (template, callback, options = {}) {
     let conf = this.options(options, { filename: template })
@@ -77,7 +75,12 @@ class Client extends (Syntax || Engine) {
     let render = true === conf.override ? undefined : this._cache(template)
 
     if (is('Function')(render)) {
-      return sync ? render : (callback(render), undefined)
+      if (sync) {
+        return render
+      }
+
+      callback(render)
+      return
     }
 
     let node = document.getElementById(template)
@@ -111,10 +114,6 @@ class Client extends (Syntax || Engine) {
 
       let total = dependencies.length
 
-      let __exec = () => {
-        0 >= (-- total) && __return()
-      }
-
       let __return = () => {
         render = this.$compile(origin)
         this._cache(template, render)
@@ -122,7 +121,11 @@ class Client extends (Syntax || Engine) {
         total = undefined
       }
 
-      if (total > 0) {
+      let __exec = () => {
+        0 >= -- total && __return()
+      }
+
+      if (0 < total) {
         forEach(unique(dependencies), (child) => {
           if (this._cache(child)) {
             __exec()
@@ -132,8 +135,8 @@ class Client extends (Syntax || Engine) {
 
             if (childSource) {
               this.compileSource(childSource, {
-                filename: child,
-                override: !!conf.override
+                filename  : child,
+                override  : !!conf.override,
               })
 
               __exec()
@@ -173,7 +176,7 @@ class Client extends (Syntax || Engine) {
    * @param {Object} data 数据
    * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
    * @param {Object} options 配置
-   * @return {string}
+   * @return {string} 结果字符串
    */
   render (template, data, callback, options = {}) {
     let conf = this.options(options, { filename: template })
@@ -196,10 +199,9 @@ class Client extends (Syntax || Engine) {
 
   /**
    * 阻塞编译模板
-   * @function
-   * @param {string} templateId 模板ID
+   * @param {string} template 模板ID
    * @param {Object} options 配置 (optional)
-   * @returns {Function} 编译函数
+   * @return {Function} 编译函数
    */
   compileSync (template, options) {
     let conf = extend({}, options, { sync: true })
@@ -208,10 +210,10 @@ class Client extends (Syntax || Engine) {
 
   /**
    * 阻塞渲染
-   * @function
    * @param {string} template 模板地址或ID
    * @param {Object} data 数据 (optional)
    * @param {Object} options 配置 (optional)
+   * @return {string} 结果字符串
    */
   renderSync (template, data, options) {
     let render = this.compileSync(template, options)
@@ -220,7 +222,6 @@ class Client extends (Syntax || Engine) {
 
   /**
    * 异步编译模板
-   * @function
    * @param {string} template 模板地址或ID
    * @param {Function} callback 回调函数
    * @param {Object} options 配置 (optional)
@@ -232,11 +233,11 @@ class Client extends (Syntax || Engine) {
 
   /**
    * 异步渲染
-   * @function
    * @param {string} template 模板地址或ID
    * @param {Object} data 数据 (optional)
    * @param {Function} callback 回调函数
    * @param {Object} options 配置 (optional)
+   * @return {string} 结果字符串
    */
   renderAsync (template, data, callback, options) {
     if (is('Function')(data)) {
@@ -252,21 +253,21 @@ class Client extends (Syntax || Engine) {
 
   /**
    * 请求远程模板资源
-   * @function
    * @param {string} sourceUrl 远程资源地址
    * @param {Function} callback 回调函数
+   * @param {Object} options 配置
    */
   getSourceByAjax (sourceUrl, callback, options = {}) {
     if (!is('Function')(callback)) {
       return
     }
 
-    let xhr = new XMLHttpRequest
+    let xhr = new XMLHttpRequest()
 
     xhr.onreadystatechange = function () {
       let status = this.status
 
-      if (this.DONE === this.readyState && 200 <= status && status < 400) {
+      if (this.DONE === this.readyState && 200 <= status && 400 > status) {
         callback(this.responseText)
       }
     }
@@ -294,7 +295,7 @@ class Client extends (Syntax || Engine) {
 
     xhr.onabort = () => {
       let err = {
-        message   : `[Request Template]: Bowswer absort the request.`,
+        message   : '[Request Template]: Bowswer absort the request.',
         filename  : sourceUrl
       }
 
@@ -310,17 +311,17 @@ class Client extends (Syntax || Engine) {
 /**
  * Exports Module
  */
-UMD('oTemplate', function () {
+umd('oTemplate', function () {
   return new Client()
 }, root)
 
 /**
- * UMD 模块定义
- * @function
- * @param {windows|global} root
- * @param {Function} factory
+ * umd 模块定
+ * @param {string} name 名称
+ * @param {function} factory 工厂
+ * @param {windows|global} root 当前域
  */
-function UMD (name, factory, root) {
+function umd (name, factory, root) {
   let [define, module] = [root.define, factory(root)]
 
   // AMD & CMD

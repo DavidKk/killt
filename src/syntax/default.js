@@ -3,7 +3,7 @@
  */
 Engine.extend((engine) => {
   const HELPER_SYNTAX       = '(=|-|!|#|!#)?\\s*([^|]+?(?:\\s*(?:\\|\\||\\&\\&)\\s*[^|]+?)*)\\s*\\|\\s*([^:\\|]+?)\\s*(?:\\:\\s*([^\\|]+?))?\\s*(\\|\\s*[\\w\\W]+?)?'
-  const HELPER_REGEXP       = engine._compileRegexp(HELPER_SYNTAX)
+  // const HELPER_REGEXP       = engine._compileRegexp(HELPER_SYNTAX)
   const HELPER_INNER_SYNTAX = '\\s*([\\w\\W]+?\\s*\\\([\\w\\W]+?\\\))\\s*\\|\\s*([^:]+?)\\s*(:\\s*([^\\|]+?))?$'
   const HELPER_INNER_REGEXP = engine._compileRegexp(HELPER_INNER_SYNTAX)
 

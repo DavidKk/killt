@@ -4,7 +4,7 @@ describe('Test in client', function () {
   let _ = oTemplate
 
   describe('It can compile templates', function () {
-    beforeEach(function() {
+    beforeEach(function () {
       _ = _.$divide({
         env       : _.ENV.UNITEST,
         noSyntax  : true,
@@ -13,7 +13,7 @@ describe('Test in client', function () {
       jasmine.Ajax.install()
     })
 
-    afterEach(function() {
+    afterEach(function () {
       jasmine.Ajax.uninstall()
       document.body.innerHTML = ''
     })
@@ -90,8 +90,8 @@ describe('Test in client', function () {
     })
   })
 
-  describe('It can compile nested templates.', function() {
-    beforeEach(function() {
+  describe('It can compile nested templates.', function () {
+    beforeEach(function () {
       _ = _.$divide({
         env: _.ENV.UNIT,
         noSyntax  : true
@@ -100,13 +100,13 @@ describe('Test in client', function () {
       jasmine.Ajax.install()
     })
 
-    afterEach(function() {
+    afterEach(function () {
       jasmine.Ajax.uninstall()
 
       document.body.innerHTML = ''
     })
 
-    it('should render the nested templates', function() {
+    it('should render the nested templates', function () {
       document.body.innerHTML =
           '<script id="templates/nested.html" type="template/text">'
         +   '<%# include("templates/nested/a.html", {'

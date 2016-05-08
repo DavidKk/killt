@@ -10,6 +10,7 @@ export default (grunt) => {
   grunt.loadNpmTasks('grunt-contrib-concat')
   grunt.loadNpmTasks('grunt-babel')
   grunt.loadNpmTasks('grunt-contrib-uglify')
+  grunt.loadNpmTasks('grunt-eslint')
   grunt.loadNpmTasks('grunt-contrib-watch')
   grunt.loadNpmTasks('grunt-karma')
 
@@ -66,6 +67,15 @@ export default (grunt) => {
       },
     },
 
+    eslint: {
+      options: {
+        configFile: '.eslintrc',
+      },
+      dest: [
+        'dist/es6/client/oTemplate.js'
+      ],
+    },
+
     jsdoc: {
       dist: {
         options: {
@@ -74,7 +84,7 @@ export default (grunt) => {
           template : 'node_modules/ink-docstrap/template',
           configure : 'node_modules/ink-docstrap/template/jsdoc.conf.json',
         },
-        src: ['src/*/*.js'],
+        src: ['src/**/*.js'],
       },
     },
 

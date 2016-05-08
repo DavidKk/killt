@@ -1,10 +1,10 @@
 extend(DEFAULTS, {
   /** open tag for syntax - 起始标识 */
-  openTag: '{{',
+  openTag   : '{{',
   /** close tag for syntax - 结束标识 */
-  closeTag: '}}',
+  closeTag  : '}}',
   /** close no syntax config - 关闭没有语法的配置项 */
-  noSyntax: false,
+  noSyntax  : false,
 })
 
 /**
@@ -28,7 +28,7 @@ class Syntax extends Engine {
    * @function
    * @param {string} source 模板
    * @param {Object} data 数据 (optional)，若数据不为 object 则设为默认配置数据
-   * @returns {string}
+   * @returns {string} 结果字符串
    * @description
    *
    * '<%= openTag %>hi<%= closeTag %>'
@@ -48,7 +48,7 @@ class Syntax extends Engine {
    * @function
    * @param {string} patternTemplate regexp 模板
    * @param {menu} attributes {igm}
-   * @returns {regexp}
+   * @returns {regexp} 结果正则
    * @description
    * '<%= openTag %>hi<%= closeTag %>'
    * if my defauts is { openTag: '{{', closeTag: '}}' }
@@ -66,7 +66,7 @@ class Syntax extends Engine {
    * @param {string} source 语法模板
    * @param {boolean} strict 是否为严格模式
    * @param {string} origin 原有的模板
-   * @return {string}
+   * @return {string} 结果字符串
    */
   _compileSyntax (source, strict = true, origin = source) {
     let matched = false
@@ -75,7 +75,7 @@ class Syntax extends Engine {
       let dress = source.replace(handle.syntax, handle.shell)
 
       if (dress !== source) {
-        source  = dress
+        source = dress
         matched = true
         return true
       }
@@ -106,7 +106,7 @@ class Syntax extends Engine {
    *                            若不为 false 编译时会验证语法正确性若不正确则返回空字符串;
    *                            若为 false 模式则会去除所有没有匹配到的语法,
    *                            默认为 true，除 false 之外所有均看成 true
-   * @return {string}
+   * @return {string}           结果字符串
    * @example
    *
    * Strict Mode
@@ -142,7 +142,8 @@ class Syntax extends Engine {
       // 逻辑代码块
       if (1 !== codes.length) {
         source = source.replace(`${conf.openTag}${codes[0]}${conf.closeTag}`, ($all) => {
-          return (valid = this._compileSyntax($all, strict, origin))
+          valid = this._compileSyntax($all, strict, origin)
+          return valid
         })
       }
 
@@ -189,7 +190,7 @@ class Syntax extends Engine {
     /**
      * 转义原生的语法标签
      * @param {string} source 模板
-     * @return {string}
+     * @return {string} 结果字符串
      */
     function escapeTags (source) {
       return source
@@ -202,7 +203,7 @@ class Syntax extends Engine {
    * 清除所有语法
    * @function
    * @param {string} source 语法模板
-   * @returns {string}
+   * @returns {string} 结果字符串
    */
   $clearSyntax (source) {
     let regexp = this._compileRegexp('<%= openTag %>(.*)?<%= closeTag %>', 'igm')
@@ -215,7 +216,7 @@ class Syntax extends Engine {
    * @param {string} name 语法名称
    * @param {string|array|object|regexp} syntax 语法正则 (请注意贪婪与贪婪模式)，当为 RegExp时，记得用 openTag 和 closeTag 包裹
    * @param {string|function} shell 元脚本, 当为 Function 时记得加上 `<%` 和 `%>` 包裹
-   * @returns {Syntax}
+   * @returns {Syntax} 模板引擎对象
    * @description
    * '(\\\w+)' will be compiled to /{{(\\\w+)}}/igm
    * but please use the non-greedy regex, and modify it to'(\\\w+)?'
@@ -253,7 +254,7 @@ class Syntax extends Engine {
    * 销毁语法
    * @function
    * @param {string} name 语法名称
-   * @returns {Syntax}
+   * @returns {Syntax} 模板引擎对象
    */
   $unregisterSyntax (name) {
     let blocks = this._blocks
@@ -269,9 +270,9 @@ class Syntax extends Engine {
   /**
    * 查询/设置块级辅助函数
    * @function
-   * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
+   * @param {string|Object} query 需要查找或设置的函数名|需要设置辅助函数集合
    * @param {function} callback 回调函数
-   * @returns {this|function}
+   * @returns {Syntax|function} 模板引擎对象或块级辅助函数
    * @description
    * 只有语法版本才拥有 block 这个概念，原生版本可以通过各种函数达到目的
    */
@@ -309,16 +310,16 @@ class Syntax extends Engine {
    * 注销块级辅助函数
    * @function
    * @param {string} name 名称
-   * @returns {Syntax}
+   * @returns {Syntax} 模板引擎自身
    */
   unblock (name) {
     let helpers = this._blockHelpers
     let blocks  = this._blocks
 
     if (helpers.hasOwnProperty(name)) {
-      helpers[name]           = undefined
-      blocks[`${name}open`]   = undefined
-      blocks[`${name}close`]  = undefined
+      helpers[name] = undefined
+      blocks[`${name}open`] = undefined
+      blocks[`${name}close`] = undefined
 
       delete helpers[name]
       delete blocks[`${name}open`]

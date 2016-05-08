@@ -25,16 +25,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   /**
    * 判断类型
    * @typedef {isType}
-   * @function
    * @param {*} value 需要判断的值
-   * @returns {boolean}
+   * @returns {boolean} 是否为该类型
    */
 
   /**
    * 判断对象是否为 type 类型
-   * @function
-   * @param {string} type
-   * @return {isType}
+   * @param {string} type 类型
+   * @return {isType} 判断类型函数
    */
   function is(type) {
     return function (value) {
@@ -80,10 +78,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 获取所在行
-   * @function
    * @param {string} string 需要查找的值
    * @param {number} position 编译
-   * @returns {number}
+   * @returns {number} 行数
    */
   function inline(string, position) {
     return (string.substr(0, position).match(/\n/g) || []).length + 1;
@@ -91,9 +88,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 去除空格
-   * @function
-   * @param {string} string
-   * @return {string}
+   * @param {string} string 字符串
+   * @return {string} 结果字符串
    */
   function trim(string) {
     return toString(string).replace(/^\s+|\s+$/, '');
@@ -101,7 +97,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 查找对象中的属性
-   * @function
    * @param {Object} object 获取的对象
    * @param {string} path 查找路径
    * @param {string} spliter 分隔符 (默认为 `.`)
@@ -133,9 +128,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 强制转化成字符串
-   * @function
    * @param {*} anything 传入的值
-   * @returns {string}
+   * @returns {string} 结果字符串
    */
   function toString(anything) {
     if (is('String')(anything)) {
@@ -143,7 +137,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }
 
     if (is('Number')(anything)) {
-      return anything += '';
+      anything += '';
+      return anything;
     }
 
     if (is('Function')(anything)) {
@@ -155,9 +150,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 转义标点符号
-   * @function
    * @param {string} string 需要转义的字符串
-   * @returns {string}
+   * @returns {string} 结果字符串
    */
   function escapeSymbol() {
     var string = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
@@ -167,9 +161,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 转义HTML字符
-   * @function
    * @param {string} string HTML字符
-   * @returns {string}
+   * @returns {string} 结果字符串
    */
   function escapeHTML(string) {
     return toString(string).replace(/&(?![\w#]+;)|[<>"']/g, function (name) {
@@ -190,7 +183,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 获取元素在数组中所在位置的键值
-   * @function
    * @param {array} array 数组
    * @param {*} value 要获取键值的元素
    * @returns {integer} 键值，不存在返回 -1;
@@ -198,29 +190,31 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   function indexOf(array, value) {
     if (Array.prototype.indexOf && is('Function')(array.indexOf)) {
       return array.indexOf(value);
-    } else {
-      for (function () {
-        var i = 0;
-        var l = array.length;
-      }(); i < l; i++) {
-        if (array[i] === value) {
-          return i;
-        }
-      }
-
-      return -1;
     }
+
+    for (function () {
+      var i = 0;
+      var l = array.length;
+    }(); i < l; i++) {
+      if (array[i] === value) {
+        return i;
+      }
+    }
+
+    return -1;
   }
 
   /**
    * inArray 增强版，获取数组中元素拥有与要查询元素相同的属性值的键值
-   * @function
+   * @param {Array} array 数组
    * @param {Object|integer} query 对象或数字(数字用于数组下标)
-   * @return {Integer}                  键值，不存在返回 -1;
+   * @param {string} propName 属性名
+   * @return {Integer} 键值，不存在返回 -1
    */
   function inArrayBy(array, query, propName) {
     var index = is('Object')(query) ? query[propName] : query;
 
+    /* eslint eqeqeq: 0 */
     for (function () {
       var i = 0;
       var l = array.length;
@@ -235,13 +229,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 遍历数组或对象
-   * @function
    * @param {Array|Object} collection 需要遍历的结合
    * @param {Function} callback 回调函数
    */
-  function forEach(collection) {
-    var callback = arguments.length <= 1 || arguments[1] === undefined ? new Function() : arguments[1];
-
+  function forEach(collection, callback) {
     if (is('Function')(callback)) {
       if (is('Array')(collection)) {
         if (Array.prototype.some) {
@@ -268,9 +259,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 数组去重
-   * @function
    * @param {Array} array 需要去重数组
-   * @return {Array}
+   * @return {Array} 结果数组
    */
   function unique(array) {
     var n = {};
@@ -289,16 +279,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 集合过滤
-   * @function
    * @param {Object|Array} collection 需要过滤的元素
    * @param {Function} callback 回调函数
-   * @returns {Object|Array}
+   * @returns {Object|Array} 结果数据或对象
    */
-  function filter(collection) {
-    var callback = arguments.length <= 1 || arguments[1] === undefined ? new Function() : arguments[1];
-
-    var isArr = is('Array')(collection),
-        res = isArr ? [] : {};
+  function filter(collection, callback) {
+    var isArr = is('Array')(collection);
+    var res = isArr ? [] : {};
 
     forEach(collection, function (val, key) {
       if (callback(val, key)) {
@@ -311,10 +298,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 合并数组或对象
-   * @function
    * @param {Array|Object} objectA 对象
    * @param {Array|Object} objectB 对象
-   * @param {Array|Object} ... 对象
    * @returns {Array|Object} objectA 第一个传入的对象
    */
   function extend() {
@@ -326,7 +311,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var paramB = args[1];
 
 
-    if (args.length > 2) {
+    if (2 < args.length) {
       paramA = extend(paramA, paramB);
 
       var next = Array.prototype.slice.call(args, 2);
@@ -350,10 +335,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 抛出异常
-   * @function
    * @param {string|Object} error 错误异常
+   * @return {string} 错误信息
    */
   function __throw(error) {
+    /* eslint no-console: 0 */
     var messages = [];
 
     if (is('Object')(error)) {
@@ -380,7 +366,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   /**
    * 伪渲染函数
-   * @function
    * @return {string} 空字符串
    */
   function __render() {
@@ -496,7 +481,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this.setting = extend(this.setting, options);
 
       // set any extensions - 设置扩展
-      if (is('Array')(extensions) && extensions.length > 0) {
+      if (is('Array')(extensions) && 0 < extensions.length) {
         forEach(extensions, function (extension) {
           _this.extends(extension);
         });
@@ -506,7 +491,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     /**
      * 获取当前配置
      * @param  {Object} options 配置
-     * @return {Object}         整合后的配置
+     * @return {Object} 整合后的配置
      */
 
 
@@ -558,7 +543,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         if (1 < arguments.length) {
           if (is('String')(query)) {
-            if (query === 'openTag' && query === '<%' || query === 'closeTag' && query === '%>') {
+            if ('openTag' === query && '<%' === query || 'closeTag' === query && '%>' === query) {
               return this;
             }
 
@@ -582,10 +567,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       /**
        * 编译脚本
-       * @function
        * @param {string} source 脚本模板
        * @param {Object} options 配置
-       * @returns {string}
+       * @return {string} 逻辑模板
        */
 
     }, {
@@ -609,9 +593,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         /**
          * 获取变量名
-         * @function
          * @param {string} source Shell
-         * @returns {Array}
+         * @return {Array} 变量名称集合
          */
         var getVariables = function getVariables(source) {
           var variables = source.replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '').replace(/[^\w$]+/g, ',').replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '').split(/^$|,+/);
@@ -623,9 +606,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         /**
          * 解析Source为JS字符串拼接
-         * @function
          * @param {string} source HTML
-         * @returns {string}
+         * @return {string} 非编译数据字符串
          */
         var sourceToJs = function sourceToJs(source) {
           var match = void 0;
@@ -647,9 +629,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         /**
          * 解析HTML为JS字符串拼接
-         * @function
          * @param {string} source HTML
-         * @returns {string}
+         * @return {string} HTML字符串
          */
         var htmlToJs = function htmlToJs(source) {
           if ('' === source.replace(/<!--[\w\W]*?-->/g, '').replace(/^ +$/, '')) {
@@ -675,9 +656,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         /**
          * 解析脚本为JS字符串拼接
-         * @function
          * @param {string} source JS shell
-         * @returns {string}
+         * @return {string} 逻辑字符串
          */
         var shellToJs = function shellToJs(source) {
           source = trim(source || '');
@@ -769,6 +749,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         });
 
         // use strict
+        /* eslint no-multi-spaces: 0 */
         buffer = 'try {' + '"use strict";' + 'var $scope=this,' + '$helpers=$scope.$helpers,' + '$blocks=$scope.$blocks,' + '$buffer="",' + '$runtime=0;' + buffer + 'return $buffer;' + '}' + 'catch(err) {' + 'throw {' + 'message: err.message,' + 'line: $runtime,' + ('shell: \'' + escapeSymbol(origin) + '\',') + 'args: arguments' + '};' + '}' + 'function $append(buffer) {' + '$buffer += buffer;' + '}';
 
         return buffer;
@@ -776,10 +757,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       /**
        * 编译模板为函数
-       * @function
        * @param {string} source 资源
        * @param {Object} options 编译配置 (optional)
-       * @returns {Function}
+       * @return {Function} 模板方法
        * @description
        *
        * Render and it's options will be cached together,
@@ -899,7 +879,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @function
        * @param {string} source 模板
        * @param {Object} options 配置
-       * @returns {Function}
+       * @return {Function} 模板方法
        * @description
        * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
        * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
@@ -932,7 +912,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @param {string} source 模板
        * @param {Object} data 数据 (optional)
        * @param {Object} options 配置 (optional)
-       * @returns {string}
+       * @return {string} 模板字符串
        */
 
     }, {
@@ -947,9 +927,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       /**
        * 查找/设置辅助函数
        * @function
-       * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
+       * @param {string|Object} query 需要查找或设置的函数名|需要设置辅助函数集合
        * @param {Function} callback 回调函数
-       * @returns {Engine|Function}
+       * @returns {Engine|Function} 模板引擎或辅助方法
        */
 
     }, {
@@ -978,7 +958,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * 注销辅助函数
        * @function
        * @param {string} name 名称
-       * @returns {Engine}
+       * @return {Engine} 模板引擎对象
        */
 
     }, {
@@ -997,7 +977,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @function
        * @param {string} type 监听类型
        * @param {Function} handle 监听函数
-       * @returns {Engine}
+       * @return {Engine} 模板引擎对象
        */
 
     }, {
@@ -1017,7 +997,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * 撤销监听事件
        * @function
        * @param {Function} handle 监听函数
-       * @returns {Engine}
+       * @return {Engine} 模板引擎本身
        */
 
     }, {
@@ -1034,7 +1014,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * 添加错误事件监听
        * @function
        * @param {Function} handle 监听函数
-       * @returns {OTempalte}
+       * @return {Engine} 模板引擎本身
        */
 
     }, {
@@ -1047,7 +1027,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * 扩展 Engine
        * @function
        * @param {Function} callback 回调
-       * @returns {Engine}
+       * @return {Engine} 模板引擎本身
        */
 
     }, {
@@ -1059,8 +1039,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       /**
        * 抛出错误
-       * @private
-       * @function
        * @param {Object} error 错误信息
        * @param {Object} options 配置 (optional)
        */
@@ -1068,14 +1046,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: '_throw',
       value: function _throw(error) {
+        var _this4 = this;
+
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
         var conf = this.options(options);
-        var message = ENV.UNITEST === conf.env && __throw(error);
 
-        forEach(this._listeners, function (listener) {
-          'error' === listener.type && listener.handle(error, message);
-        });
+        if (-1 === indexOf([ENV.UNITEST, ENV.PRODUCT], conf.env)) {
+          (function () {
+            var message = __throw(error);
+
+            forEach(_this4._listeners, function (listener) {
+              'error' === listener.type && listener.handle(error, message);
+            });
+          })();
+        }
       }
 
       /**
@@ -1084,14 +1069,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @function
        * @param {string} name 方法名称
        * @param {Function} render 渲染函数
-       * @returns {Function|Engine}
+       * @return {Function|Engine} 返回缓存的模板方法|当前对象
        */
 
     }, {
       key: '_cache',
       value: function _cache(name, render) {
         var caches = this._caches;
-        if (arguments.length > 1) {
+        if (1 < arguments.length) {
           caches[name] = render;
           return this;
         }
@@ -1103,13 +1088,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * add the line number to the string - 给每行开头添加序列号
        * @private
        * @function
-       * @param  {string} str 需要添加序列号的字符串
-       * @returns {string}
+       * @param {string} string 需要添加序列号的字符串
+       * @param {number} scope 显示范围
+       * @return {string} 错误信息
        */
 
     }, {
       key: '_table',
-      value: function _table(string, direction) {
+      value: function _table(string, scope) {
         var line = 0;
         var match = string.match(/([^\n]*)?\n|([^\n]+)$/g);
 
@@ -1122,16 +1108,34 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var end = max;
 
 
-        if (0 < direction && direction < max) {
-          start = direction - 3;
-          end = direction + 3;
+        if (0 < scope && scope < max) {
+          start = scope - 3;
+          end = scope + 3;
         }
+
+        /**
+         * Zeros - 补零
+         * @param {integer} num 需要补零的数字
+         * @param {integer} max 补零参考数字易为最大补零数字
+         * @param {string} zero 需要填补的 "零"
+         * @return {string} 补零后的字符串
+         */
+        var zeros = function zeros(num, max) {
+          var zero = arguments.length <= 2 || arguments[2] === undefined ? ' ' : arguments[2];
+
+          num = num.toString();
+          max = max.toString().replace(/\d/g, zero);
+
+          var res = max.split('');
+          res.splice(0 - num.length, num.length, num);
+          return res.join('');
+        };
 
         return string.replace(/([^\n]*)?\n|([^\n]+)$/g, function ($all) {
           ++line;
 
           if (start <= line && line <= end) {
-            if (line === direction) {
+            if (line === scope) {
               return '> ' + zeros(line, max) + '|' + $all;
             }
 
@@ -1140,25 +1144,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
           return '';
         });
-
-        /**
-         * Zeros - 补零
-         * @function
-         * @param {integer} num 需要补零的数字
-         * @param {integer} max 补零参考数字易为最大补零数字
-         * @param {string} zero 需要填补的 "零"
-         * @returns {string}
-         */
-        function zeros(num, max) {
-          var zero = arguments.length <= 2 || arguments[2] === undefined ? ' ' : arguments[2];
-
-          num = num.toString();
-          max = max.toString().replace(/\d/g, zero);
-
-          var res = max.split('');
-          res.splice(-num.length, num.length, num);
-          return res.join('');
-        }
       }
 
       /**
@@ -1172,7 +1157,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @param {string} options.openTag 语法的起始标识
        * @param {string} options.closeTag 语法的结束标识
        * @param {Array} options.depends 追加渲染器的传值设定
-       * @return {Engine}
+       * @return {Engine} 新的模板引擎对象
        */
 
     }, {
@@ -1188,12 +1173,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     }, {
       key: '$compileSyntax',
-
-
-      /**
-       * 编译语法
-       * @function
-       */
       value: function $compileSyntax() {
         throw new Error('Function `$compileSyntax` does not be implemented.');
       }
@@ -1206,8 +1185,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       /**
        * 扩展库
        * @function
-       * @param  {Function} _extends_ 扩展方法
-       * @return {Engine}
+       * @param  {Function} extension 扩展方法
+       * @return {Engine} 模板引擎本身
        */
 
     }], [{
@@ -1264,7 +1243,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @function
        * @param {string} source 模板
        * @param {Object} data 数据 (optional)，若数据不为 object 则设为默认配置数据
-       * @returns {string}
+       * @returns {string} 结果字符串
        * @description
        *
        * '<%= openTag %>hi<%= closeTag %>'
@@ -1284,7 +1263,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @function
        * @param {string} patternTemplate regexp 模板
        * @param {menu} attributes {igm}
-       * @returns {regexp}
+       * @returns {regexp} 结果正则
        * @description
        * '<%= openTag %>hi<%= closeTag %>'
        * if my defauts is { openTag: '{{', closeTag: '}}' }
@@ -1305,7 +1284,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @param {string} source 语法模板
        * @param {boolean} strict 是否为严格模式
        * @param {string} origin 原有的模板
-       * @return {string}
+       * @return {string} 结果字符串
        */
 
     }, {
@@ -1351,7 +1330,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        *                            若不为 false 编译时会验证语法正确性若不正确则返回空字符串;
        *                            若为 false 模式则会去除所有没有匹配到的语法,
        *                            默认为 true，除 false 之外所有均看成 true
-       * @return {string}
+       * @return {string}           结果字符串
        * @example
        *
        * Strict Mode
@@ -1369,7 +1348,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: '$compileSyntax',
       value: function $compileSyntax(source) {
-        var _this5 = this;
+        var _this6 = this;
 
         var strict = arguments.length <= 1 || arguments[1] === undefined ? true : arguments[1];
 
@@ -1394,7 +1373,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           // 逻辑代码块
           if (1 !== codes.length) {
             source = source.replace('' + conf.openTag + codes[0] + conf.closeTag, function ($all) {
-              return valid = _this5._compileSyntax($all, strict, origin);
+              valid = _this6._compileSyntax($all, strict, origin);
+              return valid;
             });
           }
 
@@ -1441,7 +1421,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         /**
          * 转义原生的语法标签
          * @param {string} source 模板
-         * @return {string}
+         * @return {string} 结果字符串
          */
         function escapeTags(source) {
           return source.replace(/<%/g, '&lt;%').replace(/%>/g, '%&gt;');
@@ -1452,7 +1432,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * 清除所有语法
        * @function
        * @param {string} source 语法模板
-       * @returns {string}
+       * @returns {string} 结果字符串
        */
 
     }, {
@@ -1468,7 +1448,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @param {string} name 语法名称
        * @param {string|array|object|regexp} syntax 语法正则 (请注意贪婪与贪婪模式)，当为 RegExp时，记得用 openTag 和 closeTag 包裹
        * @param {string|function} shell 元脚本, 当为 Function 时记得加上 `<%` 和 `%>` 包裹
-       * @returns {Syntax}
+       * @returns {Syntax} 模板引擎对象
        * @description
        * '(\\\w+)' will be compiled to /{{(\\\w+)}}/igm
        * but please use the non-greedy regex, and modify it to'(\\\w+)?'
@@ -1483,7 +1463,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: '$registerSyntax',
       value: function $registerSyntax(name, syntax, shell) {
-        var _this6 = this;
+        var _this7 = this;
 
         if (2 < arguments.length) {
           this._blocks[name] = {
@@ -1492,11 +1472,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           };
         } else if (is('PlainObject')(syntax)) {
           forEach(syntax, function (shell, syntax) {
-            _this6.$registerSyntax(name, syntax, shell);
+            _this7.$registerSyntax(name, syntax, shell);
           });
         } else if (is('Array')(syntax)) {
           forEach(syntax, function (compiler) {
-            is('String')(compiler.syntax) && (is('String')(compiler.shell) || is('Function')(compiler.shell)) && _this6.$registerSyntax(name, compiler.syntax, compiler.shell);
+            is('String')(compiler.syntax) && (is('String')(compiler.shell) || is('Function')(compiler.shell)) && _this7.$registerSyntax(name, compiler.syntax, compiler.shell);
           });
         }
 
@@ -1507,7 +1487,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * 销毁语法
        * @function
        * @param {string} name 语法名称
-       * @returns {Syntax}
+       * @returns {Syntax} 模板引擎对象
        */
 
     }, {
@@ -1526,9 +1506,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       /**
        * 查询/设置块级辅助函数
        * @function
-       * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
+       * @param {string|Object} query 需要查找或设置的函数名|需要设置辅助函数集合
        * @param {function} callback 回调函数
-       * @returns {this|function}
+       * @returns {Syntax|function} 模板引擎对象或块级辅助函数
        * @description
        * 只有语法版本才拥有 block 这个概念，原生版本可以通过各种函数达到目的
        */
@@ -1566,7 +1546,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * 注销块级辅助函数
        * @function
        * @param {string} name 名称
-       * @returns {Syntax}
+       * @returns {Syntax} 模板引擎自身
        */
 
     }, {
@@ -1615,22 +1595,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       // extends include func to support ajax request file
       // 扩展新的 include 支持 ajax
 
-      var _this7 = _possibleConstructorReturn(this, Object.getPrototypeOf(Client).call(this, options));
+      var _this8 = _possibleConstructorReturn(this, Object.getPrototypeOf(Client).call(this, options));
 
-      ~extend(_this7._helpers, {
+      ~extend(_this8._helpers, {
         include: function include(filename, data, options) {
-          return _this7.renderSync(filename, data, options);
+          return _this8.renderSync(filename, data, options);
         }
       });
-      return _this7;
+      return _this8;
     }
 
     /**
      * 编译模板
-     * @function
      * @param {string} source 模板
      * @param {Object} options 配置
-     * @returns {Function}
+     * @returns {Function} 模板函数
      * @description
      * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
      * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
@@ -1646,10 +1625,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       /**
        * 渲染模板
-       * @function
        * @param {string} source 模板
        * @param {Object} options 配置
-       * @returns {Function}
+       * @returns {string} 结果字符串
        * @description
        * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
        * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
@@ -1667,13 +1645,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @param {string} template 模板
        * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
        * @param {Object} options 配置
-       * @return {Function}
+       * @return {Function} 模板函数
        */
 
     }, {
       key: 'compile',
       value: function compile(template, callback) {
-        var _this8 = this;
+        var _this9 = this;
 
         var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
@@ -1693,7 +1671,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var render = true === conf.override ? undefined : this._cache(template);
 
         if (is('Function')(render)) {
-          return sync ? render : (callback(render), undefined);
+          if (sync) {
+            return render;
+          }
+
+          callback(render);
+          return;
         }
 
         var node = document.getElementById(template);
@@ -1712,7 +1695,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           // 主要用于确定需要导入的模板
 
           if (false === conf.noSyntax) {
-            source = _this8.$compileSyntax(source, conf.strict);
+            source = _this9.$compileSyntax(source, conf.strict);
           }
 
           // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
@@ -1731,33 +1714,33 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
           var total = dependencies.length;
 
-          var __exec = function __exec() {
-            0 >= --total && __return();
-          };
-
           var __return = function __return() {
-            render = _this8.$compile(origin);
-            _this8._cache(template, render);
+            render = _this9.$compile(origin);
+            _this9._cache(template, render);
             false === sync && callback(render);
             total = undefined;
           };
 
-          if (total > 0) {
+          var __exec = function __exec() {
+            0 >= --total && __return();
+          };
+
+          if (0 < total) {
             forEach(unique(dependencies), function (child) {
-              if (_this8._cache(child)) {
+              if (_this9._cache(child)) {
                 __exec();
               } else {
                 var childSource = findChildTemplate(child, origin);
 
                 if (childSource) {
-                  _this8.compileSource(childSource, {
+                  _this9.compileSource(childSource, {
                     filename: child,
                     override: !!conf.override
                   });
 
                   __exec();
                 } else {
-                  _this8.compile(child, __exec, conf);
+                  _this9.compile(child, __exec, conf);
                 }
               }
             });
@@ -1789,7 +1772,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @param {Object} data 数据
        * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
        * @param {Object} options 配置
-       * @return {string}
+       * @return {string} 结果字符串
        */
 
     }, {
@@ -1817,10 +1800,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       /**
        * 阻塞编译模板
-       * @function
-       * @param {string} templateId 模板ID
+       * @param {string} template 模板ID
        * @param {Object} options 配置 (optional)
-       * @returns {Function} 编译函数
+       * @return {Function} 编译函数
        */
 
     }, {
@@ -1832,10 +1814,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       /**
        * 阻塞渲染
-       * @function
        * @param {string} template 模板地址或ID
        * @param {Object} data 数据 (optional)
        * @param {Object} options 配置 (optional)
+       * @return {string} 结果字符串
        */
 
     }, {
@@ -1847,7 +1829,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       /**
        * 异步编译模板
-       * @function
        * @param {string} template 模板地址或ID
        * @param {Function} callback 回调函数
        * @param {Object} options 配置 (optional)
@@ -1862,11 +1843,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       /**
        * 异步渲染
-       * @function
        * @param {string} template 模板地址或ID
        * @param {Object} data 数据 (optional)
        * @param {Function} callback 回调函数
        * @param {Object} options 配置 (optional)
+       * @return {string} 结果字符串
        */
 
     }, {
@@ -1885,15 +1866,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       /**
        * 请求远程模板资源
-       * @function
        * @param {string} sourceUrl 远程资源地址
        * @param {Function} callback 回调函数
+       * @param {Object} options 配置
        */
 
     }, {
       key: 'getSourceByAjax',
       value: function getSourceByAjax(sourceUrl, callback) {
-        var _this9 = this;
+        var _this10 = this;
 
         var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
@@ -1906,7 +1887,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         xhr.onreadystatechange = function () {
           var status = this.status;
 
-          if (this.DONE === this.readyState && 200 <= status && status < 400) {
+          if (this.DONE === this.readyState && 200 <= status && 400 > status) {
             callback(this.responseText);
           }
         };
@@ -1915,10 +1896,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           var err = {
             message: '[Compile Template]: Request file ' + sourceUrl + ' some error occured.',
             filename: sourceUrl,
-            response: '[Reponse State]: ' + _this9.status
+            response: '[Reponse State]: ' + _this10.status
           };
 
-          _this9._throw(err);
+          _this10._throw(err);
           is('Function')(options.catch) && options.catch(err);
         };
 
@@ -1928,7 +1909,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             filename: sourceUrl
           };
 
-          _this9._throw(err);
+          _this10._throw(err);
           is('Function')(options.catch) && options.catch(err);
         };
 
@@ -1938,7 +1919,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             filename: sourceUrl
           };
 
-          _this9._throw(err);
+          _this10._throw(err);
           is('Function')(options.catch) && options.catch(err);
         };
 
@@ -1955,17 +1936,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    */
 
 
-  UMD('oTemplate', function () {
+  umd('oTemplate', function () {
     return new Client();
   }, root);
 
   /**
-   * UMD 模块定义
-   * @function
-   * @param {windows|global} root
-   * @param {Function} factory
+   * umd 模块定
+   * @param {string} name 名称
+   * @param {function} factory 工厂
+   * @param {windows|global} root 当前域
    */
-  function UMD(name, factory, root) {
+  function umd(name, factory, root) {
     var define = root.define;
     var module = factory(root);
 

@@ -113,7 +113,7 @@ class Engine {
     this.setting = extend(this.setting, options)
 
     // set any extensions - 设置扩展
-    if (is('Array')(extensions) && extensions.length > 0) {
+    if (is('Array')(extensions) && 0 < extensions.length) {
       forEach(extensions, (extension) => {
         this.extends(extension)
       })
@@ -123,7 +123,7 @@ class Engine {
   /**
    * 获取当前配置
    * @param  {Object} options 配置
-   * @return {Object}         整合后的配置
+   * @return {Object} 整合后的配置
    */
   options (...args) {
     return extend.apply({}, [{}, this.setting].concat(args))
@@ -139,7 +139,8 @@ class Engine {
   config (query, value) {
     if (1 < arguments.length) {
       if (is('String')(query)) {
-        if ((query === 'openTag' && query === '<%') || (query === 'closeTag' && query === '%>')) {
+        if ('openTag' === query && '<%' === query
+        || 'closeTag' === query && '%>' === query) {
           return this
         }
 
@@ -163,10 +164,9 @@ class Engine {
 
   /**
    * 编译脚本
-   * @function
    * @param {string} source 脚本模板
    * @param {Object} options 配置
-   * @returns {string}
+   * @return {string} 逻辑模板
    */
   $compileShell (source = '', options = {}) {
     let origin    = source
@@ -184,16 +184,15 @@ class Engine {
 
     /**
      * 获取变量名
-     * @function
      * @param {string} source Shell
-     * @returns {Array}
+     * @return {Array} 变量名称集合
      */
     let getVariables = (source) => {
       let variables = source
-          .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
-          .replace(/[^\w$]+/g, ',')
-          .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
-          .split(/^$|,+/)
+      .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
+      .replace(/[^\w$]+/g, ',')
+      .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
+      .split(/^$|,+/)
 
       return filter(variables, (variable) => {
         return -1 === KEYWORDS.indexOf(variable)
@@ -202,9 +201,8 @@ class Engine {
 
     /**
      * 解析Source为JS字符串拼接
-     * @function
      * @param {string} source HTML
-     * @returns {string}
+     * @return {string} 非编译数据字符串
      */
     let sourceToJs = (source) => {
       let match
@@ -226,9 +224,8 @@ class Engine {
 
     /**
      * 解析HTML为JS字符串拼接
-     * @function
      * @param {string} source HTML
-     * @returns {string}
+     * @return {string} HTML字符串
      */
     let htmlToJs = (source) => {
       if ('' === source.replace(/<!--[\w\W]*?-->/g, '').replace(/^ +$/, '')) {
@@ -261,9 +258,8 @@ class Engine {
 
     /**
      * 解析脚本为JS字符串拼接
-     * @function
      * @param {string} source JS shell
-     * @returns {string}
+     * @return {string} 逻辑字符串
      */
     let shellToJs = (source) => {
       source = trim(source || '')
@@ -324,7 +320,7 @@ class Engine {
     source = sourceToJs(source)
 
     // split logic and html
-    forEach(source.split('<%'), function(code) {
+    forEach(source.split('<%'), (code) => {
       code = code.split('%>')
 
       let [p1, p2] = [code[0], code[1]]
@@ -339,21 +335,22 @@ class Engine {
     })
 
     // define variables
-    forEach(unique(variables), function(name) {
+    forEach(unique(variables), (name) => {
       buffer = `var ${name}=$data.${name};${buffer}`
     })
 
     // define helpers
-    forEach(unique(helpers), function(name) {
+    forEach(unique(helpers), (name) => {
       buffer = `var ${name}=$helpers.${name};${buffer}`
     })
 
     // define block helpers
-    forEach(unique(blocks), function(name) {
+    forEach(unique(blocks), (name) => {
       buffer = `var ${name}=$blocks.${name};${buffer}`
     })
 
     // use strict
+    /* eslint no-multi-spaces: 0 */
     buffer = 'try {'
       +        '"use strict";'
       +        'var $scope=this,'
@@ -382,10 +379,9 @@ class Engine {
 
   /**
    * 编译模板为函数
-   * @function
    * @param {string} source 资源
    * @param {Object} options 编译配置 (optional)
-   * @returns {Function}
+   * @return {Function} 模板方法
    * @description
    *
    * Render and it's options will be cached together,
@@ -502,7 +498,7 @@ class Engine {
    * @function
    * @param {string} source 模板
    * @param {Object} options 配置
-   * @returns {Function}
+   * @return {Function} 模板方法
    * @description
    * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
    * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
@@ -530,7 +526,7 @@ class Engine {
    * @param {string} source 模板
    * @param {Object} data 数据 (optional)
    * @param {Object} options 配置 (optional)
-   * @returns {string}
+   * @return {string} 模板字符串
    */
   render (source, data = {}, options = {}) {
     return Engine.prototype.compile.call(this, source, options)(data)
@@ -539,9 +535,9 @@ class Engine {
   /**
    * 查找/设置辅助函数
    * @function
-   * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
+   * @param {string|Object} query 需要查找或设置的函数名|需要设置辅助函数集合
    * @param {Function} callback 回调函数
-   * @returns {Engine|Function}
+   * @returns {Engine|Function} 模板引擎或辅助方法
    */
   helper (query, callback) {
     if (1 < arguments.length) {
@@ -568,7 +564,7 @@ class Engine {
    * 注销辅助函数
    * @function
    * @param {string} name 名称
-   * @returns {Engine}
+   * @return {Engine} 模板引擎对象
    */
   unhelper (name) {
     let helpers = this._helpers
@@ -584,7 +580,7 @@ class Engine {
    * @function
    * @param {string} type 监听类型
    * @param {Function} handle 监听函数
-   * @returns {Engine}
+   * @return {Engine} 模板引擎对象
    */
   on (type, handle) {
     if (is('String')(type) && is('Function')(handle)) {
@@ -601,7 +597,7 @@ class Engine {
    * 撤销监听事件
    * @function
    * @param {Function} handle 监听函数
-   * @returns {Engine}
+   * @return {Engine} 模板引擎本身
    */
   off (handle) {
     if (is('Function')(handle)) {
@@ -616,7 +612,7 @@ class Engine {
    * 添加错误事件监听
    * @function
    * @param {Function} handle 监听函数
-   * @returns {OTempalte}
+   * @return {Engine} 模板引擎本身
    */
   onError (handle) {
     return this.on('error', handle)
@@ -626,7 +622,7 @@ class Engine {
    * 扩展 Engine
    * @function
    * @param {Function} callback 回调
-   * @returns {Engine}
+   * @return {Engine} 模板引擎本身
    */
   extends (callback) {
     callback.call(this, this)
@@ -635,18 +631,19 @@ class Engine {
 
   /**
    * 抛出错误
-   * @private
-   * @function
    * @param {Object} error 错误信息
    * @param {Object} options 配置 (optional)
    */
   _throw (error, options = {}) {
     let conf    = this.options(options)
-    let message = ENV.UNITEST === conf.env && __throw(error)
 
-    forEach(this._listeners, (listener) => {
-      'error' === listener.type && listener.handle(error, message)
-    })
+    if (-1 === indexOf([ENV.UNITEST, ENV.PRODUCT], conf.env)) {
+      let message = __throw(error)
+
+      forEach(this._listeners, (listener) => {
+        'error' === listener.type && listener.handle(error, message)
+      })
+    }
   }
 
   /**
@@ -655,11 +652,11 @@ class Engine {
    * @function
    * @param {string} name 方法名称
    * @param {Function} render 渲染函数
-   * @returns {Function|Engine}
+   * @return {Function|Engine} 返回缓存的模板方法|当前对象
    */
   _cache (name, render) {
     let caches = this._caches
-    if (arguments.length > 1) {
+    if (1 < arguments.length) {
       caches[name] = render
       return this
     }
@@ -671,10 +668,11 @@ class Engine {
    * add the line number to the string - 给每行开头添加序列号
    * @private
    * @function
-   * @param  {string} str 需要添加序列号的字符串
-   * @returns {string}
+   * @param {string} string 需要添加序列号的字符串
+   * @param {number} scope 显示范围
+   * @return {string} 错误信息
    */
-  _table (string, direction) {
+  _table (string, scope) {
     let line  = 0
     let match = string.match(/([^\n]*)?\n|([^\n]+)$/g)
 
@@ -685,16 +683,32 @@ class Engine {
     let max = match.length
     let [start, end] = [0, max]
 
-    if (0 < direction && direction < max) {
-      start = direction -3
-      end   = direction +3
+    if (0 < scope && scope < max) {
+      start = scope - 3
+      end   = scope + 3
+    }
+
+    /**
+     * Zeros - 补零
+     * @param {integer} num 需要补零的数字
+     * @param {integer} max 补零参考数字易为最大补零数字
+     * @param {string} zero 需要填补的 "零"
+     * @return {string} 补零后的字符串
+     */
+    let zeros = function (num, max, zero = ' ') {
+      num = num.toString()
+      max = max.toString().replace(/\d/g, zero)
+
+      let res = max.split('')
+      res.splice(0 - num.length, num.length, num)
+      return res.join('')
     }
 
     return string.replace(/([^\n]*)?\n|([^\n]+)$/g, ($all) => {
       ++ line
 
       if (start <= line && line <= end) {
-        if (line === direction) {
+        if (line === scope) {
           return `> ${zeros(line, max)}|${$all}`
         }
 
@@ -703,23 +717,6 @@ class Engine {
 
       return ''
     })
-
-    /**
-     * Zeros - 补零
-     * @function
-     * @param {integer} num 需要补零的数字
-     * @param {integer} max 补零参考数字易为最大补零数字
-     * @param {string} zero 需要填补的 "零"
-     * @returns {string}
-     */
-    function zeros (num, max, zero = ' ') {
-      num = num.toString()
-      max = max.toString().replace(/\d/g, zero)
-
-      let res = max.split('')
-      res.splice(- num.length, num.length, num)
-      return res.join('')
-    }
   }
 
   /**
@@ -733,7 +730,7 @@ class Engine {
    * @param {string} options.openTag 语法的起始标识
    * @param {string} options.closeTag 语法的结束标识
    * @param {Array} options.depends 追加渲染器的传值设定
-   * @return {Engine}
+   * @return {Engine} 新的模板引擎对象
    */
   $divide (options) {
     return new this.constructor(options)
@@ -750,18 +747,14 @@ class Engine {
   /**
    * 扩展库
    * @function
-   * @param  {Function} _extends_ 扩展方法
-   * @return {Engine}
+   * @param  {Function} extension 扩展方法
+   * @return {Engine} 模板引擎本身
    */
   static extend (extension) {
     is('Function')(extension) && extensions.push(extension)
     return this
   }
 
-  /**
-   * 编译语法
-   * @function
-   */
   $compileSyntax () {
     throw new Error('Function `$compileSyntax` does not be implemented.')
   }
