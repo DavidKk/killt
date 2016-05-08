@@ -10,16 +10,15 @@
  * @param {string} options.closeTag 语法的结束标识
  * @param {Array} options.depends 追加渲染器的传值设定
  */
-class Client extends Bone {
+class Client extends (Syntax || Engine) {
   constructor () {
-    let self = this
-    Bone.apply(this, arguments)
+    super()
 
     // extends include func to support ajax request file
     // 扩展新的 include 支持 ajax
     ~extend(this._helpers, {
-      include: function(filename, data, options) {
-        return self.renderSync(filename, data, options)
+      include (filename, data, options) {
+        return this.renderSync(filename, data, options)
       }
     })
   }
@@ -36,7 +35,7 @@ class Client extends Bone {
    * 时才能真正修改渲染器的配置
    */
   compileSource (source, options) {
-    return Bone.prototype.compile.apply(this, arguments)
+    return super.compile.apply(this, arguments)
   }
 
   /**
@@ -51,7 +50,7 @@ class Client extends Bone {
    * 时才能真正修改渲染器的配置
    */
   renderSource (source, options) {
-    return Bone.prototype.render.apply(this, arguments)
+    return super.render.apply(this, arguments)
   }
 
   /**
@@ -62,8 +61,8 @@ class Client extends Bone {
    * @return {Function}
    */
   compile (template, callback, options = {}) {
-    let conf = extend({}, this.DEFAULTS, options, { filename: template }),
-        sync = !!conf.sync
+    let conf = this.options(options, { filename: template })
+    let sync = !!conf.sync
 
     if (is('Object')(callback)) {
       return this.compile(template, null, callback)
@@ -75,27 +74,27 @@ class Client extends Bone {
 
     template = toString(template)
 
-    let self   = this,
-        render = true === conf.override ? undefined : this._cache(template)
+    let render = true === conf.override ? undefined : this._cache(template)
 
     if (is('Function')(render)) {
       return sync ? render : (callback(render), undefined)
     }
 
     let node = document.getElementById(template)
+
     if (node) {
       let source = node.innerHTML.replace(/^ *\n|\n *$/g, '')
       render = this.compileSource(source, conf)
       return sync ? render : (callback(render), undefined)
     }
 
-    this.getSourceByAjax(template, function (source) {
+    this.getSourceByAjax(template, (source) => {
       let [origin, dependencies] = [source, []]
 
       // source 经过这里会变得不纯正
       // 主要用于确定需要导入的模板
       if (false === conf.noSyntax) {
-        source = self.$compileSyntax(source, conf.strict)
+        source = this.$compileSyntax(source, conf.strict)
       }
 
       // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
@@ -111,27 +110,28 @@ class Client extends Bone {
       })
 
       let total = dependencies.length
+
       let __exec = function () {
         0 >= (-- total) && __return()
       }
 
       let __return = function () {
-        render = self.$compile(origin)
-        self._cache(template, render)
+        render = this.$compile(origin)
+        this._cache(template, render)
         false === sync && callback(render)
         total = undefined
       }
 
       if (total > 0) {
-        forEach(unique(dependencies), function (child) {
-          if (self._cache(child)) {
+        forEach(unique(dependencies), (child) => {
+          if (this._cache(child)) {
             __exec()
           }
           else {
             let childSource = findChildTemplate(child, origin)
 
             if (childSource) {
-              self.compileSource(childSource, {
+              this.compileSource(childSource, {
                 filename: child,
                 override: !!conf.override
               })
@@ -139,7 +139,7 @@ class Client extends Bone {
               __exec()
             }
             else {
-              self.compile(child, __exec, conf)
+              this.compile(child, __exec, conf)
             }
           }
         })
@@ -176,8 +176,8 @@ class Client extends Bone {
    * @return {string}
    */
   render (template, data, callback, options = {}) {
-    let conf = extend({}, this.DEFAULTS, options, { filename: template }),
-        sync = !!conf.sync
+    let conf = this.options(options, { filename: template })
+    let sync = !!conf.sync
 
     if (is('Object')(callback)) {
       let render = this.compile(template, null, extend(callback, { sync: true }))
@@ -188,7 +188,7 @@ class Client extends Bone {
       return
     }
 
-    this.compile(template, function(render) {
+    this.compile(template, (render) => {
       let source = render(data || {})
       callback(source)
     }, conf)
@@ -244,7 +244,7 @@ class Client extends Bone {
     }
 
     if (is('Function')(callback)) {
-      this.compileAsync(template, function(render) {
+      this.compileAsync(template, (render) => {
         callback(render(data || {}))
       }, options)
     }
@@ -261,43 +261,44 @@ class Client extends Bone {
       return
     }
 
-    let [self, xhr] = [this, new XMLHttpRequest]
+    let xhr = new XMLHttpRequest
 
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = () => {
       let status = this.status
+
       if (this.DONE === this.readyState && 200 <= status && status < 400) {
         callback(this.responseText)
       }
     }
 
-    xhr.onerror = function() {
+    xhr.onerror = () => {
       let err = {
         message   : `[Compile Template]: Request file ${sourceUrl} some error occured.`,
         filename  : sourceUrl,
         response  : `[Reponse State]: ${this.status}`
       }
 
-      self._throw(err)
+      this._throw(err)
       is('Function')(options.catch) && options.catch(err)
     }
 
-    xhr.ontimeout = function() {
+    xhr.ontimeout = () => {
       let err = {
         message   : `[Request Template]: Request template file ${sourceUrl} timeout.`,
         filename  : sourceUrl
       }
 
-      self._throw(err)
+      this._throw(err)
       is('Function')(options.catch) && options.catch(err)
     }
 
-    xhr.onabort = function() {
+    xhr.onabort = () => {
       let err = {
         message   : `[Request Template]: Bowswer absort the request.`,
         filename  : sourceUrl
       }
 
-      self._throw(err)
+      this._throw(err)
       is('Function')(options.catch) && options.catch(err)
     }
 
@@ -324,7 +325,7 @@ function UMD (name, factory, root) {
 
   // AMD & CMD
   if (is('Function')(define)) {
-    define(function () {
+    define(() => {
       return module
     })
   }

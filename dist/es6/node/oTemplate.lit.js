@@ -1,5 +1,4 @@
-~(function(root) {'use strict'
-/**
+~(function(root) {/**
  * current envirment - 配置环境
  * @type {Object}
  */
@@ -27,10 +26,6 @@ const DEFAULTS = {
   escape    : true,
   /** compress the html code - 压缩生成的HTML代码 */
   compress  : true,
-  /** open tag for syntax - 起始标识 */
-  openTag   : '{{',
-  /** close tag for syntax - 结束标识 */
-  closeTag  : '}}',
   /** addition render arguments (must be use `$` to define variable name) - 追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量) */
   depends   : [],
 };
@@ -39,6 +34,34 @@ const DEFAULTS = {
  * @type {Array}
  */
 let extensions = []
+
+const KEYWORDS = [
+  '$append',
+  '$blocks', '$buffer',
+  '$data',
+  '$helpers',
+  '$scope',
+  '$runtime',
+
+  'abstract', 'arguments',
+  'break', 'boolean', 'byte',
+  'case', 'catch', 'char', 'class', 'continue', 'console', 'const',
+  'debugger', 'default', 'delete', 'do', 'double',
+  'else', 'enum', 'export', 'extends',
+  'false', 'final', 'finally', 'float', 'for', 'function',
+  'goto',
+  'if', 'implements', 'import', 'in', 'instanceof', 'int', 'interface',
+  'let', 'long',
+  'native', 'new', 'null',
+  'package', 'private', 'protected', 'public',
+  'return',
+  'short', 'static', 'super', 'switch', 'synchronized',
+  'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof',
+  'undefined',
+  'var', 'void', 'volatile',
+  'while', 'with',
+  'yield'
+]
 
 /**
  * Base class for engine
@@ -52,98 +75,89 @@ let extensions = []
  * @param {string} options.closeTag 语法的结束标识
  * @param {Array} options.depends 追加渲染器的传值设定
  */
-class Bone {
+class Engine {
+  /**
+   * render caches - 编译器缓存
+   * @type {Object}
+   */
+  _caches = {}
+
+  /**
+   * block syntax - 块状语法
+   * @type {Object}
+   */
+  _blocks = {}
+
+  /**
+   * block helpers - 块状辅助函数
+   * @type {Object}
+   */
+  _blockHelpers = {}
+
+  /**
+   * source helpers - 资源辅助函数
+   * @type {Object}
+   */
+  _sourceHelpers = {}
+
+  /**
+   * helpers - 辅助函数
+   * @type {Object}
+   */
+  _helpers = {
+    $escape () {
+      return escapeHTML.apply(escapeHTML, arguments)
+    },
+
+    $noescape (string) {
+      return toString(string)
+    },
+
+    $toString (string, isEscape) {
+      string = toString(string)
+
+      return isEscape
+      ? this.$escape(string)
+      : string
+    },
+  }
+
+  /**
+   * event listener - 事件监听方法
+   * @type {Array}
+   */
+  _listeners = []
+
+  /**
+   * defualt config - 默认配置
+   * @type {Object}
+   */
+  setting = extend({}, DEFAULTS)
+
   /**
    * 构造函数
    * @function
    * @param {Object} options 配置 (optional)
    */
   constructor (options = {}) {
-    let self = this
-
-    /**
-     * render caches - 编译器缓存
-     * @type {Object}
-     */
-    this._caches = {}
-
-    /**
-     * block syntax - 块状语法
-     * @type {Object}
-     */
-    this._blocks = {}
-
-    /**
-     * block helpers - 块状辅助函数
-     * @type {Object}
-     */
-    this._blockHelpers = {}
-
-    /**
-     * source helpers - 资源辅助函数
-     * @type {Object}
-     */
-    this._sourceHelpers = {}
-
-    /**
-     * helpers - 辅助函数
-     * @type {Object}
-     */
-    this._helpers = {}
-
-    /**
-     * defualt config - 默认配置
-     * @type {Object}
-     */
-    this.DEFAULTS = {}
-
-    /**
-     * event listener - 事件监听方法
-     * @type {Array}
-     */
-    this._listeners = []
-
     // set the config - 设置配置
-    ~extend(this.DEFAULTS, DEFAULTS, options)
-
-    // set any helpers - 设置基础辅助函数
-    ~extend(this._helpers, {
-      $escape: function() {
-        return escapeHTML.apply(escapeHTML, arguments)
-      },
-      $noescape: function(string) {
-        return toString(string)
-      },
-      $toString: function(string, isEscape) {
-        string = toString(string)
-
-        let conf = self.DEFAULTS
-        return true === (is('Boolean')(isEscape) ? isEscape : conf.escape)
-          ? self.helper('$escape')(string)
-          : string
-      },
-      include: function(filename, data = {}, options = {}) {
-        let conf = self.DEFAULTS,
-            node = document.getElementById(filename)
-
-        if (node) {
-          self._throw({
-            message: `[Include Error]: Template ID ${filename} is not found.`
-          })
-
-          return ''
-        }
-
-        return self.render(node.innerHTML, data, options)
-      }
-    })
+    this.setting = extend(this.setting, options)
 
     // set any extensions - 设置扩展
     if (is('Array')(extensions) && extensions.length > 0) {
-      forEach(extensions, function(extension) {
-        self.extends(extension)
+      forEach(extensions, (extension) => {
+        this.extends(extension)
       })
     }
+  }
+
+  /**
+   * 获取当前配置
+   * @param  {Object} options 配置
+   * @return {Object}         整合后的配置
+   */
+  options (...args) {
+    return extend.apply({}, [{}, this.setting].concat(args))
   }
 
   /**
@@ -151,7 +165,7 @@ class Bone {
    * @function
    * @param {string|Object} query 设置/获取的配置值名称
    * @param {*} value 需要配置的值 (optional)
-   * @returns {Bone|*} 设置则返回 Bone,获取则返回相应的配置
+   * @returns {Engine|*} 设置则返回 Engine,获取则返回相应的配置
    */
   config (query, value) {
     if (1 < arguments.length) {
@@ -160,22 +174,21 @@ class Bone {
           return this
         }
 
-        this.DEFAULTS[query] = value
+        this.setting[query] = value
         return this
       }
     }
 
-    let self = this
     if (is('PlainObject')(query)) {
-      forEach(query, function(name, value) {
-        self.config(name, value)
+      forEach(query, (name, value) => {
+        this.config(name, value)
       })
 
       return this
     }
 
     if (is('String')(query)) {
-      return this.DEFAULTS[query]
+      return this.setting[query]
     }
   }
 
@@ -187,46 +200,18 @@ class Bone {
    * @returns {string}
    */
   $compileShell (source = '', options = {}) {
-    let origin    = source,
-        conf      = extend({}, this.DEFAULTS, options),
-        isEscape  = !!conf.escape,
-        strip     = !!conf.compress,
-        _helpers_ = this._helpers,
-        _blocks_  = this._blockHelpers,
-        _sources_ = this._sourceHelpers,
-        helpers   = [],
-        blocks    = [],
-        variables = [],
-        line      = 1,
-        buffer    = ''
-
-    const KEYWORDS = [
-      '$append',
-      '$blocks', '$buffer',
-      '$data',
-      '$helpers',
-      '$scope',
-      '$runtime',
-
-      'abstract', 'arguments',
-      'break', 'boolean', 'byte',
-      'case', 'catch', 'char', 'class', 'continue', 'console', 'const',
-      'debugger', 'default', 'delete', 'do', 'double',
-      'else', 'enum', 'export', 'extends',
-      'false', 'final', 'finally', 'float', 'for', 'function',
-      'goto',
-      'if', 'implements', 'import', 'in', 'instanceof', 'int', 'interface',
-      'let', 'long',
-      'native', 'new', 'null',
-      'package', 'private', 'protected', 'public',
-      'return',
-      'short', 'static', 'super', 'switch', 'synchronized',
-      'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof',
-      'undefined',
-      'var', 'void', 'volatile',
-      'while', 'with',
-      'yield'
-    ]
+    let origin    = source
+    let conf      = this.options(options)
+    let isEscape  = !!conf.escape
+    let strip     = !!conf.compress
+    let _helpers_ = this._helpers
+    let _blocks_  = this._blockHelpers
+    let _sources_ = this._sourceHelpers
+    let helpers   = []
+    let blocks    = []
+    let variables = []
+    let line      = 1
+    let buffer    = ''
 
     /**
      * 获取变量名
@@ -234,14 +219,14 @@ class Bone {
      * @param {string} source Shell
      * @returns {Array}
      */
-    let getVariables = function (source) {
+    let getVariables = (source) => {
       let variables = source
-            .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
-            .replace(/[^\w$]+/g, ',')
-            .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
-            .split(/^$|,+/)
+          .replace(/\\?\"([^\"])*\\?\"|\\?\'([^\'])*\\?\'|\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|\s*\.\s*[$\w\.]+/g, '')
+          .replace(/[^\w$]+/g, ',')
+          .replace(/^\d[^,]*|,\d[^,]*|^,+|,+$/g, '')
+          .split(/^$|,+/)
 
-      return filter(variables, function(variable) {
+      return filter(variables, (variable) => {
         return -1 === KEYWORDS.indexOf(variable)
       })
     }
@@ -252,17 +237,18 @@ class Bone {
      * @param {string} source HTML
      * @returns {string}
      */
-    let sourceToJs = function (source) {
+    let sourceToJs = (source) => {
       let match
+
       while (match = /<%source\\s*([\w\W]+?)?\\s*%>(.+?)<%\/source%>/igm.exec(source)) {
         let helperName = match[1]
         let str = match[2]
 
-        str = helperName && _sources_.hasOwnProperty(helperName)
-          ? _sources_[helperName](str)
-          : str
+        if (helperName && _sources_.hasOwnProperty(helperName)) {
+          str = _sources_[helperName](str)
+        }
 
-        str = `<%=unescape('${window.escape(str)}')%>`
+        str = `<%=unescape('${root.escape(str)}')%>`
         source = source.replace(match[0], str)
       }
 
@@ -275,23 +261,32 @@ class Bone {
      * @param {string} source HTML
      * @returns {string}
      */
-    let htmlToJs = function (source) {
+    let htmlToJs = (source) => {
       if ('' === source.replace(/<!--[\w\W]*?-->/g, '').replace(/^ +$/, '')) {
         return `$buffer+='${source}';`
       }
 
+      // Storage running line
       line += source.split(/\n/).length - 1
-      source = source.replace(/(["'\\])/g, '\\$1')
-      source = true === strip
-        ? source
-          .replace(/<!--[\w\W]*?-->/g, '')
-          .replace(/[\r\t\n]/g, '')
-          .replace(/ +/g, ' ')
-        : source
-          .replace(/\t/g, '\\t')
-          .replace(/\r/g, '\\r')
-          .replace(/\n/g, '\\n')
 
+      // encode
+      source = source.replace(/(["'\\])/g, '\\$1')
+
+      // check compress or not
+      if (true === strip) {
+        source = source
+        .replace(/<!--[\w\W]*?-->/g, '')
+        .replace(/[\r\t\n]/g, '')
+        .replace(/ +/g, ' ')
+      }
+      else {
+        source = source
+        .replace(/\t/g, '\\t')
+        .replace(/\r/g, '\\r')
+        .replace(/\n/g, '\\n')
+      }
+
+      // concat every block
       return `$buffer+='${source}';`
     }
 
@@ -301,11 +296,11 @@ class Bone {
      * @param {string} source JS shell
      * @returns {string}
      */
-    let shellToJs = function (source) {
+    let shellToJs = (source) => {
       source = trim(source || '')
 
       // analyze and define variables
-      forEach(getVariables(source), function(name) {
+      forEach(getVariables(source), (name) => {
         if (!name) {
           return
         }
@@ -330,7 +325,7 @@ class Bone {
 
       // echo
       if (/^=\s*[\w\W]+?\s*$/.exec(source)) {
-        source = `$buffer+=$helpers.$toString(${source.replace(/^=|;$/g, '')}, ${isEscape});`
+        source = `$buffer+=$helpers.$toString(${source.replace(/^=|;$/g, '')}, !!${isEscape});`
       }
       // no escape HTML code
       else if (/^#\s*[\w\W]+?\s*$/.exec(source)) {
@@ -342,8 +337,9 @@ class Bone {
       }
       // echo helper
       else if (/^\s*([\w\W]+)\s*\([^\)]*?\)\s*$/.exec(source)) {
-        source = `$buffer+=$helpers.$toString(${source}, ${isEscape});`
+        source = `$buffer+=$helpers.$toString(${source}, !!${isEscape});`
       }
+      // nothing to match
       else {
         source += ';'
       }
@@ -358,6 +354,7 @@ class Bone {
 
     source = sourceToJs(source)
 
+    // split logic and html
     forEach(source.split('<%'), function(code) {
       code = code.split('%>')
 
@@ -433,16 +430,76 @@ class Bone {
    * 可以设置 options.override 为 true 来覆盖
    */
   $compile (source = '', options = {}) {
-    let self    = this,
-        origin  = source,
-        conf    = extend({}, this.DEFAULTS, options),
-        strip   = !!conf.compress,
-        deps    = conf.depends,
-        _args_  = ['$data'].concat(deps),
-        args    = []
+    let origin  = source
+    let conf    = this.options(options)
+    let strip   = !!conf.compress
+    let deps    = conf.depends
+    let _args_  = ['$data'].concat(deps)
+    let args    = []
+
+    let buildRender = (scope) => {
+      let render
+
+      let __catch = (err) => {
+        let _err = {
+          message   : `[Exec Render]: ${err.message}`,
+          template  : options.filename,
+          line      : err.line,
+          source    : this._table(scope.$source, err.line),
+          shell     : this._table(err.shell, err.line),
+        }
+
+        forEach(_args_, (name, key) => {
+          _err[`arguments:${name}`] = err.args[key]
+        })
+
+        this._throw(_err)
+        return ''
+      }
+
+      try {
+        render = new Function(_args_.join(','), shell)
+      }
+      catch (err) {
+        this._throw({
+          message   : `[Compile Render]: ${err.message}`,
+          template  : options.filename,
+          line      : `Javascript syntax occur error, it can not find out the error line.`,
+          syntax    : this._table(origin),
+          source    : source,
+          shell     : shell
+        })
+
+        render = __render
+      }
+
+      if (false === strip) {
+        return (data) => {
+          try {
+            let source = render.apply(scope, [data].concat(args))
+            return source.replace(/<!--([\w\W]+?)-->/g, ($all, $1) => {
+              return `<!--${root.unescape($1)}-->`
+            })
+          }
+          catch (err) {
+            return __catch(err)
+          }
+        }
+      }
+      else {
+        return (data) => {
+          try {
+            return render.apply(scope, [data].concat(args))
+          }
+          catch (err) {
+            return __catch(err)
+          }
+        }
+      }
+    }
 
     // 获取需求的参数，除 data 之外
-    ~forEach(deps, function(name) {
+    ~forEach(deps, (name) => {
       if ('$' === name.charAt(0)) {
         name = name.replace('$', '')
         args.push(conf[name])
@@ -453,8 +510,8 @@ class Bone {
     })
 
     if (false === strip) {
-      source = source.replace(/<!--([\w\W]+?)-->/g, function($all, $1) {
-        return `<!--${window.escape($1)}-->`;
+      source = source.replace(/<!--([\w\W]+?)-->/g, ($all, $1) => {
+        return `<!--${root.escape($1)}-->`;
       })
     }
 
@@ -469,67 +526,6 @@ class Bone {
       $helpers  : this._helpers || {},
       $blocks   : this._blockHelpers || {}
     })
-
-    function buildRender (scope) {
-      let render
-
-      try {
-        render = new Function(_args_.join(','), shell)
-      }
-      catch (err) {
-        self._throw({
-          message   : `[Compile Render]: ${err.message}`,
-          template  : options.filename,
-          line      : `Javascript syntax occur error, it can not find out the error line.`,
-          syntax    : self._table(origin),
-          source    : source,
-          shell     : shell
-        })
-
-        render = __render
-      }
-
-      if (false === strip) {
-        return function(data) {
-          try {
-            let source = render.apply(scope, [data].concat(args))
-            return source.replace(/<!--([\w\W]+?)-->/g, function($all, $1) {
-              return `<!--${window.unescape($1)}-->`
-            })
-          }
-          catch (err) {
-            return __catch(err)
-          }
-        }
-      }
-      else {
-        return function(data) {
-          try {
-            return render.apply(scope, [data].concat(args))
-          }
-          catch (err) {
-            return __catch(err)
-          }
-        }
-      }
-
-      function __catch (err) {
-        let _err = {
-          message   : `[Exec Render]: ${err.message}`,
-          template  : options.filename,
-          line      : err.line,
-          source    : self._table(scope.$source, err.line),
-          shell     : self._table(err.shell, err.line),
-        }
-
-        forEach(_args_, function(name, key) {
-          _err[`arguments:${name}`] = err.args[key]
-        })
-
-        self._throw(_err)
-        return ''
-      }
-    }
   }
 
   /**
@@ -546,9 +542,9 @@ class Bone {
   compile (source, options = {}) {
     source = toString(source)
 
-    let conf     = extend({}, this.DEFAULTS, options),
-        filename = conf.filename,
-        render   = true === conf.override || this._cache(filename)
+    let conf     = this.options(options)
+    let filename = conf.filename
+    let render   = true === conf.override || this._cache(filename)
 
     if (is('Function')(render)) {
       return render
@@ -568,7 +564,7 @@ class Bone {
    * @returns {string}
    */
   render (source, data = {}, options = {}) {
-    return Bone.prototype.compile.call(this, source, options)(data)
+    return super.compile.call(this, source, options)(data)
   }
 
   /**
@@ -576,7 +572,7 @@ class Bone {
    * @function
    * @param {string|object} query 需要查找或设置的函数名|需要设置辅助函数集合
    * @param {Function} callback 回调函数
-   * @returns {Bone|Function}
+   * @returns {Engine|Function}
    */
   helper (query, callback) {
     if (1 < arguments.length) {
@@ -603,7 +599,7 @@ class Bone {
    * 注销辅助函数
    * @function
    * @param {string} name 名称
-   * @returns {Bone}
+   * @returns {Engine}
    */
   unhelper (name) {
     let helpers = this._helpers
@@ -619,13 +615,13 @@ class Bone {
    * @function
    * @param {string} type 监听类型
    * @param {Function} handle 监听函数
-   * @returns {Bone}
+   * @returns {Engine}
    */
   on (type, handle) {
     if (is('String')(type) && is('Function')(handle)) {
       this._listeners.push({
-        type: type,
-        handle: handle
+        type    : type,
+        handle  : handle,
       })
     }
 
@@ -636,12 +632,12 @@ class Bone {
    * 撤销监听事件
    * @function
    * @param {Function} handle 监听函数
-   * @returns {Bone}
+   * @returns {Engine}
    */
   off (handle) {
     if (is('Function')(handle)) {
       let index = inArrayBy(this._listeners, handle, 'handle')
-      -1 !== index && this._listeners.splice(index, 1)
+      ;-1 !== index && this._listeners.splice(index, 1)
     }
 
     return this
@@ -658,10 +654,10 @@ class Bone {
   }
 
   /**
-   * 扩展 Bone
+   * 扩展 Engine
    * @function
    * @param {Function} callback 回调
-   * @returns {Bone}
+   * @returns {Engine}
    */
   extends (callback) {
     callback.call(this, this)
@@ -676,10 +672,10 @@ class Bone {
    * @param {Object} options 配置 (optional)
    */
   _throw (error, options = {}) {
-    let conf    = extend({}, this.DEFAULTS, options),
-        message = -1 === indexOf([ENV.UNIT], conf.env) && __throw(error)
+    let conf    = this.options(options)
+    let message = -1 === indexOf([ENV.UNITEST], conf.env) && __throw(error)
 
-    forEach(this._listeners, function(listener) {
+    forEach(this._listeners, (listener) => {
       'error' === listener.type && listener.handle(error, message)
     })
   }
@@ -690,7 +686,7 @@ class Bone {
    * @function
    * @param {string} name 方法名称
    * @param {Function} render 渲染函数
-   * @returns {Function|Bone}
+   * @returns {Function|Engine}
    */
   _cache (name, render) {
     let caches = this._caches
@@ -710,22 +706,22 @@ class Bone {
    * @returns {string}
    */
   _table (string, direction) {
-    let line  = 0,
-        match = string.match(/([^\n]*)?\n|([^\n]+)$/g)
+    let line  = 0
+    let match = string.match(/([^\n]*)?\n|([^\n]+)$/g)
 
     if (!match) {
       return `> ${line}|${string}`
     }
 
-    let max = match.length,
-        [start, end] = [0, max]
+    let max = match.length
+    let [start, end] = [0, max]
 
     if (0 < direction && direction < max) {
       start = direction -3
       end   = direction +3
     }
 
-    return string.replace(/([^\n]*)?\n|([^\n]+)$/g, function ($all) {
+    return string.replace(/([^\n]*)?\n|([^\n]+)$/g, ($all) => {
       ++ line
 
       if (start <= line && line <= end) {
@@ -768,7 +764,7 @@ class Bone {
    * @param {string} options.openTag 语法的起始标识
    * @param {string} options.closeTag 语法的结束标识
    * @param {Array} options.depends 追加渲染器的传值设定
-   * @return {Bone}
+   * @return {Engine}
    */
   $divide (options) {
     return new this.constructor(options)
@@ -786,7 +782,7 @@ class Bone {
    * 扩展库
    * @function
    * @param  {Function} _extends_ 扩展方法
-   * @return {Bone}
+   * @return {Engine}
    */
   static extend (extension) {
     is('Function')(extension) && extensions.push(extension)
@@ -801,6 +797,15 @@ class Bone {
     throw new Error('Function `$compileSyntax` does not be implemented.')
   }
 };
+extend(DEFAULTS, {
+  /** open tag for syntax - 起始标识 */
+  openTag: '{{',
+  /** close tag for syntax - 结束标识 */
+  closeTag: '}}',
+  /** close no syntax config - 关闭没有语法的配置项 */
+  noSyntax: false,
+})
+
 /**
  * Syntax - 语法类
  * @class
@@ -816,7 +821,7 @@ class Bone {
  * 1. 正则表达式之间注意优先次序
  * 2. 注意贪婪模式与非贪婪模式的选择
  */
-class Syntax {
+class Syntax extends Engine {
   /**
    * 通过配置作为数据来替换模板
    * @function
@@ -830,9 +835,9 @@ class Syntax {
    * the result is '{{hi}}'
    */
   _compile (source, data) {
-    data = is('PlainObject')(data) ? data : this.DEFAULTS
+    data = is('PlainObject')(data) ? data : this.setting
 
-    return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, function (all, $1) {
+    return source.replace(/<%=\s*([^\s]+?)\s*%>/igm, (all, $1) => {
       return get(data, $1) || ''
     })
   }
@@ -865,8 +870,9 @@ class Syntax {
   _compileSyntax (source, strict = true, origin = source) {
     let matched = false
 
-    forEach(this._blocks, function (handle) {
+    forEach(this._blocks, (handle) => {
       let dress = source.replace(handle.syntax, handle.shell)
+
       if (dress !== source) {
         source = dress
         matched = true
@@ -877,8 +883,8 @@ class Syntax {
     // not match any syntax or helper
     // 语法错误，没有匹配到相关语法
     if (false === matched) {
-      let pos  = origin.search(source),
-          line = inline(origin, pos)
+      let pos  = origin.search(source)
+      let line = inline(origin, pos)
 
       this._throw({
         message : `[Syntax Error]: ${source} did not match any syntax in line ${line}.`,
@@ -914,11 +920,10 @@ class Syntax {
    * when strict equal false, it will return '<div></div>'
    */
   $compileSyntax (source, strict = true) {
-    let self    = this,
-        origin  = source,
-        conf    = this.DEFAULTS,
-        blocks  = this._blocks,
-        valid
+    let origin  = source
+    let conf    = this.options()
+    let blocks  = this._blocks
+    let valid
 
     source = escapeTags(source)
 
@@ -929,14 +934,14 @@ class Syntax {
      * split tags, because regexp may match all the string.
      * it can make every regexp match each string between tags(openTag & closeTag)
      */
-    forEach(source.split(conf.openTag), function(code) {
+    forEach(source.split(conf.openTag), (code) => {
       let codes = code.split(conf.closeTag)
 
       // logic code block
       // 逻辑代码块
       if (1 !== codes.length) {
-        source = source.replace(`${conf.openTag}${codes[0]}${conf.closeTag}`, function($all) {
-          return (valid = self._compileSyntax($all, strict, origin))
+        source = source.replace(`${conf.openTag}${codes[0]}${conf.closeTag}`, ($all) => {
+          return (valid = this._compileSyntax($all, strict, origin))
         })
       }
 
@@ -956,8 +961,8 @@ class Syntax {
 
     // error open or close tag
     // 语法错误，缺少闭合
-    let tagReg = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm'),
-        pos    = source.search(tagReg)
+    let tagReg = this._compileRegexp('<%= openTag %>|<%= closeTag %>', 'igm')
+    let pos    = source.search(tagReg)
 
     if (-1 !== pos) {
       // return empty string in static mode
@@ -987,8 +992,8 @@ class Syntax {
      */
     function escapeTags (source) {
       return source
-        .replace(/<%/g, '&lt;%')
-        .replace(/%>/g, '%&gt;')
+      .replace(/<%/g, '&lt;%')
+      .replace(/%>/g, '%&gt;')
     }
   }
 
@@ -1009,7 +1014,7 @@ class Syntax {
    * @param {string} name 语法名称
    * @param {string|array|object|regexp} syntax 语法正则 (请注意贪婪与贪婪模式)，当为 RegExp时，记得用 openTag 和 closeTag 包裹
    * @param {string|function} shell 元脚本, 当为 Function 时记得加上 `<%` 和 `%>` 包裹
-   * @returns {Bone}
+   * @returns {Syntax}
    * @description
    * '(\\\w+)' will be compiled to /{{(\\\w+)}}/igm
    * but please use the non-greedy regex, and modify it to'(\\\w+)?'
@@ -1021,8 +1026,6 @@ class Syntax {
    * 例如匹配 '{{aaa}}{{aaa}}' 的是否，贪婪匹配会将整个字符串匹配完成，而不是 '{{aaa}}'
    */
   $registerSyntax (name, syntax, shell) {
-    let self = this
-
     if (2 < arguments.length) {
       this._blocks[name] = {
         syntax  : is('RegExp')(syntax) ? syntax : this._compileRegexp(`<%= openTag %>${syntax}<%= closeTag %>`, 'igm'),
@@ -1030,14 +1033,14 @@ class Syntax {
       }
     }
     else if (is('PlainObject')(syntax)) {
-      forEach(syntax, function (shell, syntax) {
-        self.$registerSyntax(name, syntax, shell)
+      forEach(syntax, (shell, syntax) => {
+        this.$registerSyntax(name, syntax, shell)
       })
     }
     else if (is('Array')(syntax)) {
-      forEach(syntax, function (compiler) {
+      forEach(syntax, (compiler) => {
         is('String')(compiler.syntax)
-        && is('String')(compiler.shell) || is('Function')(compiler.shell)
+        && (is('String')(compiler.shell) || is('Function')(compiler.shell))
         && self.$registerSyntax(name, compiler.syntax, compiler.shell)
       })
     }
@@ -1049,11 +1052,13 @@ class Syntax {
    * 销毁语法
    * @function
    * @param {string} name 语法名称
-   * @returns {Bone}
+   * @returns {Syntax}
    */
   $unregisterSyntax (name) {
     let blocks = this._blocks
+
     if (blocks.hasOwnProperty(name)) {
+      blocks[name] = undefined
       delete blocks[name]
     }
 
@@ -1073,7 +1078,7 @@ class Syntax {
     if (1 < arguments.length) {
       if (is('String')(query) && is('Function')(callback)) {
         this
-        .$registerSyntax(`${query}open`, `(${query})\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*`, function ($all, $1, $2, $3, $4, $5) {
+        .$registerSyntax(`${query}open`, `(${query})\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*`, ($all, $1, $2, $3, $4, $5) => {
           return `<%${$1}($append, ${$2 ? $2 + ', ' : ''}function (${$5 || ''}) {'use strict';var $buffer='';%>`
         })
         .$registerSyntax(`${query}close`, `/${query}`, `return $buffer;});`)
@@ -1103,13 +1108,17 @@ class Syntax {
    * 注销块级辅助函数
    * @function
    * @param {string} name 名称
-   * @returns {Bone}
+   * @returns {Syntax}
    */
   unblock (name) {
-    let helpers = this._blockHelpers,
-        blocks  = this._blocks
+    let helpers = this._blockHelpers
+    let blocks  = this._blocks
 
     if (helpers.hasOwnProperty(name)) {
+      helpers[name]           = undefined
+      blocks[`${name}open`]   = undefined
+      blocks[`${name}close`]  = undefined
+
       delete helpers[name]
       delete blocks[`${name}open`]
       delete blocks[`${name}close`]
@@ -1117,23 +1126,14 @@ class Syntax {
 
     return this
   }
-}
-
-// close no syntax config
-// 关闭没有语法的配置项
-DEFAULTS.noSyntax = false
-
-// extends all method to Bone class
-// 扩展所有方法到 Bone 类中
-~extend(Bone.prototype, Syntax.prototype)
-;
+};
 let fs = require('fs')
 
 /**
  * 服务器接口类
  * @class
  */
-class oTemplate extends Bone {
+class Server {
   /**
    * 读取文件
    * @function
@@ -1247,7 +1247,7 @@ function get (object, path, spliter = '.') {
   }
 
   let [re, ns] = [object, path.split(spliter)]
-  for (let [i, l] = [0, ns.length]; i < l; i ++) {
+  for (let i = 0, l = ns.length; i < l; i ++) {
     if (is('Undefined')(re[ns[i]])) {
         return undefined
     }
@@ -1288,9 +1288,9 @@ function toString (anything) {
  */
 function escapeSymbol (string = '') {
   return string
-    .replace(/("|'|\\)/g, '\\$1')
-    .replace(/\r/g, '\\r')
-    .replace(/\n/g, '\\n')
+  .replace(/("|'|\\)/g, '\\$1')
+  .replace(/\r/g, '\\r')
+  .replace(/\n/g, '\\n')
 }
 
 /**
@@ -1300,20 +1300,20 @@ function escapeSymbol (string = '') {
  * @returns {string}
  */
 function escapeHTML (string) {
-  // escape sources
-  // 转义资源
-  let SOURCES = {
-    '<': '&lt;',
-    '>': '&gt;',
-    '&': '&amp;',
-    '"': '&quot;',
-    "'": '&#x27;',
-    '/': '&#x2f;'
-  }
-
   return toString(string).replace(/&(?![\w#]+;)|[<>"']/g, function(name) {
-    return SOURCES[name]
+    return escapeHTML.SOURCES[name]
   })
+}
+
+// escape sources
+// 转义资源
+escapeHTML.SOURCES = {
+  '<': '&lt;',
+  '>': '&gt;',
+  '&': '&amp;',
+  '"': '&quot;',
+  "'": '&#x27;',
+  '/': '&#x2f;'
 }
 
 /**
@@ -1501,4 +1501,4 @@ function __throw (error) {
  */
 function __render () {
   return ''
-}})(this);
+}})(window);

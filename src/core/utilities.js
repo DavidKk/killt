@@ -91,7 +91,7 @@ function get (object, path, spliter = '.') {
   }
 
   let [re, ns] = [object, path.split(spliter)]
-  for (let [i, l] = [0, ns.length]; i < l; i ++) {
+  for (let i = 0, l = ns.length; i < l; i ++) {
     if (is('Undefined')(re[ns[i]])) {
         return undefined
     }
@@ -132,9 +132,9 @@ function toString (anything) {
  */
 function escapeSymbol (string = '') {
   return string
-    .replace(/("|'|\\)/g, '\\$1')
-    .replace(/\r/g, '\\r')
-    .replace(/\n/g, '\\n')
+  .replace(/("|'|\\)/g, '\\$1')
+  .replace(/\r/g, '\\r')
+  .replace(/\n/g, '\\n')
 }
 
 /**
@@ -144,20 +144,20 @@ function escapeSymbol (string = '') {
  * @returns {string}
  */
 function escapeHTML (string) {
-  // escape sources
-  // 转义资源
-  let SOURCES = {
-    '<': '&lt;',
-    '>': '&gt;',
-    '&': '&amp;',
-    '"': '&quot;',
-    "'": '&#x27;',
-    '/': '&#x2f;'
-  }
-
   return toString(string).replace(/&(?![\w#]+;)|[<>"']/g, function(name) {
-    return SOURCES[name]
+    return escapeHTML.SOURCES[name]
   })
+}
+
+// escape sources
+// 转义资源
+escapeHTML.SOURCES = {
+  '<': '&lt;',
+  '>': '&gt;',
+  '&': '&amp;',
+  '"': '&quot;',
+  "'": '&#x27;',
+  '/': '&#x2f;'
 }
 
 /**

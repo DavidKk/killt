@@ -4,7 +4,7 @@ let fs = require('fs')
  * 服务器接口类
  * @class
  */
-class oTemplate extends Bone {
+class Server {
   /**
    * 读取文件
    * @function
