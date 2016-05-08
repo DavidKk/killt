@@ -9,7 +9,7 @@ killt is a light template engine for Javascript.
 ### Install
 
 ```
-bower install killt
+npm install killt
 ```
 
 ### Features
