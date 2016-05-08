@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Document</title>
-  <script src="dist/es5/client/oTemplate.js"></script>
+  <script src="dist/es5/client/killt.js"></script>
   <script id="template/index.html" type="text/template">
-    {{body, 'oTemplate' }}
+    {{body, 'killt' }}
       <p>Hello World</p>
     {{/body}}
 
@@ -19,13 +19,13 @@
   </script>
   <script>
     window.onload = function() {
-      var source = oTemplate.render('template/abc.html', { qwe: 123 }, {
+      var source = killt.render('template/abc.html', { qwe: 123 }, {
         compress: false
       })
 
       document.body.innerHTML = source;
 
-      // var render = oTemplate.renderAsync('template/abc.html', {title: 'qwe'}, function(render) {
+      // var render = killt.renderAsync('template/abc.html', {title: 'qwe'}, function(render) {
       //   console.log(render)
       // })
     }

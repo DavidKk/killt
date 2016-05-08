@@ -312,7 +312,7 @@ class Client extends (Syntax || Engine) {
 /**
  * Exports Module
  */
-umd('oTemplate', function () {
+umd('killt', function () {
   return new Client()
 }, root)
 

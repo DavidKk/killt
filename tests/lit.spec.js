@@ -1,7 +1,7 @@
 'use strict'
 
 describe('Test origin javascript syntax', function () {
-  let _ = oTemplate
+  let _ = killt
 
   describe('It can compile templates', function () {
     beforeEach(function () {

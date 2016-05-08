@@ -1,16 +1,16 @@
 {
-  "name": "oTemplate",
+  "name": "killt",
   "version": "1.0.4",
   "license": "MIT",
   "description": "Template engine for Javascript.",
-  "homepage": "https://github.com/DavidKk/oTemplate",
+  "homepage": "https://github.com/DavidKk/killt",
   "repository": {
     "type": "git",
-    "url": "git@github.com:DavidKk/oTemplate.git"
+    "url": "git@github.com:DavidKk/killt.git"
   },
   "author": "David Jones <qowera@qq.com>",
   "bugs": {
-    "url": "https://github.com/DavidKk/oTemplate/issues"
+    "url": "https://github.com/DavidKk/killt/issues"
   },
   "engines": {
     "node": ">= 0.11.12"
@@ -38,7 +38,7 @@
   },
   "autoupdate": {
     "source": "git",
-    "target": "git@github.com:DavidKk/oTemplate.git",
+    "target": "git@github.com:DavidKk/killt.git",
     "basePath": ""
   }
 }

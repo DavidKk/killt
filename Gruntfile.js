@@ -71,7 +71,7 @@ export default (grunt) => {
         configFile: '.eslintrc',
       },
       dest: [
-        'dist/es6/client/oTemplate.js'
+        'dist/es6/client/killt.js'
       ],
     },
 

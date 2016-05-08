@@ -1,7 +1,7 @@
 'use strict'
 
 describe('Test in client', function () {
-  let _ = oTemplate
+  let _ = killt
 
   describe('It can compile templates', function () {
     beforeEach(function () {
