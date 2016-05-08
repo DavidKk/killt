@@ -1,5 +1,7 @@
 'use strict';
 
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -1560,6 +1562,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     return Syntax;
   }(Engine);
 
+  var path = require('path');
   var fs = require('fs');
 
   /**
@@ -1570,14 +1573,250 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   var Server = function (_ref) {
     _inherits(Server, _ref);
 
-    function Server() {
+    function Server(options) {
       _classCallCheck(this, Server);
 
-      return _possibleConstructorReturn(this, Object.getPrototypeOf(Server).apply(this, arguments));
+      // extends include func to support ajax request file
+      // 扩展新的 include 支持 ajax
+
+      var _this8 = _possibleConstructorReturn(this, Object.getPrototypeOf(Server).call(this, options));
+
+      ~extend(_this8._helpers, {
+        include: function include(filename, data, options) {
+          return _this8.renderSync(filename, data, options);
+        }
+      });
+      return _this8;
     }
 
+    /**
+     * 编译模板
+     * @param {string} source 模板
+     * @param {Object} options 配置
+     * @returns {Function} 模板函数
+     * @description
+     * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
+     * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
+     * 时才能真正修改渲染器的配置
+     */
+
+
     _createClass(Server, [{
-      key: 'readFile',
+      key: 'compileSource',
+      value: function compileSource(source, options) {
+        return _get(Object.getPrototypeOf(Server.prototype), 'compile', this).call(this, source, options);
+      }
+
+      /**
+       * 渲染模板
+       * @param {string} source 模板
+       * @param {Object} data 数据
+       * @param {Object} options 配置
+       * @returns {string} 结果字符串
+       * @description
+       * 当渲染器已经被缓存的情况下，options 除 override 外的所有属性均不会
+       * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
+       * 时才能真正修改渲染器的配置
+       */
+
+    }, {
+      key: 'renderSource',
+      value: function renderSource(source, data, options) {
+        return _get(Object.getPrototypeOf(Server.prototype), 'render', this).call(this, source, data, options);
+      }
+
+      /**
+       * 编译模板
+       * @param {string} template 模板
+       * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
+       * @param {Object} options 配置
+       * @return {Function} 模板函数
+       */
+
+    }, {
+      key: 'compile',
+      value: function compile(template, callback) {
+        var _this9 = this;
+
+        var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+        var conf = this.options(options, { filename: template });
+        var sync = !!conf.sync;
+
+        if (is('Object')(callback)) {
+          return this.compile(template, null, callback);
+        }
+
+        if (false === sync && !is('Function')(callback)) {
+          return;
+        }
+
+        template = toString(template);
+
+        var render = true === conf.override ? undefined : this._cache(template);
+
+        if (is('Function')(render)) {
+          if (sync) {
+            return render;
+          }
+
+          callback(render);
+          return;
+        }
+
+        this.getSourceByFile(template, function (source) {
+          var origin = source;
+          var dependencies = [];
+
+          // source 经过这里会变得不纯正
+          // 主要用于确定需要导入的模板
+
+          if (false === conf.noSyntax) {
+            source = _this9.$compileSyntax(source, conf.strict);
+          }
+
+          // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
+          forEach(source.split('<%'), function (code) {
+            var _ref2 = [code.split('%>')];
+            var codes = _ref2[0];
+            var match = _ref2[1];
+
+            // logic block is fist part when `codes.length === 2`
+            // 逻辑模块
+
+            if (1 !== codes.length && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
+              dependencies.push(match[1].replace(/[\'\"\`]/g, ''));
+            }
+          });
+
+          var total = dependencies.length;
+
+          var __return = function __return() {
+            render = _this9.$compile(origin);
+            _this9._cache(template, render);
+            false === sync && callback(render);
+            total = undefined;
+          };
+
+          var __exec = function __exec() {
+            0 >= --total && __return();
+          };
+
+          if (0 < total) {
+            forEach(unique(dependencies), function (child) {
+              if (_this9._cache(child)) {
+                __exec();
+              } else {
+                _this9.compile(child, __exec, conf);
+              }
+            });
+          } else {
+            __return();
+          }
+        }, {
+          sync: sync
+        });
+
+        return render;
+      }
+
+      /**
+       * 渲染模板
+       * @param {string} template 模板
+       * @param {Object} data 数据
+       * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
+       * @param {Object} options 配置
+       * @return {string} 结果字符串
+       */
+
+    }, {
+      key: 'render',
+      value: function render(template, data, callback) {
+        var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+
+        var conf = this.options(options, { filename: template });
+        var sync = !!conf.sync;
+
+        if (is('Object')(callback)) {
+          var render = this.compile(template, null, extend(callback, { sync: true }));
+          return render(data || {});
+        }
+
+        if (false === sync && !is('Function')(callback)) {
+          return;
+        }
+
+        this.compile(template, function (render) {
+          var source = render(data || {});
+          callback(source);
+        }, conf);
+      }
+
+      /**
+       * 阻塞编译模板
+       * @param {string} template 模板ID
+       * @param {Object} options 配置 (optional)
+       * @return {Function} 编译函数
+       */
+
+    }, {
+      key: 'compileSync',
+      value: function compileSync(template, options) {
+        var conf = extend({}, options, { sync: true });
+        return this.compile(template, null, conf);
+      }
+
+      /**
+       * 阻塞渲染
+       * @param {string} template 模板地址或ID
+       * @param {Object} data 数据 (optional)
+       * @param {Object} options 配置 (optional)
+       * @return {string} 结果字符串
+       */
+
+    }, {
+      key: 'renderSync',
+      value: function renderSync(template, data, options) {
+        var render = this.compileSync(template, options);
+        return render(data || {});
+      }
+
+      /**
+       * 异步编译模板
+       * @param {string} template 模板地址或ID
+       * @param {Function} callback 回调函数
+       * @param {Object} options 配置 (optional)
+       */
+
+    }, {
+      key: 'compileAsync',
+      value: function compileAsync(template, callback, options) {
+        var conf = extend({}, options, { sync: false });
+        this.compile(template, callback, conf);
+      }
+
+      /**
+       * 异步渲染
+       * @param {string} template 模板地址或ID
+       * @param {Object} data 数据 (optional)
+       * @param {Function} callback 回调函数
+       * @param {Object} options 配置 (optional)
+       * @return {string} 结果字符串
+       */
+
+    }, {
+      key: 'renderAsync',
+      value: function renderAsync(template, data, callback, options) {
+        if (is('Function')(data)) {
+          return this.renderAsync(template, {}, data, callback);
+        }
+
+        if (is('Function')(callback)) {
+          this.compileAsync(template, function (render) {
+            callback(render(data || {}));
+          }, options);
+        }
+      }
 
       /**
        * 读取文件
@@ -1585,10 +1824,48 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @param  {String}   filename 文件名
        * @param  {Function} callback 回调函数
        */
-      value: function readFile(filename, callback) {
-        if (is('Function')(callback)) {
-          fs.readFile(filename, function (err, buffer) {
-            callback(buffer.toString());
+
+    }, {
+      key: 'getSourceByFile',
+      value: function getSourceByFile(filename, callback) {
+        var _this10 = this;
+
+        var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+        if (!is('Function')(callback)) {
+          return;
+        }
+
+        if (true === options.sync) {
+          try {
+            var buffer = fs.readFileSync(filename, options.encoding || 'utf-8');
+            var source = buffer.toString('utf-8');
+            callback(source);
+          } catch (err) {
+            var error = {
+              message: '[Compile Template]: Request file ' + filename + ' some error occured.',
+              filename: filename,
+              origin: err
+            };
+
+            this._throw(error);
+            return;
+          }
+        } else {
+          fs.readFile(filename, options.encoding || 'utf-8', function (err, buffer) {
+            if (err) {
+              var _error = {
+                message: '[Compile Template]: Request file ' + filename + ' some error occured.',
+                filename: filename,
+                origin: err
+              };
+
+              _this10._throw(_error);
+              return;
+            }
+
+            var source = buffer.toString('utf-8');
+            callback(source);
           });
         }
       }

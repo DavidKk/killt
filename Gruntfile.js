@@ -11,8 +11,8 @@ export default (grunt) => {
   grunt.loadNpmTasks('grunt-babel')
   grunt.loadNpmTasks('grunt-contrib-uglify')
   grunt.loadNpmTasks('grunt-eslint')
-  grunt.loadNpmTasks('grunt-contrib-watch')
   grunt.loadNpmTasks('grunt-karma')
+  grunt.loadNpmTasks('grunt-contrib-watch')
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -60,12 +60,6 @@ export default (grunt) => {
       }
     },
 
-    karma: {
-      unit: {
-        configFile: 'karma.conf.js',
-      },
-    },
-
     eslint: {
       options: {
         configFile: '.eslintrc',
@@ -73,6 +67,12 @@ export default (grunt) => {
       dest: [
         'dist/es6/client/killt.js'
       ],
+    },
+
+    karma: {
+      unitest: {
+        configFile: 'karma.conf.js',
+      },
     },
 
     watch: {
