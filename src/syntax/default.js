@@ -14,7 +14,7 @@ Engine.extend((engine) => {
    */
   .$registerSyntax('helper', HELPER_SYNTAX, (function () {
     return function ($all, $1, $2, $3, $4, $5) {
-      let str = format.apply(engine, arguments)
+      let str = format($all, $1, $2, $3, $4, $5)
 
       // 这里需要递推所有的辅助函数
       while (HELPER_INNER_REGEXP.exec(str)) {

@@ -34,12 +34,13 @@ class Client extends (Syntax || Engine) {
    * 时才能真正修改渲染器的配置
    */
   compileSource (source, options) {
-    return super.compile.apply(this, arguments)
+    return super.compile.call(this, source, options)
   }
 
   /**
    * 渲染模板
    * @param {string} source 模板
+   * @param {Object} data 数据
    * @param {Object} options 配置
    * @returns {string} 结果字符串
    * @description
@@ -47,8 +48,8 @@ class Client extends (Syntax || Engine) {
    * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
    * 时才能真正修改渲染器的配置
    */
-  renderSource (source, options) {
-    return super.render.apply(this, arguments)
+  renderSource (source, data, options) {
+    return super.render.call(this, source, data, options)
   }
 
   /**

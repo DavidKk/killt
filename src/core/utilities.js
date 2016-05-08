@@ -145,12 +145,12 @@ function escapeHTML (string) {
 // escape sources
 // 转义资源
 escapeHTML.SOURCES = {
-  '<' : '&lt;',
-  '>' : '&gt;',
-  '&' : '&amp;',
-  '"' : '&quot;',
-  "'" : '&#x27;',
-  '/' : '&#x2f;'
+  '<'   : '&lt;',
+  '>'   : '&gt;',
+  '&'   : '&amp;',
+  '"'   : '&quot;',
+  '\''  : '&#x27;',
+  '/'   : '&#x2f;'
 }
 
 /**

@@ -27,9 +27,8 @@ export default (grunt) => {
 
     concat: {
       options: {
-        separator: ';\n',
-        banner: '~(function(root) {',
-        footer: '})(window);',
+        banner: `~(function (root) {\n'use strict'\n`,
+        footer: `\n})('undefined' === typeof global ? 'undefined' === typeof window ? {} : window : global)`,
       },
     },
 
@@ -134,7 +133,6 @@ export default (grunt) => {
       grunt.config(`concat.${vendorName}@lit`, {
         dest: `<%= es6Path %>${vendorName}/<%= pkg.name %>.lit.js`,
         src: [
-          'src/core/root.js',
           'src/core/utilities.js',
           'src/core/conf.js',
           'src/core/engine.js',
@@ -152,7 +150,6 @@ export default (grunt) => {
           grunt.config(`concat.${taskName}`, {
             dest: `<%= es6Path %>${vendorName}/${fileName}.js`,
             src: [
-              'src/core/root.js',
               'src/core/utilities.js',
               'src/core/conf.js',
               'src/core/engine.js',
@@ -170,6 +167,6 @@ export default (grunt) => {
 
   grunt.registerTask('develop', ['clean', 'scripts', 'watch'])
   grunt.registerTask('release', ['clean', 'scripts', 'unitest'])
-  grunt.registerTask('unitest', ['karma'])
+  grunt.registerTask('unitest', ['eslint', 'karma'])
   grunt.registerTask('default', ['release'])
 }

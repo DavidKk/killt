@@ -11,17 +11,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 ~function (root) {
-  if ('undefined' === typeof root) {
-    var root;
-
-    if ('undefined' !== typeof global) {
-      root = global;
-    } else if ('undefined' !== typeof window) {
-      root = window;
-    } else {
-      root = {};
-    }
-  };
+  'use strict';
   /**
    * 判断类型
    * @typedef {isType}
@@ -34,6 +24,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    * @param {string} type 类型
    * @return {isType} 判断类型函数
    */
+
   function is(type) {
     return function (value) {
       switch (type) {
@@ -177,7 +168,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     '>': '&gt;',
     '&': '&amp;',
     '"': '&quot;',
-    "'": '&#x27;',
+    '\'': '&#x27;',
     '/': '&#x2f;'
   };
 
@@ -370,7 +361,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    */
   function __render() {
     return '';
-  };
+  }
 
   /**
    * current envirment - 配置环境
@@ -788,6 +779,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var _args_ = ['$data'].concat(deps);
         var args = [];
 
+        // 获取需求的参数，除 data 之外
+        ~forEach(deps, function (name) {
+          if ('$' === name.charAt(0)) {
+            name = name.replace('$', '');
+            args.push(conf[name]);
+          } else {
+            args.push(undefined);
+          }
+        });
+
+        if (false === strip) {
+          source = source.replace(/<!--([\w\W]+?)-->/g, function ($all, $1) {
+            return '<!--' + root.escape($1) + '-->';
+          });
+        }
+
+        if (true !== conf.noSyntax) {
+          source = this.$compileSyntax(source, !!conf.strict);
+        }
+
+        var shell = this.$compileShell(source, conf);
+
         var buildRender = function buildRender(scope) {
           var render = void 0;
 
@@ -809,6 +822,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           };
 
           try {
+            /* eslint no-new-func: 0 */
             render = new Function(_args_.join(','), shell);
           } catch (err) {
             _this3._throw({
@@ -834,38 +848,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return __catch(err);
               }
             };
-          } else {
-            return function (data) {
-              try {
-                return render.apply(scope, [data].concat(args));
-              } catch (err) {
-                return __catch(err);
-              }
-            };
           }
+
+          return function (data) {
+            try {
+              return render.apply(scope, [data].concat(args));
+            } catch (err) {
+              return __catch(err);
+            }
+          };
         };
-
-        // 获取需求的参数，除 data 之外
-        ~forEach(deps, function (name) {
-          if ('$' === name.charAt(0)) {
-            name = name.replace('$', '');
-            args.push(conf[name]);
-          } else {
-            args.push(undefined);
-          }
-        });
-
-        if (false === strip) {
-          source = source.replace(/<!--([\w\W]+?)-->/g, function ($all, $1) {
-            return '<!--' + root.escape($1) + '-->';
-          });
-        }
-
-        if (true !== conf.noSyntax) {
-          source = this.$compileSyntax(source, !!conf.strict);
-        }
-
-        var shell = this.$compileShell(source, conf);
 
         return buildRender({
           $source: origin,
@@ -1200,7 +1192,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     return Engine;
   }();
 
-  ;
   extend(DEFAULTS, {
     /** open tag for syntax - 起始标识 */
     openTag: '{{',
@@ -1354,7 +1345,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         var origin = source;
         var conf = this.options();
-        var blocks = this._blocks;
         var valid = void 0;
 
         source = escapeTags(source);
@@ -1571,8 +1561,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     return Syntax;
   }(Engine);
-
-  ;
   /**
    * 浏览器接口类
    * @class
@@ -1585,6 +1573,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    * @param {string} options.closeTag 语法的结束标识
    * @param {Array} options.depends 追加渲染器的传值设定
    */
+
 
   var Client = function (_ref) {
     _inherits(Client, _ref);
@@ -1620,12 +1609,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     _createClass(Client, [{
       key: 'compileSource',
       value: function compileSource(source, options) {
-        return _get(Object.getPrototypeOf(Client.prototype), 'compile', this).apply(this, arguments);
+        return _get(Object.getPrototypeOf(Client.prototype), 'compile', this).call(this, source, options);
       }
 
       /**
        * 渲染模板
        * @param {string} source 模板
+       * @param {Object} data 数据
        * @param {Object} options 配置
        * @returns {string} 结果字符串
        * @description
@@ -1636,8 +1626,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     }, {
       key: 'renderSource',
-      value: function renderSource(source, options) {
-        return _get(Object.getPrototypeOf(Client.prototype), 'render', this).apply(this, arguments);
+      value: function renderSource(source, data, options) {
+        return _get(Object.getPrototypeOf(Client.prototype), 'render', this).call(this, source, data, options);
       }
 
       /**
@@ -1962,4 +1952,4 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         root[name] = module;
       }
   }
-}(window);
+}('undefined' === typeof global ? 'undefined' === typeof window ? {} : window : global);

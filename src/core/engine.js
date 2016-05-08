@@ -402,6 +402,29 @@ class Engine {
     let _args_  = ['$data'].concat(deps)
     let args    = []
 
+    // 获取需求的参数，除 data 之外
+    ~forEach(deps, (name) => {
+      if ('$' === name.charAt(0)) {
+        name = name.replace('$', '')
+        args.push(conf[name])
+      }
+      else {
+        args.push(undefined)
+      }
+    })
+
+    if (false === strip) {
+      source = source.replace(/<!--([\w\W]+?)-->/g, ($all, $1) => {
+        return `<!--${root.escape($1)}-->`
+      })
+    }
+
+    if (true !== conf.noSyntax) {
+      source = this.$compileSyntax(source, !!conf.strict)
+    }
+
+    let shell = this.$compileShell(source, conf)
+
     let buildRender = (scope) => {
       let render
 
@@ -423,13 +446,14 @@ class Engine {
       }
 
       try {
+        /* eslint no-new-func: 0 */
         render = new Function(_args_.join(','), shell)
       }
       catch (err) {
         this._throw({
           message   : `[Compile Render]: ${err.message}`,
           template  : options.filename,
-          line      : `Javascript syntax occur error, it can not find out the error line.`,
+          line      : 'Javascript syntax occur error, it can not find out the error line.',
           syntax    : this._table(origin),
           source    : source,
           shell     : shell
@@ -451,40 +475,16 @@ class Engine {
           }
         }
       }
-      else {
-        return (data) => {
-          try {
-            return render.apply(scope, [data].concat(args))
-          }
-          catch (err) {
-            return __catch(err)
-          }
+
+      return (data) => {
+        try {
+          return render.apply(scope, [data].concat(args))
+        }
+        catch (err) {
+          return __catch(err)
         }
       }
     }
-
-    // 获取需求的参数，除 data 之外
-    ~forEach(deps, (name) => {
-      if ('$' === name.charAt(0)) {
-        name = name.replace('$', '')
-        args.push(conf[name])
-      }
-      else {
-        args.push(undefined)
-      }
-    })
-
-    if (false === strip) {
-      source = source.replace(/<!--([\w\W]+?)-->/g, ($all, $1) => {
-        return `<!--${root.escape($1)}-->`;
-      })
-    }
-
-    if (true !== conf.noSyntax) {
-      source = this.$compileSyntax(source, !!conf.strict)
-    }
-
-    let shell = this.$compileShell(source, conf)
 
     return buildRender({
       $source   : origin,

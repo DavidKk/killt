@@ -123,7 +123,6 @@ class Syntax extends Engine {
   $compileSyntax (source, strict = true) {
     let origin  = source
     let conf    = this.options()
-    let blocks  = this._blocks
     let valid
 
     source = escapeTags(source)
@@ -283,7 +282,7 @@ class Syntax extends Engine {
         .$registerSyntax(`${query}open`, `(${query})\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*`, ($all, $1, $2, $3, $4, $5) => {
           return `<%${$1}($append, ${$2 ? $2 + ', ' : ''}function (${$5 || ''}) {'use strict';var $buffer='';%>`
         })
-        .$registerSyntax(`${query}close`, `/${query}`, `return $buffer;});`)
+        .$registerSyntax(`${query}close`, `/${query}`, 'return $buffer;});')
 
         this._blockHelpers[query] = function ($append) {
           let args = Array.prototype.splice.call(arguments, 1)

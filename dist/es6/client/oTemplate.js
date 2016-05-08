@@ -1,16 +1,5 @@
-~(function(root) {if ('undefined' === typeof root) {
-  var root
-
-  if ('undefined' !== typeof global) {
-    root = global
-  }
-  else if ('undefined' !== typeof window) {
-    root = window
-  }
-  else {
-    root = {}
-  }
-};
+~(function (root) {
+'use strict'
 /**
  * 判断类型
  * @typedef {isType}
@@ -158,12 +147,12 @@ function escapeHTML (string) {
 // escape sources
 // 转义资源
 escapeHTML.SOURCES = {
-  '<' : '&lt;',
-  '>' : '&gt;',
-  '&' : '&amp;',
-  '"' : '&quot;',
-  "'" : '&#x27;',
-  '/' : '&#x2f;'
+  '<'   : '&lt;',
+  '>'   : '&gt;',
+  '&'   : '&amp;',
+  '"'   : '&quot;',
+  '\''  : '&#x27;',
+  '/'   : '&#x2f;'
 }
 
 /**
@@ -346,7 +335,7 @@ function __throw (error) {
  */
 function __render () {
   return ''
-};
+}
 
 /**
  * current envirment - 配置环境
@@ -378,7 +367,7 @@ const DEFAULTS = {
   compress  : true,
   /** addition render arguments (must be use `$` to define variable name) - 追加渲染器的传值设定,默认拥有 $data (必须使用 `$` 作为起始字符来定义变量) */
   depends   : [],
-};
+}
 /**
  * extensions - 扩展集合
  * @type {Array}
@@ -783,6 +772,29 @@ class Engine {
     let _args_  = ['$data'].concat(deps)
     let args    = []
 
+    // 获取需求的参数，除 data 之外
+    ~forEach(deps, (name) => {
+      if ('$' === name.charAt(0)) {
+        name = name.replace('$', '')
+        args.push(conf[name])
+      }
+      else {
+        args.push(undefined)
+      }
+    })
+
+    if (false === strip) {
+      source = source.replace(/<!--([\w\W]+?)-->/g, ($all, $1) => {
+        return `<!--${root.escape($1)}-->`
+      })
+    }
+
+    if (true !== conf.noSyntax) {
+      source = this.$compileSyntax(source, !!conf.strict)
+    }
+
+    let shell = this.$compileShell(source, conf)
+
     let buildRender = (scope) => {
       let render
 
@@ -804,13 +816,14 @@ class Engine {
       }
 
       try {
+        /* eslint no-new-func: 0 */
         render = new Function(_args_.join(','), shell)
       }
       catch (err) {
         this._throw({
           message   : `[Compile Render]: ${err.message}`,
           template  : options.filename,
-          line      : `Javascript syntax occur error, it can not find out the error line.`,
+          line      : 'Javascript syntax occur error, it can not find out the error line.',
           syntax    : this._table(origin),
           source    : source,
           shell     : shell
@@ -832,40 +845,16 @@ class Engine {
           }
         }
       }
-      else {
-        return (data) => {
-          try {
-            return render.apply(scope, [data].concat(args))
-          }
-          catch (err) {
-            return __catch(err)
-          }
+
+      return (data) => {
+        try {
+          return render.apply(scope, [data].concat(args))
+        }
+        catch (err) {
+          return __catch(err)
         }
       }
     }
-
-    // 获取需求的参数，除 data 之外
-    ~forEach(deps, (name) => {
-      if ('$' === name.charAt(0)) {
-        name = name.replace('$', '')
-        args.push(conf[name])
-      }
-      else {
-        args.push(undefined)
-      }
-    })
-
-    if (false === strip) {
-      source = source.replace(/<!--([\w\W]+?)-->/g, ($all, $1) => {
-        return `<!--${root.escape($1)}-->`;
-      })
-    }
-
-    if (true !== conf.noSyntax) {
-      source = this.$compileSyntax(source, !!conf.strict)
-    }
-
-    let shell = this.$compileShell(source, conf)
 
     return buildRender({
       $source   : origin,
@@ -1139,7 +1128,7 @@ class Engine {
   $compileSyntax () {
     throw new Error('Function `$compileSyntax` does not be implemented.')
   }
-};
+}
 extend(DEFAULTS, {
   /** open tag for syntax - 起始标识 */
   openTag   : '{{',
@@ -1265,7 +1254,6 @@ class Syntax extends Engine {
   $compileSyntax (source, strict = true) {
     let origin  = source
     let conf    = this.options()
-    let blocks  = this._blocks
     let valid
 
     source = escapeTags(source)
@@ -1425,7 +1413,7 @@ class Syntax extends Engine {
         .$registerSyntax(`${query}open`, `(${query})\\s*(,?\\s*([\\w\\W]+?))\\s*(:\\s*([\\w\\W]+?))?\\s*`, ($all, $1, $2, $3, $4, $5) => {
           return `<%${$1}($append, ${$2 ? $2 + ', ' : ''}function (${$5 || ''}) {'use strict';var $buffer='';%>`
         })
-        .$registerSyntax(`${query}close`, `/${query}`, `return $buffer;});`)
+        .$registerSyntax(`${query}close`, `/${query}`, 'return $buffer;});')
 
         this._blockHelpers[query] = function ($append) {
           let args = Array.prototype.splice.call(arguments, 1)
@@ -1470,7 +1458,7 @@ class Syntax extends Engine {
 
     return this
   }
-};
+}
 /**
  * Simple Syntax Defination - 定义简单语法
  */
@@ -1487,7 +1475,7 @@ Engine.extend((engine) => {
    */
   .$registerSyntax('helper', HELPER_SYNTAX, (function () {
     return function ($all, $1, $2, $3, $4, $5) {
-      let str = format.apply(engine, arguments)
+      let str = format($all, $1, $2, $3, $4, $5)
 
       // 这里需要递推所有的辅助函数
       while (HELPER_INNER_REGEXP.exec(str)) {
@@ -1573,7 +1561,7 @@ Engine.extend((engine) => {
       forEach(data, callback)
     }
   })
-});
+})
 /**
  * 浏览器接口类
  * @class
@@ -1610,12 +1598,13 @@ class Client extends (Syntax || Engine) {
    * 时才能真正修改渲染器的配置
    */
   compileSource (source, options) {
-    return super.compile.apply(this, arguments)
+    return super.compile.call(this, source, options)
   }
 
   /**
    * 渲染模板
    * @param {string} source 模板
+   * @param {Object} data 数据
    * @param {Object} options 配置
    * @returns {string} 结果字符串
    * @description
@@ -1623,8 +1612,8 @@ class Client extends (Syntax || Engine) {
    * 对渲染器造成任何修改；当 override 为 true 的时候，缓存将被刷新，此
    * 时才能真正修改渲染器的配置
    */
-  renderSource (source, options) {
-    return super.render.apply(this, arguments)
+  renderSource (source, data, options) {
+    return super.render.call(this, source, data, options)
   }
 
   /**
@@ -1910,4 +1899,5 @@ function umd (name, factory, root) {
   else {
     root[name] = module
   }
-}})(window);
+}
+})('undefined' === typeof global ? 'undefined' === typeof window ? {} : window : global)
