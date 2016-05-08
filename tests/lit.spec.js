@@ -4,7 +4,7 @@ describe('Test origin javascript syntax', function() {
   describe('It can compile templates', function() {
     beforeEach(function() {
       _ = _.$divide({
-        env       : _.ENV.UNIT,
+        env       : _.ENV.UNITEST,
         noSyntax  : true
       })
     })
@@ -43,32 +43,32 @@ describe('Test origin javascript syntax', function() {
 
     it('should not compile keywords', function() {
       var keywords = [
-            '$append',
-            '$blocks', '$buffer',
-            '$data',
-            '$helpers',
-            '$scope',
-            '$runtime',
+        '$append',
+        '$blocks', '$buffer',
+        '$data',
+        '$helpers',
+        '$scope',
+        '$runtime',
 
-            'abstract', 'arguments',
-            'break', 'boolean', 'byte',
-            'case', 'catch', 'char', 'class', 'continue', 'console', 'const',
-            'debugger', 'default', 'delete', 'do', 'double',
-            'else', 'enum', 'export', 'extends',
-            'false', 'final', 'finally', 'float', 'for', 'function',
-            'goto',
-            'if', 'implements', 'import', 'in', 'instanceof', 'int', 'interface',
-            'let', 'long',
-            'native', 'new', 'null',
-            'package', 'private', 'protected', 'public',
-            'return',
-            'short', 'static', 'super', 'switch', 'synchronized',
-            'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof',
-            'undefined',
-            'var', 'void', 'volatile',
-            'while', 'with',
-            'yield'
-          ]
+        'abstract', 'arguments',
+        'break', 'boolean', 'byte',
+        'case', 'catch', 'char', 'class', 'continue', 'console', 'const',
+        'debugger', 'default', 'delete', 'do', 'double',
+        'else', 'enum', 'export', 'extends',
+        'false', 'final', 'finally', 'float', 'for', 'function',
+        'goto',
+        'if', 'implements', 'import', 'in', 'instanceof', 'int', 'interface',
+        'let', 'long',
+        'native', 'new', 'null',
+        'package', 'private', 'protected', 'public',
+        'return',
+        'short', 'static', 'super', 'switch', 'synchronized',
+        'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof',
+        'undefined',
+        'var', 'void', 'volatile',
+        'while', 'with',
+        'yield'
+      ]
 
       keywords.forEach(function(name, index) {
         var datas = {}

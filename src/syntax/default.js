@@ -12,8 +12,8 @@ Engine.extend((engine) => {
    * helper syntax
    * syntax {{ data | helperA: dataA, dataB, dataC | helperB: dataD, dataE, dataF }}
    */
-  .$registerSyntax('helper', HELPER_SYNTAX, (() => {
-    return ($all, $1, $2, $3, $4, $5) => {
+  .$registerSyntax('helper', HELPER_SYNTAX, (function () {
+    return function ($all, $1, $2, $3, $4, $5) {
       let str = format.apply(engine, arguments)
 
       // 这里需要递推所有的辅助函数

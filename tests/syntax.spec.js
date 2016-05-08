@@ -4,7 +4,7 @@ describe('Test the simple syntax', function () {
   describe('It can compile simple syntax to origin syntax', function () {
     beforeEach(function () {
       _ = _.$divide({
-        env: _.ENV.UNIT
+        env: _.ENV.UNITEST
       })
     })
 

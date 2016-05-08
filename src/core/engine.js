@@ -533,7 +533,7 @@ class Engine {
    * @returns {string}
    */
   render (source, data = {}, options = {}) {
-    return super.compile.call(this, source, options)(data)
+    return Engine.prototype.compile.call(this, source, options)(data)
   }
 
   /**
@@ -642,7 +642,7 @@ class Engine {
    */
   _throw (error, options = {}) {
     let conf    = this.options(options)
-    let message = -1 === indexOf([ENV.UNITEST], conf.env) && __throw(error)
+    let message = ENV.UNITEST === conf.env && __throw(error)
 
     forEach(this._listeners, (listener) => {
       'error' === listener.type && listener.handle(error, message)

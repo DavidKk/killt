@@ -4,8 +4,8 @@ describe('Test in client', function() {
   describe('It can compile templates', function() {
     beforeEach(function() {
       _ = _.$divide({
-        env: _.ENV.UNIT,
-        noSyntax  : true
+        env       : _.ENV.UNITEST,
+        noSyntax  : true,
       })
 
       jasmine.Ajax.install()
@@ -13,7 +13,6 @@ describe('Test in client', function() {
 
     afterEach(function() {
       jasmine.Ajax.uninstall()
-
       document.body.innerHTML = ''
     })
 

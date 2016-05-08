@@ -564,7 +564,7 @@ class Engine {
    * @returns {string}
    */
   render (source, data = {}, options = {}) {
-    return super.compile.call(this, source, options)(data)
+    return Engine.prototype.compile.call(this, source, options)(data)
   }
 
   /**
@@ -673,7 +673,7 @@ class Engine {
    */
   _throw (error, options = {}) {
     let conf    = this.options(options)
-    let message = -1 === indexOf([ENV.UNITEST], conf.env) && __throw(error)
+    let message = ENV.UNITEST === conf.env && __throw(error)
 
     forEach(this._listeners, (listener) => {
       'error' === listener.type && listener.handle(error, message)
@@ -874,7 +874,7 @@ class Syntax extends Engine {
       let dress = source.replace(handle.syntax, handle.shell)
 
       if (dress !== source) {
-        source = dress
+        source  = dress
         matched = true
         return true
       }
@@ -1041,7 +1041,7 @@ class Syntax extends Engine {
       forEach(syntax, (compiler) => {
         is('String')(compiler.syntax)
         && (is('String')(compiler.shell) || is('Function')(compiler.shell))
-        && self.$registerSyntax(name, compiler.syntax, compiler.shell)
+        && this.$registerSyntax(name, compiler.syntax, compiler.shell)
       })
     }
 
@@ -1141,8 +1141,8 @@ Engine.extend((engine) => {
    * helper syntax
    * syntax {{ data | helperA: dataA, dataB, dataC | helperB: dataD, dataE, dataF }}
    */
-  .$registerSyntax('helper', HELPER_SYNTAX, (() => {
-    return ($all, $1, $2, $3, $4, $5) => {
+  .$registerSyntax('helper', HELPER_SYNTAX, (function () {
+    return function ($all, $1, $2, $3, $4, $5) {
       let str = format.apply(engine, arguments)
 
       // 这里需要递推所有的辅助函数

@@ -75,7 +75,7 @@ class Syntax extends Engine {
       let dress = source.replace(handle.syntax, handle.shell)
 
       if (dress !== source) {
-        source = dress
+        source  = dress
         matched = true
         return true
       }

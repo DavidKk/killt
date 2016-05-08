@@ -1,8 +1,8 @@
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
@@ -11,7 +11,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 ~function (root) {
-  var _arguments = arguments;
   /**
   * current envirment - 配置环境
   * @type {Object}
@@ -566,7 +565,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var data = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
-        return _get(Object.getPrototypeOf(Engine.prototype), 'compile', this).call(this, source, options)(data);
+        return Engine.prototype.compile.call(this, source, options)(data);
       }
 
       /**
@@ -696,7 +695,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
         var conf = this.options(options);
-        var message = -1 === indexOf([ENV.UNITEST], conf.env) && __throw(error);
+        var message = ENV.UNITEST === conf.env && __throw(error);
 
         forEach(this._listeners, function (listener) {
           'error' === listener.type && listener.handle(error, message);
@@ -1121,7 +1120,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           });
         } else if (is('Array')(syntax)) {
           forEach(syntax, function (compiler) {
-            is('String')(compiler.syntax) && (is('String')(compiler.shell) || is('Function')(compiler.shell)) && self.$registerSyntax(name, compiler.syntax, compiler.shell);
+            is('String')(compiler.syntax) && (is('String')(compiler.shell) || is('Function')(compiler.shell)) && _this6.$registerSyntax(name, compiler.syntax, compiler.shell);
           });
         }
 
@@ -1234,7 +1233,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      */
     .$registerSyntax('helper', HELPER_SYNTAX, function () {
       return function ($all, $1, $2, $3, $4, $5) {
-        var str = format.apply(engine, _arguments);
+        var str = format.apply(engine, arguments);
 
         // 这里需要递推所有的辅助函数
         while (HELPER_INNER_REGEXP.exec(str)) {
@@ -1337,17 +1336,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   var Client = function (_ref) {
     _inherits(Client, _ref);
 
-    function Client() {
+    function Client(options) {
       _classCallCheck(this, Client);
 
       // extends include func to support ajax request file
       // 扩展新的 include 支持 ajax
 
-      var _this7 = _possibleConstructorReturn(this, Object.getPrototypeOf(Client).call(this));
+      var _this7 = _possibleConstructorReturn(this, Object.getPrototypeOf(Client).call(this, options));
 
       ~extend(_this7._helpers, {
         include: function include(filename, data, options) {
-          return this.renderSync(filename, data, options);
+          return _this7.renderSync(filename, data, options);
         }
       });
       return _this7;
@@ -1464,8 +1463,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           };
 
           var __return = function __return() {
-            render = this.$compile(origin);
-            this._cache(template, render);
+            render = _this8.$compile(origin);
+            _this8._cache(template, render);
             false === sync && callback(render);
             total = undefined;
           };
@@ -1632,10 +1631,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var xhr = new XMLHttpRequest();
 
         xhr.onreadystatechange = function () {
-          var status = _this9.status;
+          var status = this.status;
 
-          if (_this9.DONE === _this9.readyState && 200 <= status && status < 400) {
-            callback(_this9.responseText);
+          if (this.DONE === this.readyState && 200 <= status && status < 400) {
+            callback(this.responseText);
           }
         };
 

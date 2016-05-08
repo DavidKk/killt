@@ -11,13 +11,13 @@
  * @param {Array} options.depends 追加渲染器的传值设定
  */
 class Client extends (Syntax || Engine) {
-  constructor () {
-    super()
+  constructor (options) {
+    super(options)
 
     // extends include func to support ajax request file
     // 扩展新的 include 支持 ajax
     ~extend(this._helpers, {
-      include (filename, data, options) {
+      include: (filename, data, options) => {
         return this.renderSync(filename, data, options)
       }
     })
@@ -98,7 +98,7 @@ class Client extends (Syntax || Engine) {
       }
 
       // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
-      forEach(source.split('<%'), function (code) {
+      forEach(source.split('<%'), (code) => {
         let [codes, match] = [code.split('%>')]
 
         // logic block is fist part when `codes.length === 2`
@@ -111,11 +111,11 @@ class Client extends (Syntax || Engine) {
 
       let total = dependencies.length
 
-      let __exec = function () {
+      let __exec = () => {
         0 >= (-- total) && __return()
       }
 
-      let __return = function () {
+      let __return = () => {
         render = this.$compile(origin)
         this._cache(template, render)
         false === sync && callback(render)
@@ -263,7 +263,7 @@ class Client extends (Syntax || Engine) {
 
     let xhr = new XMLHttpRequest
 
-    xhr.onreadystatechange = () => {
+    xhr.onreadystatechange = function () {
       let status = this.status
 
       if (this.DONE === this.readyState && 200 <= status && status < 400) {
