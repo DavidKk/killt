@@ -1,6 +1,6 @@
 # killt
 
-oTempalte is a light template engine for Javascript.
+killt is a light template engine for Javascript.
 
 ### Examples & Docs
 
@@ -51,7 +51,7 @@ bower install killt
 ### Compile and Render
 ```
 // Source
-oTempalte.compile([String source], [Object options])
+killt.compile([String source], [Object options])
 killt.render([String source], [Object Data], [Object options])
 
 // Nested
@@ -67,7 +67,7 @@ killt.renderAsync([String url], [Object data], [Function callback], [Object opti
 #### Compiled by template
 ```
 var killt = window.killt
-var oTempalte = require('killt')
+var killt = require('killt')
 
 killt.renderSync('templates/list/default.html', {
   title: 'Customer Title',
