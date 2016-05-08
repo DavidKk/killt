@@ -310,7 +310,7 @@ class Client extends (Syntax || Engine) {
 /**
  * Exports Module
  */
-UMD('oTemplate', function() {
+UMD('oTemplate', function () {
   return new Client()
 }, root)
 

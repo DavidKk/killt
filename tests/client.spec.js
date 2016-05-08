@@ -1,7 +1,9 @@
-describe('Test in client', function() {
-  var _ = oTemplate
+'use strict'
 
-  describe('It can compile templates', function() {
+describe('Test in client', function () {
+  let _ = oTemplate
+
+  describe('It can compile templates', function () {
     beforeEach(function() {
       _ = _.$divide({
         env       : _.ENV.UNITEST,
@@ -16,7 +18,7 @@ describe('Test in client', function() {
       document.body.innerHTML = ''
     })
 
-    it('should render nested templates', function() {
+    it('should render nested templates', function () {
       document.body.innerHTML =
         '<script id="templates/nested.html" type="template/text">'
       +   '<%if (true) {%>'
@@ -24,12 +26,12 @@ describe('Test in client', function() {
       +   '<%}%>'
       + '</script>'
 
-      var source = _.renderSync('templates/nested.html')
+      let source = _.renderSync('templates/nested.html')
       expect(source).toEqual('<div>Hello world</div>')
     })
 
-    it('should render remote templates', function(done) {
-      _.renderAsync('templates/remote.html', {}, function(source) {
+    it('should render remote templates', function (done) {
+      _.renderAsync('templates/remote.html', {}, function (source) {
         expect(source).toEqual('<div>Hello world</div>')
         done()
       })
@@ -47,8 +49,8 @@ describe('Test in client', function() {
       })
     })
 
-    it('should render remote templates which include the nested templates', function(done) {
-      _.renderAsync('template/remote.html', {}, function(source) {
+    it('should render remote templates which include the nested templates', function (done) {
+      _.renderAsync('template/remote.html', {}, function (source) {
         expect(source).toEqual('<div>Hello World</div><script id="template/nested.html" type="text/template"><div>Hello World</div></script>')
         done()
       })
@@ -66,13 +68,13 @@ describe('Test in client', function() {
       })
     })
 
-    it('should render remote templates which include the nested templates in body', function(done) {
+    it('should render remote templates which include the nested templates in body', function (done) {
       document.body.innerHTML =
         '<script id="template/nested.html" type="text/template">'
       +   '<div>Hello World</div>'
       + '</script>'
 
-      _.renderAsync('template/remote.html', {}, function(source) {
+      _.renderAsync('template/remote.html', {}, function (source) {
         expect(source).toEqual('<div>Hello World</div>')
         done()
       })
@@ -116,11 +118,11 @@ describe('Test in client', function() {
         +   '<div><%= mesage %></div>'
         + '</script>'
 
-      var source = _.renderSync('templates/nested.html')
+      let source = _.renderSync('templates/nested.html')
       expect(source).toEqual('<div>Hello Nested Template!!!</div>')
     })
 
-    it('should render the remote templates which included other remote templates', function(done) {
+    it('should render the remote templates which included other remote templates', function (done) {
       jasmine.Ajax
       .stubRequest('templates/nested/a.html')
       .andReturn({
@@ -142,7 +144,7 @@ describe('Test in client', function() {
           + '})%>'
       })
 
-      _.renderAsync('templates/nested.html', {}, function(source) {
+      _.renderAsync('templates/nested.html', {}, function (source) {
         expect(source).toEqual('<div>Hello Remote Template!!!</div>')
         done()
       })

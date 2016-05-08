@@ -1,5 +1,7 @@
+'use strict'
+
 describe('Test the simple syntax', function () {
-  var _ = oTemplate
+  let _ = oTemplate
 
   describe('It can compile simple syntax to origin syntax', function () {
     beforeEach(function () {
@@ -9,22 +11,22 @@ describe('Test the simple syntax', function () {
     })
 
     it('should compile the `echo` syntax', function () {
-      var shell = _.$compileSyntax('{{= "Hello World" }}')
+      let shell = _.$compileSyntax('{{= "Hello World" }}')
       expect(shell).toEqual('<%="Hello World"%>')
     })
 
     it('should compile the `logic` syntax', function () {
-      var shell = _.$compileSyntax('{{- var i = 0 }}')
+      let shell = _.$compileSyntax('{{- var i = 0 }}')
       expect(shell).toEqual('<%var i = 0%>')
     })
 
     it('should solve the `||` and `&&` operators in echo syntax', function () {
-      var shell = _.$compileSyntax('{{= aa || bb && cc }}')
+      let shell = _.$compileSyntax('{{= aa || bb && cc }}')
       expect(shell).toEqual('<%=aa || bb && cc%>')
     })
 
     it('should compile the `if` syntax', function () {
-      var template =
+      let template =
             '{{if 1}}'
           +   '<div></div>'
           + '{{else if 1}}'
@@ -33,7 +35,7 @@ describe('Test the simple syntax', function () {
           +   '<div></div>'
           + '{{/if}}'
 
-      var result =
+      let result =
             '<%if (1) {%>'
           +   '<div></div>'
           + '<%} else if (1) {%>'
@@ -42,22 +44,22 @@ describe('Test the simple syntax', function () {
           +   '<div></div>'
           + '<%}%>'
 
-      var shell = _.$compileSyntax(template)
+      let shell = _.$compileSyntax(template)
       expect(shell.replace(/\s+/g, '')).toEqual(result.replace(/\s+/g, ''))
     })
 
     it('should allow compile `each` syntax', function () {
-      var template =
+      let template =
             '{{each data as value, key}}'
           +   '<div></div>'
           + '{{/each}}'
 
-      var result =
+      let result =
             '<%each(data, function (value, key) {%>'
           +   '<div></div>'
           + '<%})%>'
 
-      var shell = _.$compileSyntax(template)
+      let shell = _.$compileSyntax(template)
       expect(shell.replace(/\s+/g, '')).toEqual(result.replace(/\s+/g, ''))
 
       template =
@@ -75,10 +77,10 @@ describe('Test the simple syntax', function () {
     })
 
     it('should allow compile `include` syntax', function () {
-      var template = '<div>{{include /template/modal.html, data}}</div>'
-      var result = '<div><%#include( \'/template/modal.html\', data)%></div>'
+      let template = '<div>{{include /template/modal.html, data}}</div>'
+      let result = '<div><%#include( \'/template/modal.html\', data)%></div>'
 
-      var shell = _.$compileSyntax(template, true)
+      let shell = _.$compileSyntax(template, true)
       expect(shell.replace(/\s+/g, '')).toEqual(result.replace(/\s+/g, ''))
 
       template = '<div>{{include "/template/modal.html"}}</div>'
@@ -89,26 +91,26 @@ describe('Test the simple syntax', function () {
     })
 
     it('should allow compile `noescape` syntax', function () {
-      var template = '{{# toString(123) }}'
-      var result = '<%#toString(123)%>'
+      let template = '{{# toString(123) }}'
+      let result = '<%#toString(123)%>'
 
-      var shell = _.$compileSyntax(template)
+      let shell = _.$compileSyntax(template)
       expect(shell.replace(/\s+/g, '')).toEqual(result.replace(/\s+/g, ''))
     })
 
     it('should allow compile `escape` syntax', function () {
-      var template = '{{!# toString(123) }}'
-      var result = '<%!#toString(123)%>'
+      let template = '{{!# toString(123) }}'
+      let result = '<%!#toString(123)%>'
 
-      var shell = _.$compileSyntax(template)
+      let shell = _.$compileSyntax(template)
       expect(shell.replace(/\s+/g, '')).toEqual(result.replace(/\s+/g, ''))
     })
 
     it('should allow compile `helper` syntax', function () {
-      var template = '<div>{{data | helper}}</div>'
-      var result = '<div><%helper(data)%></div>'
+      let template = '<div>{{data | helper}}</div>'
+      let result = '<div><%helper(data)%></div>'
 
-      var shell = _.$compileSyntax(template)
+      let shell = _.$compileSyntax(template)
       expect(shell.replace(/\s+/g, '')).toEqual(result.replace(/\s+/g, ''))
 
       template = '<div>{{data | helper:a,b,c}}</div>'
@@ -125,7 +127,7 @@ describe('Test the simple syntax', function () {
     })
 
     it('should allow compile all syntax at the same time', function () {
-      var template =
+      let template =
             '{{if 1}}'
           +   '{{each data as value, key}}'
           +     '<div>{{include /templates/index.html, data}}</div>'
@@ -138,7 +140,7 @@ describe('Test the simple syntax', function () {
           +   '<div>{{ value | helper:a,b,c }}</div>'
           + '{{/if}}'
 
-      var result =
+      let result =
             '<%if (1) {%>'
           +   '<%each(data, function (value, key) {%>'
           +     '<div><%# include(\'/templates/index.html\', data)%></div>'
@@ -151,14 +153,14 @@ describe('Test the simple syntax', function () {
           +   '<div><%helper(value,a,b,c)%></div>'
           + '<%}%>'
 
-      var shell = _.$compileSyntax(template)
+      let shell = _.$compileSyntax(template)
       expect(shell.replace(/\s+/g, '')).toEqual(result.replace(/\s+/g, ''))
     })
 
     it('should escape the javascript syntax when noSyntax turned off', function () {
-      var template = '<%= error %>'
+      let template = '<%= error %>'
 
-      var source = _.compileSource(template, {
+      let source = _.compileSource(template, {
         error: 123
       })
 
@@ -166,10 +168,10 @@ describe('Test the simple syntax', function () {
     })
 
     it('should allow compile `v1 && v2 || v3 | helper` in syntax version', function () {
-      var template = '{{a || b | image}}{{b || c | image}}'
-      var result = '<%image(a || b)%><%image(b || c)%>'
+      let template = '{{a || b | image}}{{b || c | image}}'
+      let result = '<%image(a || b)%><%image(b || c)%>'
 
-      var shell = _.$compileSyntax(template)
+      let shell = _.$compileSyntax(template)
       expect(shell.replace(/\s+/g, '')).toEqual(result.replace(/\s+/g, ''))
     })
   })
@@ -182,47 +184,47 @@ describe('Test the simple syntax', function () {
     })
 
     it('should support the wrap syntax', function() {
-      var template = '\
-            {{- var action = "Hello"}}\
-            {{- var name = "World"}}\
-            {{- var datas = [\
-                  { name: "David" },\
-                  { name: "Jones" }\
-                ]\
-            }}\
-            {{if action}}\
-              <div data-id="{{= data}}">{{= action + " " + name}}</div>\
-            {{/if}}\
-            \
-            {{each datas as author}}\
-              <div>{{= author.name}}</div>\
-            {{/each}}'
+      let template = `
+            {{- var action = "Hello"}}
+            {{- var name = "World"}}
+            {{- var datas = [
+                  { name: "David" },
+                  { name: "Jones" }
+                ]
+            }}
+            {{if action}}
+              <div data-id="{{= data}}">{{= action + " " + name}}</div>
+            {{/if}}
 
-      var result =
+            {{each datas as author}}
+              <div>{{= author.name}}</div>
+            {{/each}}`
+
+      let result =
             '<div data-id="">Hello World</div>'
           + '<div>David</div>'
           + '<div>Jones</div>'
 
-      var source = _.renderSource(template)
+      let source = _.renderSource(template)
       expect(source.replace(/\s+/g, '')).toEqual(result.replace(/\s+/g, ''))
     })
 
     it('should auto escape source', function() {
-      var template = '\
-            <div data-id="{{= "id-123" }}"><div>\
-            <%= 123 %>\
-            {{= script }}\
-            {{= ascii }}\
-            {{= iso88591 }}\
-          '
+      let template = `
+        <div data-id="{{= "id-123" }}"><div>
+        <%= 123 %>
+        {{= script }}
+        {{= ascii }}
+        {{= iso88591 }}
+      `
 
-      var result =
+      let result =
             '<div data-id="id-123"><div>'
           + '&lt;%= 123 %&gt; &lt;script&gt;&lt;/script&gt;'
           + '&lt;script&gt;&lt;/script&gt;'
           + '&#60;&#115;&#99;&#114;&#105;&#112;&#116;&#62;&#60;&#47;&#115;&#99;&#114;&#105;&#112;&#116;&#62;'
 
-      var source = _.renderSource(template, {
+      let source = _.renderSource(template, {
         script    : '<script></script>',
         ascii     : '\x3c\x73\x63\x72\x69\x70\x74\x3e\x3c\x2f\x73\x63\x72\x69\x70\x74\x3e',
         iso88591  : '&#60;&#115;&#99;&#114;&#105;&#112;&#116;&#62;&#60;&#47;&#115;&#99;&#114;&#105;&#112;&#116;&#62;',
@@ -248,10 +250,10 @@ describe('Test the simple syntax', function () {
 
       expect(_._helpers.say).toEqual(jasmine.any(Function))
 
-      var template = '<div>{{ "World" | say }}</div>'
-      var result = '<div>Hello World!!!</div>'
+      let template = '<div>{{ "World" | say }}</div>'
+      let result = '<div>Hello World!!!</div>'
 
-      var source = _.renderSource(template)
+      let source = _.renderSource(template)
       expect(source).toEqual(result)
     })
 
@@ -264,10 +266,10 @@ describe('Test the simple syntax', function () {
 
       expect(_._blockHelpers.say).toEqual(jasmine.any(Function))
 
-      var template = '<div>{{say "yes"}}Hello world{{/say}}</div>'
-      var result = '<div>Hello world</div>'
+      let template = '<div>{{say "yes"}}Hello world{{/say}}</div>'
+      let result = '<div>Hello world</div>'
 
-      var source = _.renderSource(template)
+      let source = _.renderSource(template)
       expect(source).toEqual(result)
     })
 
@@ -275,8 +277,8 @@ describe('Test the simple syntax', function () {
       expect(_._blockHelpers.loop).toEqual(undefined)
 
       _.block('loop', function (times, blockShell) {
-        var str = ''
-        for (var i = 0; i < times; i ++) {
+        let str = ''
+        for (let i = 0; i < times; i ++) {
           str += blockShell(i +1)
         }
 
@@ -285,17 +287,17 @@ describe('Test the simple syntax', function () {
 
       expect(_._blockHelpers.loop).toEqual(jasmine.any(Function))
 
-      var template =
-            '{{loop 3 : times}}'
-          +   '<span>{{= times }} Times.</span>'
-          + '{{/loop}}'
+      let template =
+        '{{loop 3 : times}}'
+      +   '<span>{{= times }} Times.</span>'
+      + '{{/loop}}'
 
-      var result =
-            '<span>1 Times.</span>'
-          + '<span>2 Times.</span>'
-          + '<span>3 Times.</span>'
+      let result =
+        '<span>1 Times.</span>'
+      + '<span>2 Times.</span>'
+      + '<span>3 Times.</span>'
 
-      var source = _.renderSource(template)
+      let source = _.renderSource(template)
       expect(source).toEqual(result)
     })
 
@@ -308,19 +310,19 @@ describe('Test the simple syntax', function () {
 
       expect(_._blockHelpers.say).toEqual(jasmine.any(Function))
 
-      var template =
-            '<div>'
-          +   '{{say "Hello"}}'
-          +     '<div>Hello World?</div>'
-          +   '{{/say}}'
-          + '</div>'
+      let template =
+        '<div>'
+      +   '{{say "Hello"}}'
+      +     '<div>Hello World?</div>'
+      +   '{{/say}}'
+      + '</div>'
 
-      var result =
-            '<div>'
-          +   '<span>Say Hello!!!</span>'
-          + '</div>'
+      let result =
+        '<div>'
+      +   '<span>Say Hello!!!</span>'
+      + '</div>'
 
-      var source = _.renderSource(template)
+      let source = _.renderSource(template)
       expect(source).toEqual(result)
     })
 
@@ -329,10 +331,10 @@ describe('Test the simple syntax', function () {
 
       expect(_._blocks.say).toEqual(jasmine.any(Object))
 
-      var template = '{{say "Hello World"}}'
-      var result = '<%say("Hello World")%>'
+      let template = '{{say "Hello World"}}'
+      let result = '<%say("Hello World")%>'
 
-      var source = _.$compileSyntax(template)
+      let source = _.$compileSyntax(template)
       expect(source).toEqual(result)
     })
   })
@@ -345,12 +347,12 @@ describe('Test the simple syntax', function () {
     })
 
     it('should return the empty string in error', function() {
-      var shell = _.$compileSyntax('{{')
+      let shell = _.$compileSyntax('{{')
       expect(shell).toEqual('')
     })
 
     it('should catch the syntax error', function() {
-      var template =
+      let template =
             '{{if 1\
                 <div></div>\
               {{/if}}'
@@ -359,21 +361,21 @@ describe('Test the simple syntax', function () {
         expect(!!error.message.match('Syntax error in line 1')).toBeTruthy()
       })
 
-      var source = _.$compileSyntax(template)
+      let source = _.$compileSyntax(template)
       expect(source).toEqual('')
     })
 
     it('should catch the error which not match any syntax', function() {
-      var template =
-            '{{qwe}}\
-                <div></div>\
-              {{/qwe}}'
+      let template =
+      `{{qwe}}
+        <div></div>
+      {{/qwe}}`
 
       _.on('error', function(error) {
         expect(!!error.message.match('did not match any syntax in line 1')).toBeTruthy()
       })
 
-      var source = _.$compileSyntax(template)
+      let source = _.$compileSyntax(template)
       expect(source).toEqual('')
     })
   })
@@ -403,7 +405,7 @@ describe('Test the simple syntax', function () {
         +   '</ul>'
         + '</script>'
 
-      var result =
+      let result =
             '<h1>Keywords</h1>'
           + '<ul>'
           +   '<li>0: Template</li>'
@@ -411,7 +413,7 @@ describe('Test the simple syntax', function () {
           +   '<li>2: Javascript</li>'
           + '</ul>'
 
-      var source = _.renderSync('templates/nested.html', {
+      let source = _.renderSync('templates/nested.html', {
         title: 'Keywords',
         list: ['Template', 'Template Engine', 'Javascript']
       })
@@ -430,7 +432,7 @@ describe('Test the simple syntax', function () {
         +   '</ul>'
         + '</script>'
 
-      var result =
+      let result =
             '<h1>Keywords</h1>'
           + '<ul>'
           +   '<li>0: Template</li>'
@@ -438,9 +440,9 @@ describe('Test the simple syntax', function () {
           +   '<li>2: Javascript</li>'
           + '</ul>'
 
-      var render = _.compileSync('templates/nested.html')
+      let render = _.compileSync('templates/nested.html')
 
-      var source = render({
+      let source = render({
         title: 'Keywords',
         list: ['Template', 'Template Engine', 'Javascript']
       })
@@ -456,7 +458,7 @@ describe('Test the simple syntax', function () {
         +  '<p>{{ "what?" | say }}</p>'
         + '</script>'
 
-      var result =
+      let result =
             '<h1>Helper Defination</h1>'
           + '<p>Hello World</p>'
           + '<p>Welcome</p>'
@@ -465,7 +467,7 @@ describe('Test the simple syntax', function () {
         return 'what?' === what ? 'Welcome' : what
       })
 
-      var source = _.renderSync('templates/nested.html', {
+      let source = _.renderSync('templates/nested.html', {
         title: 'Helper Defination'
       })
 
@@ -492,7 +494,7 @@ describe('Test the simple syntax', function () {
         +   '</ul>'
         + '</script>'
 
-      var result =
+      let result =
             '<h1>Hello World</h1>'
           + '<h3>Keywords</h3>'
           + '<ul>'
@@ -501,7 +503,7 @@ describe('Test the simple syntax', function () {
           +   '<li>2: Javascript</li>'
           + '</ul>'
 
-      var source = _.renderSync('templates/nested.html', {
+      let source = _.renderSync('templates/nested.html', {
         title     : 'Hello World',
         subTitle  : 'Keywords',
         list      : ['Template', 'Template Engine', 'Javascript']
@@ -522,7 +524,7 @@ describe('Test the simple syntax', function () {
         +   '<div>{{!# escapeContent }}</div>'
         + '</script>'
 
-      var result =
+      let result =
             '<h1>Hello World</h1>'
           + '<h4>default escape = true</h4>'
           + '<div>&lt;p&gt;Check it out!!!&lt;/p&gt;</div>'
@@ -533,7 +535,7 @@ describe('Test the simple syntax', function () {
           + '<h4>force escape</h4>'
           + '<div>&lt;p&gt;Check it out!!!&lt;/p&gt;</div>'
 
-      var source = _.renderSync('templates/nested.html', {
+      let source = _.renderSync('templates/nested.html', {
         title           : 'Hello World',
         noescapeContent : '<p>Check it out!!!</p>',
         escapeContent   : '<p>Check it out!!!</p>'
@@ -546,8 +548,8 @@ describe('Test the simple syntax', function () {
     })
 
     it('should not filter remarks when compress is false', function() {
-      var template = '<!-- {{= "Hello World" }} -->'
-      var source = _.renderSource(template, {}, {
+      let template = '<!-- {{= "Hello World" }} -->'
+      let source = _.renderSource(template, {}, {
         compress: false
       })
 
