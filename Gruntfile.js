@@ -75,18 +75,6 @@ export default (grunt) => {
       ],
     },
 
-    jsdoc: {
-      dist: {
-        options: {
-          destination: 'document',
-          readme: 'README.md',
-          template : 'node_modules/ink-docstrap/template',
-          configure : 'node_modules/ink-docstrap/template/jsdoc.conf.json',
-        },
-        src: ['src/**/*.js'],
-      },
-    },
-
     watch: {
       gruntfile: {
         options: {
