@@ -1,6 +1,6 @@
 window.onload = function() {
-  document.body.innerHTML = oTemplate.renderById('/template/include.html', {
-    title: 'oTemplate',
+  document.body.innerHTML = killt.renderById('/template/include.html', {
+    title: 'killt',
     subTitle: 'Keywords',
     list: ['Template', 'Template Engine', 'Javascript']
   })

@@ -1,6 +1,6 @@
 window.onload = function() {
-  document.body.innerHTML = oTemplate.renderById('/template/noescape.html', {
-    title: 'oTemplate',
+  document.body.innerHTML = killt.renderById('/template/noescape.html', {
+    title: 'killt',
     noescapeContent: [
         '<div>',
         '   Check it out!!!',

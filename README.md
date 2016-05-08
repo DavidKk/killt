@@ -1,5 +1,5 @@
-# oTemplate 
+# killt 
 
 Template engine for Javascript.
 
-[Progject in Github](https://github.com/DavidKk/oTemplate)
+[Progject in Github](https://github.com/DavidKk/killt)

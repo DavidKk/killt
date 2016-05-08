@@ -53,7 +53,7 @@
         })
       }
       else if ('.html' === extname) {
-        oTemplate.renderByAjax(file, function(view) {
+        killt.renderByAjax(file, function(view) {
           $(container).html(view)
           $.isFunction(callback) && callback()
         })

@@ -20,7 +20,7 @@
 ### Javascript
 
 ```
-oTemplate.renderById('/template/basic.html', {
+killt.renderById('/template/basic.html', {
   title: 'Keywords',
   list: ['Template', 'Template Engine', 'Javascript']
 })
@@ -28,7 +28,7 @@ oTemplate.renderById('/template/basic.html', {
 
 ### Output
 
-<iframe data-src="/oTemplate/demo/basic.html"></iframe>
+<iframe data-src="/killt/demo/basic.html"></iframe>
 
 
 
@@ -50,7 +50,7 @@ oTemplate.renderById('/template/basic.html', {
 ### Javascript
 
 ```
-var render = oTemplate.compileById('/template/compile.html')
+var render = killt.compileById('/template/compile.html')
 render({
   title: 'Keywords',
   list: ['Template', 'Template Engine', 'Javascript']
@@ -59,7 +59,7 @@ render({
 
 ### Output
 
-<iframe data-src="/oTemplate/demo/compile.html"></iframe>
+<iframe data-src="/killt/demo/compile.html"></iframe>
 
 ## Include/引入
 
@@ -88,8 +88,8 @@ render({
 ### Javascript
 
 ```
-oTemplate.renderById('/template/include.html', {
-  title: 'oTemplate',
+killt.renderById('/template/include.html', {
+  title: 'killt',
   subTitle: 'Keywords',
   list: ['Template', 'Template Engine', 'Javascript']
 })
@@ -97,7 +97,7 @@ oTemplate.renderById('/template/include.html', {
 
 ### Output
 
-<iframe data-src="/oTemplate/demo/include.html"></iframe>
+<iframe data-src="/killt/demo/include.html"></iframe>
 
 
 ## Helper/辅助函数
@@ -115,18 +115,18 @@ oTemplate.renderById('/template/include.html', {
 ### Javascript
 
 ```
-oTemplate.helper('love', function(who) {
+killt.helper('love', function(who) {
   return /\?/.exec(who) ? 'Fuck Q!!!' : 'Love ' + who
 })
 
-document.body.innerHTML = oTemplate.renderById('/template/helper.html', {
+document.body.innerHTML = killt.renderById('/template/helper.html', {
   title: 'Helper Defination'
 })
 ```
 
 ### Output
 
-<iframe data-src="/oTemplate/demo/helper.html"></iframe>
+<iframe data-src="/killt/demo/helper.html"></iframe>
 
 
 ## Noescape/不转义
@@ -148,8 +148,8 @@ document.body.innerHTML = oTemplate.renderById('/template/helper.html', {
 ### Javascript
 
 ```
-oTemplate.renderById('/template/noescape.html', {
-  title: 'oTemplate',
+killt.renderById('/template/noescape.html', {
+  title: 'killt',
   noescapeContent: '<div>\
       Check it out!!!\
       <ul>\
@@ -175,7 +175,7 @@ oTemplate.renderById('/template/noescape.html', {
 
 ### Output
 
-<iframe data-src="/oTemplate/demo/noescape.html"></iframe>
+<iframe data-src="/killt/demo/noescape.html"></iframe>
 
 
 ## AJAX/异步请求模板
@@ -200,7 +200,7 @@ oTemplate.renderById('/template/noescape.html', {
 ### Javascript
 
 ```
-oTemplate.renderByAjax('templates/ajax.html', {
+killt.renderByAjax('templates/ajax.html', {
   title: 'Keywords',
   list: ['Template', 'Template Engine', 'Javascript']
 },
@@ -211,7 +211,7 @@ function(html) {
 
 ### Output
 
-<iframe data-src="/oTemplate/demo/ajax.html"></iframe>
+<iframe data-src="/killt/demo/ajax.html"></iframe>
 
 
 ## Debug/异常处理
@@ -238,19 +238,19 @@ function(html) {
 ### Javascript
 
 ```
-oTemplate.onError(function(message) {
-  message = oTemplate.helper('$escape')(message)
+killt.onError(function(message) {
+  message = killt.helper('$escape')(message)
   document.body.innerHTML += message.replace(/\n/g, '<br>')
 })
 
-oTemplate.renderById('/template/debug/a.html')
-oTemplate.renderById('/template/debug/b.html')
-oTemplate.renderById('/template/debug/c.html')
-oTemplate.renderById('/template/debug/d.html')
-oTemplate.renderByAjax('/template/debug/e.html', function() {})
-oTemplate.renderByAjax('http://baidu.com', function() {})
+killt.renderById('/template/debug/a.html')
+killt.renderById('/template/debug/b.html')
+killt.renderById('/template/debug/c.html')
+killt.renderById('/template/debug/d.html')
+killt.renderByAjax('/template/debug/e.html', function() {})
+killt.renderByAjax('http://baidu.com', function() {})
 ```
 
 ### Output
 
-<iframe data-src="/oTemplate/demo/debug.html"></iframe>
+<iframe data-src="/killt/demo/debug.html"></iframe>

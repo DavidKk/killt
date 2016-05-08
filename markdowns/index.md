@@ -1,12 +1,12 @@
-# oTemplate
+# killt
 
-oTemplate is a template engine for Javascript.
+killt is a template engine for Javascript.
 
 
 ## Install
 
 ```
-bower install oTemplate
+bower install killt
 ```
 
 ## Features
@@ -51,24 +51,24 @@ bower install oTemplate
 ```
 // Source
 oTempalte.compile([String source], [Object options])
-oTemplate.render([String source], [Object Data], [Object options])
+killt.render([String source], [Object Data], [Object options])
 
 // Nested
 script(id="/template/inline.html", type="template/text")
-oTemplate.compileById([String TemplateId], [Object options])
-oTemplate.renderById([String TemplateId], [Object data], [Object options])
+killt.compileById([String TemplateId], [Object options])
+killt.renderById([String TemplateId], [Object data], [Object options])
 
 // Ajax
-oTemplate.compileFile([String File], [Function callback], [Object options])
-oTemplate.renderFile([String File], [Object data], [Function callback], [Object options])
+killt.compileFile([String File], [Function callback], [Object options])
+killt.renderFile([String File], [Object data], [Function callback], [Object options])
 ```
 
 ### Compiled by node
 ```
-var oTemplate = window.oTemplate
-var oTempalte = require('oTemplate')
+var killt = window.killt
+var oTempalte = require('killt')
 
-oTemplate.renderById('templates/list/default.html', {
+killt.renderById('templates/list/default.html', {
   title: 'Customer Title',
   list: {
     Author: 'David Jones',
@@ -79,7 +79,7 @@ oTemplate.renderById('templates/list/default.html', {
 
 ### Compiled by Ajax
 ```
-oTemplate.renderByAjax('templates/list/default.html', function(html) {
+killt.renderByAjax('templates/list/default.html', function(html) {
   // do something...
 })
 ```
@@ -87,7 +87,7 @@ oTemplate.renderByAjax('templates/list/default.html', function(html) {
 ## Customize Helpers
 
 ```
-oTemplate.helper('hate', function(who) {
+killt.helper('hate', function(who) {
   return 'Hate ' + who + '!!!'
 })
 
@@ -101,7 +101,7 @@ oTemplate.helper('hate', function(who) {
 ## Customize Block (full version, not in lite version)
 
 ```
-oTemplate.block('like', function(who, blockShell) {
+killt.block('like', function(who, blockShell) {
   return who ? 'Like ' + who + '!!!' : blockShell()
 })
 
@@ -115,7 +115,7 @@ oTemplate.block('like', function(who, blockShell) {
 ## Customize Syntax (full version, not in lite version)
 
 ```
-oTemplate.$registerSyntax('fuck', 'fuck\\s*([\\w\\W]+?)\\s*', 'fuck($1)')
+killt.$registerSyntax('fuck', 'fuck\\s*([\\w\\W]+?)\\s*', 'fuck($1)')
 
 // HTML
 {{fuck 'Q'}}
@@ -124,4 +124,4 @@ oTemplate.$registerSyntax('fuck', 'fuck\\s*([\\w\\W]+?)\\s*', 'fuck($1)')
 <% fuck('Q'); %>
 ```
 
-Note: `fuck` is a helper, so u must use `oTemplate.helper('fuck', function() {})` to add a helper.
+Note: `fuck` is a helper, so u must use `killt.helper('fuck', function() {})` to add a helper.

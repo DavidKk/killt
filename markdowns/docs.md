@@ -30,7 +30,7 @@
 ### compile/编译资源
 
 ```
-oTemplate.compile([String source], [Object options])
+killt.compile([String source], [Object options])
 
 source  {String} 模板资源
 options {Object} 渲染配置 (optional)
@@ -42,7 +42,7 @@ return  {Function} 渲染器
 ### render/渲染资源
 
 ```
-oTemplate.render([String source], [Object data], [Object options])
+killt.render([String source], [Object data], [Object options])
 
 source  {String} 模板资源
 data    {Object} 渲染的数据
@@ -55,7 +55,7 @@ return  {String}
 ### compileById/通过内联模板编译资源
 
 ```
-oTemplate.compileById([String elementId], [Object options])
+killt.compileById([String elementId], [Object options])
 
 elementId {String} 内联模板的ID
 options   {Object} 渲染配置 (optional)
@@ -67,7 +67,7 @@ return    {Function} 渲染器
 ### renderById/通过内联模板渲染资源
 
 ```
-oTemplate.renderById([String elementId], [Object options])
+killt.renderById([String elementId], [Object options])
 
 elementId {String} 内联模板的ID
 data      {Object} 渲染的数据
@@ -80,7 +80,7 @@ return    {String}
 ### compileByAjax/通过AJAX渲染资源
 
 ```
-oTemplate.renderByAjax([String filename], [Object options])
+killt.renderByAjax([String filename], [Object options])
 
 filename  {String}   模板文件
 options   {Object}   渲染配置 (optional)
@@ -92,7 +92,7 @@ return    {Function} 渲染器
 ### renderByAjax/通过Ajax渲染资源
 
 ```
-oTemplate.renderByAjax([String filename], [Object data], [Object options])
+killt.renderByAjax([String filename], [Object data], [Object options])
 
 filename  {String}   模板文件
 data      {Object}   渲染的数据
@@ -107,7 +107,7 @@ return    {String}
 helper 同时可以作为获取辅助函数的方法来使用，当没有传入 helper 的时候就会返回该辅助函数，但该函数必须是存在的。
 
 ```
-oTemplate.helper([String name], [Function helper])
+killt.helper([String name], [Function helper])
 
 name    {String}    辅助函数名称
 helper  {Function}  辅助函数 (optional)
@@ -117,7 +117,7 @@ return  {Self|Function}
 ### unhelper/注销辅助函数
 
 ```
-oTemplate.unhelper([String name])
+killt.unhelper([String name])
 
 name    {String} 辅助函数的名称
 return  {Self}
@@ -130,7 +130,7 @@ return  {Self}
 - block 同时可以作为获取辅助函数的方法来使用，当没有传入 block 的时候就会返回该辅助函数，但该函数必须是存在的。
 
 ```
-oTemplate.block([String name], [Function helper])
+killt.block([String name], [Function helper])
 
 name    {String}    辅助函数名称
 helper  {Function}  辅助函数
@@ -140,7 +140,7 @@ return  {Self}
 ### unblock/注销块级辅助函数 (语法版本下才有用)
 
 ```
-oTemplate.unblock([String name])
+killt.unblock([String name])
 
 name    {String} 辅助函数的名称
 return  {Self}
@@ -150,11 +150,11 @@ return  {Self}
 ### config/设置配置
 
 ```
-oTemplate.config([Object options])
+killt.config([Object options])
 
 options {Object} 配置信息
 
-oTemplate.config([String name, Anything value])
+killt.config([String name, Anything value])
 
 name  {String}    配置名称
 value {Anything}  配置的值
@@ -166,7 +166,7 @@ value {Anything}  配置的值
 ### $registerSyntax/注册语法 (语法版本才能使用)
 
 ```
-oTemplate.$registerSyntax([String name], [String syntax, RegExp syntax], [String shell, Function shell])
+killt.$registerSyntax([String name], [String syntax, RegExp syntax], [String shell, Function shell])
 
 name    {String}          语法名称
 syntax  {String|Regexp}   语法匹配
@@ -179,7 +179,7 @@ shell   {String|Function} 脚本替换
 
 
 ```
-oTemplate.$registerSyntax([String name], [Object options, Array options])
+killt.$registerSyntax([String name], [Object options, Array options])
 
 name    {String}          语法名称
 options {Object}          语法配置
@@ -197,7 +197,7 @@ options {Array}           语法配置
 ### $unregisterSyntax/注销语法 (语法版本才能使用)
 
 ```
-oTemplate.$unregisterSyntax([String name])
+killt.$unregisterSyntax([String name])
 
 name {String} 语法名称
 ```
@@ -205,7 +205,7 @@ name {String} 语法名称
 ### $clearSyntax/清除语法 (语法版本才能使用)
 
 ```
-oTemplate.$clearSyntax([String source])
+killt.$clearSyntax([String source])
 
 source {String} 模板资源
 ```
@@ -215,17 +215,17 @@ source {String} 模板资源
 
 ### extends/扩展
 
-- callback 的 scope 也是 oTemplate 自身
-- 若模板引擎本身还没初始化，可以定义 `oTemplate._extends` 来配置默认初始化，一般只会内部使用。
+- callback 的 scope 也是 killt 自身
+- 若模板引擎本身还没初始化，可以定义 `killt._extends` 来配置默认初始化，一般只会内部使用。
 
 ```
-oTemplate.extends([Function callback])
+killt.extends([Function callback])
 
 callback {Function}     回调函数
-  oTemplate {OTemplate} 模板引擎自身
+  killt {killt} 模板引擎自身
 ```
 
-[DEMO](https://github.com/DavidKk/oTemplate/blob/master/syntax/default.js)
+[DEMO](https://github.com/DavidKk/killt/blob/master/syntax/default.js)
 
 
 ## 高级扩展
@@ -237,9 +237,9 @@ callback {Function}     回调函数
 
 同时，必须开启语法配置
 ```
-OTemplate._defaults = extend(OTemplate._defaults, {
+killt._defaults = extend(killt._defaults, {
   noSyntax: false
 })
 ```
 
-[DEMO](https://github.com/DavidKk/oTemplate/blob/master/src/syntax.js)
+[DEMO](https://github.com/DavidKk/killt/blob/master/src/syntax.js)

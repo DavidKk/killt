@@ -1,15 +1,15 @@
 window.onload = function() {
-  oTemplate.config('env', oTemplate.ENV.UNIT)
+  killt.config('env', killt.ENV.UNIT)
 
-  oTemplate.onError(function(error, message) {
-    message = oTemplate.helper('$escape')(message)
+  killt.onError(function(error, message) {
+    message = killt.helper('$escape')(message)
     document.body.innerHTML += message.replace(/\n/g, '<br>')
   })
 
-  oTemplate.renderById('/template/debug/a.html')
-  oTemplate.renderById('/template/debug/b.html')
-  oTemplate.renderById('/template/debug/c.html')
-  oTemplate.renderById('/template/debug/d.html')
-  oTemplate.renderByAjax('/template/debug/e.html', function() {})
-  oTemplate.renderByAjax('http://baidu.com', function() {})
+  killt.renderById('/template/debug/a.html')
+  killt.renderById('/template/debug/b.html')
+  killt.renderById('/template/debug/c.html')
+  killt.renderById('/template/debug/d.html')
+  killt.renderByAjax('/template/debug/e.html', function() {})
+  killt.renderByAjax('http://baidu.com', function() {})
 }

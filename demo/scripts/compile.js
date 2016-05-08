@@ -1,5 +1,5 @@
 window.onload = function() {
-  var render = oTemplate.compileById('/template/compile.html')
+  var render = killt.compileById('/template/compile.html')
 
   document.body.innerHTML = render({
     title: 'Keywords',
