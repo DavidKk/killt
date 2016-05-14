@@ -208,15 +208,13 @@ class Engine {
       let match
 
       while (match = /<%source\\s*([\w\W]+?)?\\s*%>(.+?)<%\/source%>/igm.exec(source)) {
-        let helperName = match[1]
-        let str = match[2]
-
-        if (helperName && _sources_.hasOwnProperty(helperName)) {
-          str = _sources_[helperName](str)
+        let [all, helper, content] = match
+        if (helper && _sources_.hasOwnProperty(helper)) {
+          content = _sources_[helper](content, options, this)
         }
 
-        str = `<%=unescape('${root.escape(str)}')%>`
-        source = source.replace(match[0], str)
+        content = `<%=unescape('${escape(content)}')%>`
+        source = source.replace(all, content)
       }
 
       return source
@@ -415,7 +413,7 @@ class Engine {
 
     if (false === strip) {
       source = source.replace(/<!--([\w\W]+?)-->/g, ($all, $1) => {
-        return `<!--${root.escape($1)}-->`
+        return `<!--${escape($1)}-->`
       })
     }
 
@@ -467,7 +465,7 @@ class Engine {
           try {
             let source = render.apply(scope, [data].concat(args))
             return source.replace(/<!--([\w\W]+?)-->/g, ($all, $1) => {
-              return `<!--${root.unescape($1)}-->`
+              return `<!--${unescape($1)}-->`
             })
           }
           catch (err) {

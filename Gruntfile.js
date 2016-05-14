@@ -27,7 +27,7 @@ export default (grunt) => {
 
     concat: {
       options: {
-        banner: `~(function (root) {\n'use strict'\n`,
+        banner: `~((root = {}) => {\n'use strict'\n`,
         footer: `\n})('undefined' === typeof global ? 'undefined' === typeof window ? {} : window : global)`,
       },
     },

@@ -2,6 +2,10 @@
 
 const killt = require('./dist/es5/server/killt.js')
 
-killt.render('./template/b.html', {}, function (source) {
-  console.log(source)
+killt.compile('./template/a.html', function (err, render) {
+  if (err) {
+    console.log(err)
+  }
+
+  console.log(render())
 })

@@ -19,7 +19,8 @@ export default function (config) {
     ],
     files: [
       'node_modules/jasmine-ajax/lib/mock-ajax.js',
-      'src/core/root.js',
+      'tests/utilities/root.js',
+
       'src/core/utilities.js',
       'src/core/conf.js',
       'src/core/engine.js',
