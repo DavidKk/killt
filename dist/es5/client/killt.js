@@ -2,6 +2,8 @@
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -10,7 +12,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-~function (root) {
+~function () {
   'use strict';
   /**
    * 判断类型
@@ -25,6 +27,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    * @return {isType} 判断类型函数
    */
 
+  var root = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
   function is(type) {
     return function (value) {
       switch (type) {
@@ -566,6 +569,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: '$compileShell',
       value: function $compileShell() {
+        var _this3 = this;
+
         var source = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
@@ -604,15 +609,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           var match = void 0;
 
           while (match = /<%source\\s*([\w\W]+?)?\\s*%>(.+?)<%\/source%>/igm.exec(source)) {
-            var helperName = match[1];
-            var str = match[2];
+            var _match = match;
 
-            if (helperName && _sources_.hasOwnProperty(helperName)) {
-              str = _sources_[helperName](str);
+            var _match2 = _slicedToArray(_match, 3);
+
+            var all = _match2[0];
+            var helper = _match2[1];
+            var content = _match2[2];
+
+            if (helper && _sources_.hasOwnProperty(helper)) {
+              content = _sources_[helper](content, options, _this3);
             }
 
-            str = '<%=unescape(\'' + root.escape(str) + '\')%>';
-            source = source.replace(match[0], str);
+            content = '<%=unescape(\'' + escape(content) + '\')%>';
+            source = source.replace(all, content);
           }
 
           return source;
@@ -767,7 +777,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: '$compile',
       value: function $compile() {
-        var _this3 = this;
+        var _this4 = this;
 
         var source = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
@@ -791,7 +801,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         if (false === strip) {
           source = source.replace(/<!--([\w\W]+?)-->/g, function ($all, $1) {
-            return '<!--' + root.escape($1) + '-->';
+            return '<!--' + escape($1) + '-->';
           });
         }
 
@@ -809,15 +819,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               message: '[Exec Render]: ' + err.message,
               template: options.filename,
               line: err.line,
-              source: _this3._table(scope.$source, err.line),
-              shell: _this3._table(err.shell, err.line)
+              source: _this4._table(scope.$source, err.line),
+              shell: _this4._table(err.shell, err.line)
             };
 
             forEach(_args_, function (name, key) {
               _err['arguments:' + name] = err.args[key];
             });
 
-            _this3._throw(_err);
+            _this4._throw(_err);
             return '';
           };
 
@@ -825,11 +835,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             /* eslint no-new-func: 0 */
             render = new Function(_args_.join(','), shell);
           } catch (err) {
-            _this3._throw({
+            _this4._throw({
               message: '[Compile Render]: ' + err.message,
               template: options.filename,
               line: 'Javascript syntax occur error, it can not find out the error line.',
-              syntax: _this3._table(origin),
+              syntax: _this4._table(origin),
               source: source,
               shell: shell
             });
@@ -842,7 +852,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               try {
                 var _source = render.apply(scope, [data].concat(args));
                 return _source.replace(/<!--([\w\W]+?)-->/g, function ($all, $1) {
-                  return '<!--' + root.unescape($1) + '-->';
+                  return '<!--' + unescape($1) + '-->';
                 });
               } catch (err) {
                 return __catch(err);
@@ -1038,7 +1048,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: '_throw',
       value: function _throw(error) {
-        var _this4 = this;
+        var _this5 = this;
 
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
@@ -1048,7 +1058,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           (function () {
             var message = __throw(error);
 
-            forEach(_this4._listeners, function (listener) {
+            forEach(_this5._listeners, function (listener) {
               'error' === listener.type && listener.handle(error, message);
             });
           })();
@@ -1339,7 +1349,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: '$compileSyntax',
       value: function $compileSyntax(source) {
-        var _this6 = this;
+        var _this7 = this;
 
         var strict = arguments.length <= 1 || arguments[1] === undefined ? true : arguments[1];
 
@@ -1363,7 +1373,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           // 逻辑代码块
           if (1 !== codes.length) {
             source = source.replace('' + conf.openTag + codes[0] + conf.closeTag, function ($all) {
-              valid = _this6._compileSyntax($all, strict, origin);
+              valid = _this7._compileSyntax($all, strict, origin);
               return valid;
             });
           }
@@ -1453,7 +1463,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: '$registerSyntax',
       value: function $registerSyntax(name, syntax, shell) {
-        var _this7 = this;
+        var _this8 = this;
 
         if (2 < arguments.length) {
           this._blocks[name] = {
@@ -1462,11 +1472,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           };
         } else if (is('PlainObject')(syntax)) {
           forEach(syntax, function (shell, syntax) {
-            _this7.$registerSyntax(name, syntax, shell);
+            _this8.$registerSyntax(name, syntax, shell);
           });
         } else if (is('Array')(syntax)) {
           forEach(syntax, function (compiler) {
-            is('String')(compiler.syntax) && (is('String')(compiler.shell) || is('Function')(compiler.shell)) && _this7.$registerSyntax(name, compiler.syntax, compiler.shell);
+            is('String')(compiler.syntax) && (is('String')(compiler.shell) || is('Function')(compiler.shell)) && _this8.$registerSyntax(name, compiler.syntax, compiler.shell);
           });
         }
 
@@ -1688,14 +1698,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       // extends include func to support ajax request file
       // 扩展新的 include 支持 ajax
 
-      var _this8 = _possibleConstructorReturn(this, Object.getPrototypeOf(Client).call(this, options));
+      var _this9 = _possibleConstructorReturn(this, Object.getPrototypeOf(Client).call(this, options));
 
-      ~extend(_this8._helpers, {
+      ~extend(_this9._helpers, {
         include: function include(filename, data, options) {
-          return _this8.renderSync(filename, data, options);
+          return _this9.renderSync(filename, data, options);
         }
       });
-      return _this8;
+      return _this9;
     }
 
     /**
@@ -1737,136 +1747,158 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       /**
        * 编译模板
        * @param {string} template 模板
-       * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
+       * @param {Function} callback 回调函数
        * @param {Object} options 配置
-       * @return {Function} 模板函数
+       * @description
+       * Progress:
+       * find includes -> load include -> compile -> not found includes -> cache -> render template
+       *                                          -> find includes      -> ...
        */
 
     }, {
       key: 'compile',
       value: function compile(template, callback) {
-        var _this9 = this;
+        var _this10 = this;
 
         var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
-        var conf = this.options(options, { filename: template });
-        var sync = !!conf.sync;
-
-        if (is('Object')(callback)) {
-          return this.compile(template, null, callback);
-        }
-
-        if (false === sync && !is('Function')(callback)) {
-          return;
-        }
-
         template = toString(template);
 
+        var conf = this.options(options, { filename: template });
+
+        /**
+         * find out render function in the caches
+         * 找出缓存中是否存在模板函数
+         */
         var render = true === conf.override ? undefined : this._cache(template);
-
         if (is('Function')(render)) {
-          if (sync) {
-            return render;
-          }
-
-          callback(render);
+          callback(null, render);
           return;
         }
 
+        /**
+         * if template in document, use innerHTML as source
+         * 查找模板是否存在 document 当中，若存在则直接使用不用请求远程模板
+         */
         var node = document.getElementById(template);
-
         if (node) {
           var source = node.innerHTML.replace(/^ *\n|\n *$/g, '');
           render = this.compileSource(source, conf);
-          return sync ? render : (callback(render), undefined);
+          callback(null, render);
+          return;
         }
 
-        this.getSourceByAjax(template, function (source) {
-          var origin = source;
-          var dependencies = [];
-
-          // source 经过这里会变得不纯正
-          // 主要用于确定需要导入的模板
-
-          if (false === conf.noSyntax) {
-            source = _this9.$compileSyntax(source, conf.strict);
+        this.readFileByAJAX(template, function (err, source) {
+          if (err) {
+            callback(err);
+            return;
           }
 
-          // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
+          /**
+           * source will become not pure
+           * so we must save the source at first
+           * source 会受影响，因此先保存 source 的初始值
+           */
+          var dependencies = [];
+          var origin = source;
+
+          /**
+           * because can not make sure which syntax will be used
+           * so compile it to lit version syntax
+           * 因此不能确认使用那种语法，因此先编译成原始版本语法
+           */
+          if (false === conf.noSyntax) {
+            source = _this10.$compileSyntax(source, conf.strict);
+          }
+
+          /**
+           * find out all dependencies of this template
+           * match any `<%# include template [, data] %>` syntax
+           * 找出所有依赖模板
+           * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
+           */
           forEach(source.split('<%'), function (code) {
             var _ref2 = [code.split('%>')];
             var codes = _ref2[0];
             var match = _ref2[1];
 
-            // logic block is fist part when `codes.length === 2`
-            // 逻辑模块
 
             if (1 !== codes.length && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
               dependencies.push(match[1].replace(/[\'\"\`]/g, ''));
             }
           });
 
-          var total = dependencies.length;
+          // compile all dependencies
+          // 编译所有的子模板
+          if (0 < dependencies.length) {
+            (function () {
+              var promises = [];
 
-          var __return = function __return() {
-            render = _this9.$compile(origin);
-            _this9._cache(template, render);
-            false === sync && callback(render);
-            total = undefined;
-          };
+              forEach(dependencies, function (dependency) {
+                // check if dependency is already exists
+                // 检测子模板是否已经存在
+                if (!_this10._cache(dependency)) {
+                  // check if dependency is in current template
+                  // 检测子模板是否存在当前模板中，若是则直使用
+                  var subSource = findChildTemplate(dependency, origin);
+                  if (subSource) {
+                    _this10.compileSource(subSource, {
+                      filename: dependency,
+                      override: !!conf.override
+                    });
+                  }
+                  // require source in loop
+                  else {
+                      var promise = new Promise(function (resolve, reject) {
+                        _this10.compile(dependency, function (err, render) {
+                          err ? reject(err) : resolve(render);
+                        }, conf);
+                      });
 
-          var __exec = function __exec() {
-            0 >= --total && __return();
-          };
-
-          if (0 < total) {
-            forEach(unique(dependencies), function (child) {
-              if (_this9._cache(child)) {
-                __exec();
-              } else {
-                var childSource = findChildTemplate(child, origin);
-
-                if (childSource) {
-                  _this9.compileSource(childSource, {
-                    filename: child,
-                    override: !!conf.override
-                  });
-
-                  __exec();
-                } else {
-                  _this9.compile(child, __exec, conf);
+                      promises.push(promise);
+                    }
                 }
+              });
+
+              /**
+               * all sub-template is ready
+               * compile current template
+               * and fire callback
+               */
+              if (0 < promises.length) {
+                Promise.all(promises).then(function () {
+                  var render = _this10.$compile(origin);
+                  _this10._cache(template, render);
+
+                  callback(null, render);
+                }).catch(function (err) {
+                  callback(err);
+                });
+              } else {
+                var _render = _this10.$compile(origin);
+                _this10._cache(template, _render);
+
+                callback(null, _render);
               }
-            });
-          } else {
-            __return();
+            })();
           }
-        }, {
-          sync: sync
-        });
+          // not found any dependencies and compile this template
+          // 找不到任何子模板直接编译模板
+          else {
+              var _render2 = _this10.$compile(origin);
+              _this10._cache(template, _render2);
 
-        return render;
-
-        function findChildTemplate(templateId, source) {
-          var node = document.createElement('div');
-          node.innerHTML = source;
-
-          var templateNodes = node.getElementsByTagName('script');
-          for (var i = templateNodes.length; i--;) {
-            if (templateId === templateNodes[i].id) {
-              return templateNodes[i].innerHTML;
+              callback(null, _render2);
             }
-          }
-        }
+        }, extend(conf, { sync: false }));
       }
 
       /**
        * 渲染模板
        * @param {string} template 模板
        * @param {Object} data 数据
-       * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
+       * @param {function} callback 回调
        * @param {Object} options 配置
-       * @return {string} 结果字符串
        */
 
     }, {
@@ -1874,22 +1906,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function render(template, data, callback) {
         var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
-        var conf = this.options(options, { filename: template });
-        var sync = !!conf.sync;
-
-        if (is('Object')(callback)) {
-          var render = this.compile(template, null, extend(callback, { sync: true }));
-          return render(data || {});
+        if (is('Function')(data)) {
+          this.render(template, {}, data, callback);
+        } else if (is('Function')(callback)) {
+          this.compile(template, function (error, render) {
+            callback(error, render(data || {}));
+          }, options);
         }
-
-        if (false === sync && !is('Function')(callback)) {
-          return;
-        }
-
-        this.compile(template, function (render) {
-          var source = render(data || {});
-          callback(source);
-        }, conf);
       }
 
       /**
@@ -1897,13 +1920,101 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @param {string} template 模板ID
        * @param {Object} options 配置 (optional)
        * @return {Function} 编译函数
+       * @description
+       * Progress:
+       * find includes -> load include -> compile -> not found includes -> cache -> render template
+       *                                          -> find includes      -> ...
        */
 
     }, {
       key: 'compileSync',
-      value: function compileSync(template, options) {
-        var conf = extend({}, options, { sync: true });
-        return this.compile(template, null, conf);
+      value: function compileSync(template) {
+        var _this11 = this;
+
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+        template = toString(template);
+
+        var conf = this.options(options, { filename: template });
+
+        /**
+         * find out render function in the caches
+         * 找出缓存中是否存在模板函数
+         */
+        var render = true === conf.override ? undefined : this._cache(template);
+        if (is('Function')(render)) {
+          return render;
+        }
+
+        /**
+         * if template in document, use innerHTML as source
+         * 查找模板是否存在 document 当中，若存在则直接使用不用请求远程模板
+         */
+        var node = document.getElementById(template);
+        if (node) {
+          var _source2 = node.innerHTML.replace(/^ *\n|\n *$/g, '');
+          return this.compileSource(_source2, conf);
+        }
+
+        /**
+         * read template by ajax sync
+         * if error return __render (return empty string)
+         * 同步查找模板文件，若失败则返回 __render (该函数返回空字符串)
+         */
+        var source = this.readFileByAJAX(template, null, extend(conf, { sync: false }));
+        if (is('Undefined')(source)) {
+          return __render;
+        }
+
+        /**
+         * source will become not pure
+         * so we must save the source at first
+         * source 会受影响，因此先保存 source 的初始值
+         */
+        var dependencies = [];
+        var origin = source;
+
+        /**
+         * because can not make sure which syntax will be used
+         * so compile it to lit version syntax
+         * 因此不能确认使用那种语法，因此先编译成原始版本语法
+         */
+        if (false === conf.noSyntax) {
+          source = this.$compileSyntax(source, conf.strict);
+        }
+
+        /**
+         * find out all dependencies of this template
+         * match any `<%# include template [, data] %>` syntax
+         * 找出所有依赖模板
+         * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
+         */
+        forEach(source.split('<%'), function (code) {
+          var _ref3 = [code.split('%>')];
+          var codes = _ref3[0];
+          var match = _ref3[1];
+
+
+          if (1 !== codes.length && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
+            dependencies.push(match[1].replace(/[\'\"\`]/g, ''));
+          }
+        });
+
+        // compile all dependencies
+        // 编译所有的子模板
+        if (0 < dependencies.length) {
+          forEach(dependencies, function (dependency) {
+            // check if dependency is already exists
+            // 检测子模板是否已经存在
+            if (!_this11._cache(dependency)) {
+              _this11.compileSync(dependency, options);
+            }
+          });
+        }
+
+        render = this.$compile(origin);
+        this._cache(template, render);
+        return render;
       }
 
       /**
@@ -1916,109 +2027,79 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     }, {
       key: 'renderSync',
-      value: function renderSync(template, data, options) {
+      value: function renderSync(template) {
+        var data = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var options = arguments[2];
+
         var render = this.compileSync(template, options);
-        return render(data || {});
-      }
-
-      /**
-       * 异步编译模板
-       * @param {string} template 模板地址或ID
-       * @param {Function} callback 回调函数
-       * @param {Object} options 配置 (optional)
-       */
-
-    }, {
-      key: 'compileAsync',
-      value: function compileAsync(template, callback, options) {
-        var conf = extend({}, options, { sync: false });
-        this.compile(template, callback, conf);
-      }
-
-      /**
-       * 异步渲染
-       * @param {string} template 模板地址或ID
-       * @param {Object} data 数据 (optional)
-       * @param {Function} callback 回调函数
-       * @param {Object} options 配置 (optional)
-       * @return {string} 结果字符串
-       */
-
-    }, {
-      key: 'renderAsync',
-      value: function renderAsync(template, data, callback, options) {
-        if (is('Function')(data)) {
-          return this.renderAsync(template, {}, data, callback);
-        }
-
-        if (is('Function')(callback)) {
-          this.compileAsync(template, function (render) {
-            callback(render(data || {}));
-          }, options);
-        }
+        return render(data);
       }
 
       /**
        * 请求远程模板资源
-       * @param {string} sourceUrl 远程资源地址
+       * @param {string} url 远程资源地址
        * @param {Function} callback 回调函数
        * @param {Object} options 配置
+       * @return {string} 模板
        */
 
     }, {
-      key: 'getSourceByAjax',
-      value: function getSourceByAjax(sourceUrl, callback) {
-        var _this10 = this;
+      key: 'readFileByAJAX',
+      value: function readFileByAJAX(url, callback) {
+        var _this12 = this;
 
         var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
         if (!is('Function')(callback)) {
-          return;
+          callback = function callback() {};
         }
 
         var xhr = new XMLHttpRequest();
+        var responseText = void 0;
 
         xhr.onreadystatechange = function () {
           var status = this.status;
 
           if (this.DONE === this.readyState && 200 <= status && 400 > status) {
-            callback(this.responseText);
+            responseText = this.responseText;
+            callback(null, this.responseText);
           }
         };
 
         xhr.onerror = function () {
           var err = {
-            message: '[Compile Template]: Request file ' + sourceUrl + ' some error occured.',
-            filename: sourceUrl,
-            response: '[Reponse State]: ' + _this10.status
+            message: '[Compile Template]: Request file ' + url + ' some error occured.',
+            filename: url,
+            response: '[Reponse State]: ' + _this12.status
           };
 
-          _this10._throw(err);
-          is('Function')(options.catch) && options.catch(err);
+          _this12._throw(err);
+          callback(err);
         };
 
         xhr.ontimeout = function () {
           var err = {
-            message: '[Request Template]: Request template file ' + sourceUrl + ' timeout.',
-            filename: sourceUrl
+            message: '[Request Template]: Request template file ' + url + ' timeout.',
+            filename: url
           };
 
-          _this10._throw(err);
-          is('Function')(options.catch) && options.catch(err);
+          _this12._throw(err);
+          callback(err);
         };
 
         xhr.onabort = function () {
           var err = {
             message: '[Request Template]: Bowswer absort the request.',
-            filename: sourceUrl
+            filename: url
           };
 
-          _this10._throw(err);
-          is('Function')(options.catch) && options.catch(err);
+          _this12._throw(err);
+          callback(err);
         };
 
-        xhr.open('GET', sourceUrl, !options.sync);
+        xhr.open('GET', url, !options.sync);
         xhr.send(null);
+        return responseText;
       }
     }]);
 
@@ -2055,5 +2136,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     else {
         root[name] = module;
       }
+  }
+
+  function findChildTemplate(templateId, source) {
+    var node = document.createElement('div');
+    node.innerHTML = source;
+
+    var templateNodes = node.getElementsByTagName('script');
+    for (var i = templateNodes.length; i--;) {
+      if (templateId === templateNodes[i].id) {
+        return templateNodes[i].innerHTML;
+      }
+    }
   }
 }('undefined' === typeof global ? 'undefined' === typeof window ? {} : window : global);

@@ -18,6 +18,7 @@ export default function (config) {
       'karma-babel-preprocessor',
     ],
     files: [
+      'node_modules/babel-polyfill/dist/polyfill.js',
       'node_modules/jasmine-ajax/lib/mock-ajax.js',
       'tests/utilities/root.js',
 

@@ -1,4 +1,4 @@
-~(function (root) {
+~((root = {}) => {
 'use strict'
 /**
  * 判断类型
@@ -578,15 +578,13 @@ class Engine {
       let match
 
       while (match = /<%source\\s*([\w\W]+?)?\\s*%>(.+?)<%\/source%>/igm.exec(source)) {
-        let helperName = match[1]
-        let str = match[2]
-
-        if (helperName && _sources_.hasOwnProperty(helperName)) {
-          str = _sources_[helperName](str)
+        let [all, helper, content] = match
+        if (helper && _sources_.hasOwnProperty(helper)) {
+          content = _sources_[helper](content, options, this)
         }
 
-        str = `<%=unescape('${root.escape(str)}')%>`
-        source = source.replace(match[0], str)
+        content = `<%=unescape('${escape(content)}')%>`
+        source = source.replace(all, content)
       }
 
       return source
@@ -785,7 +783,7 @@ class Engine {
 
     if (false === strip) {
       source = source.replace(/<!--([\w\W]+?)-->/g, ($all, $1) => {
-        return `<!--${root.escape($1)}-->`
+        return `<!--${escape($1)}-->`
       })
     }
 
@@ -837,7 +835,7 @@ class Engine {
           try {
             let source = render.apply(scope, [data].concat(args))
             return source.replace(/<!--([\w\W]+?)-->/g, ($all, $1) => {
-              return `<!--${root.unescape($1)}-->`
+              return `<!--${unescape($1)}-->`
             })
           }
           catch (err) {
@@ -1562,8 +1560,7 @@ Engine.extend((engine) => {
     }
   })
 })
-const path  = require('path')
-const fs    = require('fs')
+const fs = require('fs')
 
 /**
  * 服务器接口类
@@ -1612,128 +1609,273 @@ class Server extends (Syntax || Engine) {
   }
 
   /**
+   * 读取文件
+   * @function
+   * @param {string} filename 文件名
+   * @param {Object} options 配置
+   * @return {Promise}
+   */
+  readFile (filename, options = {}) {
+    return new Promise((reolve, reject) => {
+      fs.readFile(filename, options.encoding || 'utf-8', (err, buffer) => {
+        if (err) {
+          let error = {
+            message   : `[Compile Template]: Read file ${filename} some error occured.`,
+            filename  : filename,
+            origin    : err
+          }
+
+          this._throw(error)
+          reject(error)
+          return
+        }
+
+        let source = buffer.toString('utf-8')
+        reolve(source)
+      })
+    })
+  }
+
+  /**
    * 编译模板
    * @param {string} template 模板
-   * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
+   * @param {Function} callback 回调函数
    * @param {Object} options 配置
-   * @return {Function} 模板函数
+   * @description
+   * Progress:
+   * find includes -> load include -> compile -> not found includes -> cache -> render template
+   *                                          -> find includes      -> ...
    */
   compile (template, callback, options = {}) {
-    let conf = this.options(options, { filename: template })
-    let sync = !!conf.sync
-
-    if (is('Object')(callback)) {
-      return this.compile(template, null, callback)
-    }
-
-    if (false === sync && !is('Function')(callback)) {
-      return
-    }
-
     template = toString(template)
 
+    let conf = this.options(options, { filename: template })
+
+    /**
+     * find out render function in the caches
+     * 找出缓存中是否存在模板函数
+     */
     let render = true === conf.override ? undefined : this._cache(template)
-
     if (is('Function')(render)) {
-      if (sync) {
-        return render
-      }
-
-      callback(render)
+      callback(null, render)
       return
     }
 
-    this.getSourceByFile(template, (source) => {
-      let [origin, dependencies] = [source, []]
+    this
+    .readFile(template)
+    .then((source) => {
+      /**
+       * source will become not pure
+       * so we must save the source at first
+       * source 会受影响，因此先保存 source 的初始值
+       */
+      let dependencies = []
+      let origin       = source
 
-      // source 经过这里会变得不纯正
-      // 主要用于确定需要导入的模板
+      /**
+       * because can not make sure which syntax will be used
+       * so compile it to lit version syntax
+       * 因此不能确认使用那种语法，因此先编译成原始版本语法
+       */
       if (false === conf.noSyntax) {
         source = this.$compileSyntax(source, conf.strict)
       }
 
-      // 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
+      /**
+       * find out all dependencies of this template
+       * match any `<%# include template [, data] %>` syntax
+       * 找出所有依赖模板
+       * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
+       */
       forEach(source.split('<%'), (code) => {
         let [codes, match] = [code.split('%>')]
 
-        // logic block is fist part when `codes.length === 2`
-        // 逻辑模块
         if (1 !== codes.length
         && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
           dependencies.push(match[1].replace(/[\'\"\`]/g, ''))
         }
       })
 
-      let total = dependencies.length
+      // compile all dependencies
+      // 编译所有的子模板
+      if (0 < dependencies.length) {
+        let promises = []
 
-      let __return = () => {
-        render = this.$compile(origin)
-        this._cache(template, render)
-        false === sync && callback(render)
-        total = undefined
-      }
+        forEach(dependencies, (dependency) => {
+          // check if dependency is already exists
+          // 检测子模板是否已经存在
+          if (!this._cache(dependency)) {
+            let promise = new Promise((resolve, reject) => {
+              this.compile(dependency, (err, render) => {
+                err ? reject(err) : resolve(render)
+              }, options)
+            })
 
-      let __exec = () => {
-        0 >= -- total && __return()
-      }
-
-      if (0 < total) {
-        forEach(unique(dependencies), (child) => {
-          if (this._cache(child)) {
-            __exec()
-          }
-          else {
-            this.compile(child, __exec, conf)
+            promises.push(promise)
           }
         })
-      }
-      else {
-        __return()
-      }
-    },
-    {
-      sync: sync
-    })
 
-    return render
+        /**
+         * all sub-template is ready
+         * compile current template
+         * and fire callback
+         */
+        if (0 < promises.length) {
+          Promise
+          .all(promises)
+          .then(() => {
+            let render = this.$compile(origin)
+            this._cache(template, render)
+
+            callback(null, render)
+          })
+          .catch((err) => {
+            callback(err)
+          })
+        }
+        else {
+          let render = this.$compile(origin)
+          this._cache(template, render)
+
+          callback(null, render)
+        }
+      }
+      // not found any dependencies and compile this template
+      // 找不到任何子模板直接编译模板
+      else {
+        let render = this.$compile(origin)
+        this._cache(template, render)
+        callback(null, render)
+      }
+    })
+    .catch((err) => {
+      callback(err)
+    })
   }
 
   /**
    * 渲染模板
    * @param {string} template 模板
    * @param {Object} data 数据
-   * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
+   * @param {function} callback 回调
    * @param {Object} options 配置
-   * @return {string} 结果字符串
    */
-  render (template, data, callback, options = {}) {
-    let conf = this.options(options, { filename: template })
-    let sync = !!conf.sync
-
-    if (is('Object')(callback)) {
-      let render = this.compile(template, null, extend(callback, { sync: true }))
-      return render(data || {})
+  render (template, data, callback, options) {
+    if (is('Function')(data)) {
+      this.render(template, {}, data, callback)
     }
-
-    if (false === sync && !is('Function')(callback)) {
-      return
+    else if (is('Function')(callback)) {
+      this.compile(template, (error, render) => {
+        callback(error, render(data || {}))
+      }, options)
     }
+  }
 
-    this.compile(template, (render) => {
-      let source = render(data || {})
-      callback(source)
-    }, conf)
+  /**
+   * 同步读取文件
+   * @function
+   * @param {string} filename 文件名
+   * @param {Object} options 配置
+   * @return {string} 模板
+   */
+  readFileSync (filename, options = {}) {
+    try {
+      let buffer = fs.readFileSync(filename, options.encoding || 'utf-8')
+      let source = buffer.toString('utf-8')
+      return source
+    }
+    catch (err) {
+      let error = {
+        message   : `[Compile Template]: Read file (sync) ${filename} some error occured.`,
+        filename  : filename,
+        origin    : err
+      }
+
+      this._throw(error)
+    }
   }
 
   /**
    * 阻塞编译模板
    * @param {string} template 模板ID
    * @param {Object} options 配置 (optional)
-   * @return {Function} 编译函数
+   * @return {Function} 模板函数
+   * @description
+   * Progress:
+   * find includes -> load include -> compile -> not found includes -> cache -> render template
+   *                                          -> find includes      -> ...
    */
-  compileSync (template, options) {
-    let conf = extend({}, options, { sync: true })
-    return this.compile(template, null, conf)
+  compileSync (template, options = {}) {
+    template = toString(template)
+
+    let conf = this.options(options, { filename: template })
+
+    /**
+     * find out render function in the caches
+     * 找出缓存中是否存在模板函数
+     */
+    let render = true === conf.override ? undefined : this._cache(template)
+    if (is('Function')(render)) {
+      return render
+    }
+
+    /**
+     * read template by ajax sync
+     * if error return __render (return empty string)
+     * 同步查找模板文件，若失败则返回 __render (该函数返回空字符串)
+     */
+    let source = this.readFileSync(template, options)
+    if (is('Undefined')(source)) {
+      return __render
+    }
+
+    /**
+     * source will become not pure
+     * so we must save the source at first
+     * source 会受影响，因此先保存 source 的初始值
+     */
+    let dependencies = []
+    let origin       = source
+
+    /**
+     * because can not make sure which syntax will be used
+     * so compile it to lit version syntax
+     * 因此不能确认使用那种语法，因此先编译成原始版本语法
+     */
+    if (false === conf.noSyntax) {
+      source = this.$compileSyntax(source, conf.strict)
+    }
+
+    /**
+     * find out all dependencies of this template
+     * match any `<%# include template [, data] %>` syntax
+     * 找出所有依赖模板
+     * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
+     */
+    forEach(source.split('<%'), (code) => {
+      let [codes, match] = [code.split('%>')]
+
+      if (1 !== codes.length
+      && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
+        dependencies.push(match[1].replace(/[\'\"\`]/g, ''))
+      }
+    })
+
+    // compile all dependencies
+    // 编译所有的子模板
+    if (0 < dependencies.length) {
+      forEach(dependencies, (dependency) => {
+        // check if dependency is already exists
+        // 检测子模板是否已经存在
+        if (!this._cache(dependency)) {
+          this.compileSync(dependency, options)
+        }
+      })
+    }
+
+    render = this.$compile(origin)
+    this._cache(template, render)
+    return render
   }
 
   /**
@@ -1743,87 +1885,9 @@ class Server extends (Syntax || Engine) {
    * @param {Object} options 配置 (optional)
    * @return {string} 结果字符串
    */
-  renderSync (template, data, options) {
+  renderSync (template, data = {}, options) {
     let render = this.compileSync(template, options)
-    return render(data || {})
-  }
-
-  /**
-   * 异步编译模板
-   * @param {string} template 模板地址或ID
-   * @param {Function} callback 回调函数
-   * @param {Object} options 配置 (optional)
-   */
-  compileAsync (template, callback, options) {
-    let conf = extend({}, options, { sync: false })
-    this.compile(template, callback, conf)
-  }
-
-  /**
-   * 异步渲染
-   * @param {string} template 模板地址或ID
-   * @param {Object} data 数据 (optional)
-   * @param {Function} callback 回调函数
-   * @param {Object} options 配置 (optional)
-   * @return {string} 结果字符串
-   */
-  renderAsync (template, data, callback, options) {
-    if (is('Function')(data)) {
-      return this.renderAsync(template, {}, data, callback)
-    }
-
-    if (is('Function')(callback)) {
-      this.compileAsync(template, (render) => {
-        callback(render(data || {}))
-      }, options)
-    }
-  }
-
-  /**
-   * 读取文件
-   * @function
-   * @param  {String}   filename 文件名
-   * @param  {Function} callback 回调函数
-   */
-  getSourceByFile (filename, callback, options = {}) {
-    if (!is('Function')(callback)) {
-      return
-    }
-
-    if (true === options.sync) {
-      try {
-        let buffer = fs.readFileSync(filename, options.encoding || 'utf-8')
-        let source = buffer.toString('utf-8')
-        callback(source)
-      }
-      catch (err) {
-        let error = {
-          message   : `[Compile Template]: Request file ${filename} some error occured.`,
-          filename  : filename,
-          origin    : err
-        }
-
-        this._throw(error)
-        return
-      }
-    }
-    else {
-      fs.readFile(filename, options.encoding || 'utf-8', (err, buffer) => {
-        if (err) {
-          let error = {
-            message   : `[Compile Template]: Request file ${filename} some error occured.`,
-            filename  : filename,
-            origin    : err
-          }
-
-          this._throw(error)
-          return
-        }
-
-        let source = buffer.toString('utf-8')
-        callback(source)
-      })
-    }
+    return render(data)
   }
 }
 

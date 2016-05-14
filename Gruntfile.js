@@ -65,7 +65,8 @@ export default (grunt) => {
         configFile: '.eslintrc',
       },
       dest: [
-        'dist/es6/client/killt.js'
+        'dist/es6/client/killt.js',
+        'dist/es6/server/killt.js',
       ],
     },
 

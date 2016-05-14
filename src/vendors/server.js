@@ -1,5 +1,4 @@
-const path  = require('path')
-const fs    = require('fs')
+const fs = require('fs')
 
 /**
  * 服务器接口类
@@ -51,8 +50,8 @@ class Server extends (Syntax || Engine) {
    * 读取文件
    * @function
    * @param {string} filename 文件名
-   * @param {Function} callback 回调函数
    * @param {Object} options 配置
+   * @return {Promise}
    */
   readFile (filename, options = {}) {
     return new Promise((reolve, reject) => {
@@ -80,15 +79,20 @@ class Server extends (Syntax || Engine) {
    * @param {string} template 模板
    * @param {Function} callback 回调函数
    * @param {Object} options 配置
-   * @return {Function} 模板函数
    * @description
    * Progress:
    * find includes -> load include -> compile -> not found includes -> cache -> render template
    *                                          -> find includes      -> ...
    */
   compile (template, callback, options = {}) {
+    template = toString(template)
+
     let conf = this.options(options, { filename: template })
 
+    /**
+     * find out render function in the caches
+     * 找出缓存中是否存在模板函数
+     */
     let render = true === conf.override ? undefined : this._cache(template)
     if (is('Function')(render)) {
       callback(null, render)
@@ -106,6 +110,11 @@ class Server extends (Syntax || Engine) {
       let dependencies = []
       let origin       = source
 
+      /**
+       * because can not make sure which syntax will be used
+       * so compile it to lit version syntax
+       * 因此不能确认使用那种语法，因此先编译成原始版本语法
+       */
       if (false === conf.noSyntax) {
         source = this.$compileSyntax(source, conf.strict)
       }
@@ -127,7 +136,7 @@ class Server extends (Syntax || Engine) {
 
       // compile all dependencies
       // 编译所有的子模板
-      if (dependencies.length > 0) {
+      if (0 < dependencies.length) {
         let promises = []
 
         forEach(dependencies, (dependency) => {
@@ -138,23 +147,36 @@ class Server extends (Syntax || Engine) {
               this.compile(dependency, (err, render) => {
                 err ? reject(err) : resolve(render)
               }, options)
-
-              promises.push(promise)
             })
+
+            promises.push(promise)
           }
         })
 
-        Promise
-        .all(promises)
-        .then(() => {
+        /**
+         * all sub-template is ready
+         * compile current template
+         * and fire callback
+         */
+        if (0 < promises.length) {
+          Promise
+          .all(promises)
+          .then(() => {
+            let render = this.$compile(origin)
+            this._cache(template, render)
+
+            callback(null, render)
+          })
+          .catch((err) => {
+            callback(err)
+          })
+        }
+        else {
           let render = this.$compile(origin)
           this._cache(template, render)
 
           callback(null, render)
-        })
-        .catch((err) => {
-          callback(err)
-        })
+        }
       }
       // not found any dependencies and compile this template
       // 找不到任何子模板直接编译模板
@@ -173,14 +195,18 @@ class Server extends (Syntax || Engine) {
    * 渲染模板
    * @param {string} template 模板
    * @param {Object} data 数据
-   * @param {Function} callback 回调函数 (optional) - 只有在异步编译才需要/only in async
+   * @param {function} callback 回调
    * @param {Object} options 配置
-   * @return {string} 结果字符串
    */
-  render (template, data = {}, callback, options = {}) {
-    let render = this.compile(template, (err, render) => {
-      !err && render(data)
-    }, options)
+  render (template, data, callback, options) {
+    if (is('Function')(data)) {
+      this.render(template, {}, data, callback)
+    }
+    else if (is('Function')(callback)) {
+      this.compile(template, (error, render) => {
+        callback(error, render(data || {}))
+      }, options)
+    }
   }
 
   /**
@@ -188,6 +214,7 @@ class Server extends (Syntax || Engine) {
    * @function
    * @param {string} filename 文件名
    * @param {Object} options 配置
+   * @return {string} 模板
    */
   readFileSync (filename, options = {}) {
     try {
@@ -210,16 +237,35 @@ class Server extends (Syntax || Engine) {
    * 阻塞编译模板
    * @param {string} template 模板ID
    * @param {Object} options 配置 (optional)
-   * @return {Function} 编译函数
+   * @return {Function} 模板函数
+   * @description
+   * Progress:
+   * find includes -> load include -> compile -> not found includes -> cache -> render template
+   *                                          -> find includes      -> ...
    */
   compileSync (template, options = {}) {
+    template = toString(template)
+
     let conf = this.options(options, { filename: template })
+
+    /**
+     * find out render function in the caches
+     * 找出缓存中是否存在模板函数
+     */
     let render = true === conf.override ? undefined : this._cache(template)
     if (is('Function')(render)) {
       return render
     }
 
+    /**
+     * read template by ajax sync
+     * if error return __render (return empty string)
+     * 同步查找模板文件，若失败则返回 __render (该函数返回空字符串)
+     */
     let source = this.readFileSync(template, options)
+    if (is('Undefined')(source)) {
+      return __render
+    }
 
     /**
      * source will become not pure
@@ -229,6 +275,11 @@ class Server extends (Syntax || Engine) {
     let dependencies = []
     let origin       = source
 
+    /**
+     * because can not make sure which syntax will be used
+     * so compile it to lit version syntax
+     * 因此不能确认使用那种语法，因此先编译成原始版本语法
+     */
     if (false === conf.noSyntax) {
       source = this.$compileSyntax(source, conf.strict)
     }
@@ -248,7 +299,9 @@ class Server extends (Syntax || Engine) {
       }
     })
 
-    if (dependencies.length > 0) {
+    // compile all dependencies
+    // 编译所有的子模板
+    if (0 < dependencies.length) {
       forEach(dependencies, (dependency) => {
         // check if dependency is already exists
         // 检测子模板是否已经存在
@@ -270,7 +323,7 @@ class Server extends (Syntax || Engine) {
    * @param {Object} options 配置 (optional)
    * @return {string} 结果字符串
    */
-  renderSync (template, data = {}, options = {}) {
+  renderSync (template, data = {}, options) {
     let render = this.compileSync(template, options)
     return render(data)
   }

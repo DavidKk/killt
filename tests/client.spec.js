@@ -31,7 +31,7 @@ describe('Test in client', function () {
     })
 
     it('should render remote templates', function (done) {
-      _.renderAsync('templates/remote.html', {}, function (source) {
+      _.render('templates/remote.html', {}, function (error, source) {
         expect(source).toEqual('<div>Hello world</div>')
         done()
       })
@@ -50,7 +50,7 @@ describe('Test in client', function () {
     })
 
     it('should render remote templates which include the nested templates', function (done) {
-      _.renderAsync('template/remote.html', {}, function (source) {
+      _.render('template/remote.html', {}, function (error, source) {
         expect(source).toEqual('<div>Hello World</div><script id="template/nested.html" type="text/template"><div>Hello World</div></script>')
         done()
       })
@@ -74,7 +74,7 @@ describe('Test in client', function () {
       +   '<div>Hello World</div>'
       + '</script>'
 
-      _.renderAsync('template/remote.html', {}, function (source) {
+      _.render('template/remote.html', {}, function (error, source) {
         expect(source).toEqual('<div>Hello World</div>')
         done()
       })
@@ -144,7 +144,7 @@ describe('Test in client', function () {
           + '})%>'
       })
 
-      _.renderAsync('templates/nested.html', {}, function (source) {
+      _.render('templates/nested.html', {}, function (error, source) {
         expect(source).toEqual('<div>Hello Remote Template!!!</div>')
         done()
       })

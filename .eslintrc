@@ -58,6 +58,7 @@
       1,
       {
         "requireReturn": false,
+        "requireReturnDescription": false,
       }
     ],
     // 确保 typeof 结果与一个有效的字符串相比较
