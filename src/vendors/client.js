@@ -102,14 +102,12 @@ class Client extends (Syntax || Engine) {
        */
       let dependencies  = []
       let origin        = source
+      let openTag       = '<%'
+      let closeTag      = '%>'
 
-      /**
-       * because can not make sure which syntax will be used
-       * so compile it to lit version syntax
-       * 因此不能确认使用那种语法，因此先编译成原始版本语法
-       */
       if (false === conf.noSyntax) {
-        source = this.$compileSyntax(source, conf.strict)
+        openTag   = conf.openTag
+        closeTag  = conf.closeTag
       }
 
       /**
@@ -118,8 +116,8 @@ class Client extends (Syntax || Engine) {
        * 找出所有依赖模板
        * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
        */
-      forEach(source.split('<%'), (code) => {
-        let [codes, match] = [code.split('%>')]
+      forEach(source.split(openTag), (code) => {
+        let [codes, match] = [code.split(closeTag)]
 
         if (1 !== codes.length
         && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
@@ -139,7 +137,7 @@ class Client extends (Syntax || Engine) {
             // check if dependency is in current template
             // 检测子模板是否存在当前模板中，若是则直使用
             let subSource = findChildTemplate(dependency, origin)
-            if (subSource) {
+            if (is('Defined')(subSource)) {
               this.compileSource(subSource, {
                 filename  : dependency,
                 override  : !!conf.override,
@@ -261,16 +259,14 @@ class Client extends (Syntax || Engine) {
      * so we must save the source at first
      * source 会受影响，因此先保存 source 的初始值
      */
-    let dependencies = []
-    let origin       = source
+    let dependencies  = []
+    let origin        = source
+    let openTag       = '<%'
+    let closeTag      = '%>'
 
-    /**
-     * because can not make sure which syntax will be used
-     * so compile it to lit version syntax
-     * 因此不能确认使用那种语法，因此先编译成原始版本语法
-     */
     if (false === conf.noSyntax) {
-      source = this.$compileSyntax(source, conf.strict)
+      openTag   = conf.openTag
+      closeTag  = conf.closeTag
     }
 
     /**
@@ -279,8 +275,8 @@ class Client extends (Syntax || Engine) {
      * 找出所有依赖模板
      * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
      */
-    forEach(source.split('<%'), (code) => {
-      let [codes, match] = [code.split('%>')]
+    forEach(source.split(openTag), (code) => {
+      let [codes, match] = [code.split(closeTag)]
 
       if (1 !== codes.length
       && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
@@ -406,6 +402,13 @@ function umd (name, factory, root) {
   }
 }
 
+/**
+ * 查找子模板
+ * 在模板中查找是否含有另外的模板
+ * @param  {string} templateId 对应的模板ID
+ * @param  {string} source     需要查找模板
+ * @return {string}            结果模板
+ */
 function findChildTemplate (templateId, source) {
   let node = document.createElement('div')
   node.innerHTML = source

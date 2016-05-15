@@ -13,7 +13,7 @@ extend(DEFAULTS, {
  * @description
  * 该模块主要提供一系列方法和基础语法供使用者更为简洁编写模板和自定义扩展语法
  * 你可以通过 `$registerSyntax` 方法来扩展自己所需求的语法；
- * 同时，现有的默认语法均可以通过 `$unregisterSyntax` 方法进行删除或清空，
+ * 同时，现有的默认语法均可以通过 `$dismissSyntax` 方法进行删除或清空，
  * 使用者可以拥有完全自主的控制权，但是语法最终必须替换成原生语法 (以 `<%` 和 `%>` 为包裹标记)
  * 其包裹内容是 Javascript 代码，你可以通过 `block` `helper` 为模板渲染时创建
  * 需要的辅助函数。
@@ -255,7 +255,7 @@ class Syntax extends Engine {
    * @param {string} name 语法名称
    * @returns {Syntax} 模板引擎对象
    */
-  $unregisterSyntax (name) {
+  $dismissSyntax (name) {
     let blocks = this._blocks
 
     if (blocks.hasOwnProperty(name)) {
@@ -311,7 +311,7 @@ class Syntax extends Engine {
    * @param {string} name 名称
    * @returns {Syntax} 模板引擎自身
    */
-  unblock (name) {
+  dismissBlock (name) {
     let helpers = this._blockHelpers
     let blocks  = this._blocks
 

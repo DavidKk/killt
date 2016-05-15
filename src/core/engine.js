@@ -67,7 +67,14 @@ class Engine {
    * source helpers - 资源辅助函数
    * @type {Object}
    */
-  _sourceHelpers = {}
+  _processors = {
+    text (source) {
+      return `<%=unescape('${escape(source)}')%>`
+    },
+    template (source, params) {
+      return `<script id="${params[0]}">${source.replace(/\n/g, '').replace(/\s+/g, ' ')}</script>`
+    },
+  }
 
   /**
    * helpers - 辅助函数
@@ -169,18 +176,18 @@ class Engine {
    * @return {string} 逻辑模板
    */
   $compileShell (source = '', options = {}) {
-    let origin    = source
-    let conf      = this.options(options)
-    let isEscape  = !!conf.escape
-    let strip     = !!conf.compress
-    let _helpers_ = this._helpers
-    let _blocks_  = this._blockHelpers
-    let _sources_ = this._sourceHelpers
-    let helpers   = []
-    let blocks    = []
-    let variables = []
-    let line      = 1
-    let buffer    = ''
+    let origin        = source
+    let conf          = this.options(options)
+    let isEscape      = !!conf.escape
+    let strip         = !!conf.compress
+    let _helpers_     = this._helpers
+    let _blocks_      = this._blockHelpers
+    let _processors_  = this._processors
+    let helpers       = []
+    let blocks        = []
+    let variables     = []
+    let line          = 1
+    let buffer        = ''
 
     /**
      * 获取变量名
@@ -206,14 +213,17 @@ class Engine {
      */
     let sourceToJs = (source) => {
       let match
+      while (match = /<%source\s*(?:\s+([\w\W]+?)(?:\:([\w\W]+?))?)?\s*%>([\w\W]+?)<%\/source%>/igm.exec(source)) {
+        let [all, helper, params, content] = match
+        params = params.split(',')
 
-      while (match = /<%source\\s*([\w\W]+?)?\\s*%>(.+?)<%\/source%>/igm.exec(source)) {
-        let [all, helper, content] = match
-        if (helper && _sources_.hasOwnProperty(helper)) {
-          content = _sources_[helper](content, options, this)
+        if (is('String')(helper) && is('Function')(_processors_[helper])) {
+          content = _processors_[helper](content, params, options, this)
+        }
+        else {
+          content = _processors_.text(content)
         }
 
-        content = `<%=unescape('${escape(content)}')%>`
         source = source.replace(all, content)
       }
 
@@ -564,10 +574,55 @@ class Engine {
    * @param {string} name 名称
    * @return {Engine} 模板引擎对象
    */
-  unhelper (name) {
+  dismissHelper (name) {
     let helpers = this._helpers
     if (helpers.hasOwnProperty(name)) {
+      helpers[name] = undefined
       delete helpers[name]
+    }
+
+    return this
+  }
+
+  /**
+   * 查找/设置编译器
+   * @function
+   * @param {string|Object} query 需要查找或设置的函数名|需要设置辅助函数集合
+   * @param {Function} callback 回调函数
+   * @returns {Engine|Function} 模板引擎或辅助方法
+   */
+  processor (query, callback) {
+    if (1 < arguments.length) {
+      if (is('String')(query) && is('Function')(callback)) {
+        this._processor[query] = callback
+      }
+    }
+    else {
+      if (is('String')(query)) {
+        return this._processor[query]
+      }
+
+      if (is('PlainObject')(query)) {
+        for (let name in query) {
+          this.processor(name, query[name])
+        }
+      }
+    }
+
+    return this
+  }
+
+  /**
+   * 注销编译器
+   * @function
+   * @param {string} name 名称
+   * @return {Engine} 模板引擎对象
+   */
+  dismissProcessor (name) {
+    let processors = this._processors
+    if (processors.hasOwnProperty(name)) {
+      processors[name] = undefined
+      delete processors[name]
     }
 
     return this

@@ -56,7 +56,7 @@ Engine.extend((engine) => {
    * if open tag and corresponding to ifclose (block syntax)
    * syntax {{if true}} Hello World {{/if}}
    */
-  .$registerSyntax('ifopen', 'if\\s*(.+?)\\s*', 'if ($1) {')
+  .$registerSyntax('ifOpen', 'if\\s*(.+?)\\s*', 'if ($1) {')
   /**
    * else tag between if and ifclose tag
    * syntax {{if false}} {{else}} Hello World {{/if}}
@@ -71,12 +71,12 @@ Engine.extend((engine) => {
    * if close tag
    * syntax {{if true}} Hello World {{/if}}
    */
-  .$registerSyntax('ifclose', '\\/if', '}')
+  .$registerSyntax('ifClose', '\\/if', '}')
   /**
    * each open tag. iterate data one by one
    * syntax {{each data as value, key}} {{= key + '=>' + value }} {{/each}}
    */
-  .$registerSyntax('eachopen', 'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', ($all, $1, $2, $3, $4) => {
+  .$registerSyntax('eachOpen', 'each\\s*([\\w\\W]+?)\\s*(as\\s*(\\w*?)\\s*(,\\s*\\w*?)?)?\\s*', ($all, $1, $2, $3, $4) => {
     let string = `each(${$1}, function(${$3 || '$value'}${$4 || ', $index'}) {`
     return `<%${string}%>`
   })
@@ -84,11 +84,13 @@ Engine.extend((engine) => {
    * each close tag
    * syntax {{each data as value, key}} {{= key + '=>' + value }} {{/each}}
    */
-  .$registerSyntax('eachclose', '\\/each', '})')
+  .$registerSyntax('eachClose', '\\/each', '})')
   /*
    * include another template
    * syntax {{include template/index.html [, ...(optional)] }}
    */
+  .$registerSyntax('sourceOpen', 'source(.+?)', 'source$1')
+  .$registerSyntax('sourceClose', '\\/source', '/source')
   .$registerSyntax('include', 'include\\s*([\\w\\W]+?)\\s*(,\\s*([\\w\\W]+?))?\\s*', ($all, $1, $2, $3) => {
     return `<%#include('${$1.replace(/[\'\"\`]/g, '')}', ${$3 || '$data'})%>`
   })

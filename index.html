@@ -17,13 +17,21 @@
   <script id="template/abc.html" type="text/template">
     {{= title.qwe }}
   </script>
+
+  <script id="template/bcd.html" type="text/template">
+    {{source template:template/cde.html}}
+      <h1>123</h1>
+    {{/source}}
+  </script>
   <script>
     window.onload = function() {
-      var source = killt.render('template/abc.html', { qwe: 123 }, {
+      killt.render('template/bcd.html', { qwe: 123 }, function (error, source) {
+        document.body.innerHTML = source
+      },
+      {
         compress: false
       })
 
-      document.body.innerHTML = source;
 
       // var render = killt.renderAsync('template/abc.html', {title: 'qwe'}, function(render) {
       //   console.log(render)

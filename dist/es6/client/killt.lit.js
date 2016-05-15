@@ -437,7 +437,14 @@ class Engine {
    * source helpers - 资源辅助函数
    * @type {Object}
    */
-  _sourceHelpers = {}
+  _processors = {
+    text (source) {
+      return `<%=unescape('${escape(source)}')%>`
+    },
+    template (source, params) {
+      return `<script id="${params[0]}">${source.replace(/\n/g, '').replace(/\s+/g, ' ')}</script>`
+    },
+  }
 
   /**
    * helpers - 辅助函数
@@ -539,18 +546,18 @@ class Engine {
    * @return {string} 逻辑模板
    */
   $compileShell (source = '', options = {}) {
-    let origin    = source
-    let conf      = this.options(options)
-    let isEscape  = !!conf.escape
-    let strip     = !!conf.compress
-    let _helpers_ = this._helpers
-    let _blocks_  = this._blockHelpers
-    let _sources_ = this._sourceHelpers
-    let helpers   = []
-    let blocks    = []
-    let variables = []
-    let line      = 1
-    let buffer    = ''
+    let origin        = source
+    let conf          = this.options(options)
+    let isEscape      = !!conf.escape
+    let strip         = !!conf.compress
+    let _helpers_     = this._helpers
+    let _blocks_      = this._blockHelpers
+    let _processors_  = this._processors
+    let helpers       = []
+    let blocks        = []
+    let variables     = []
+    let line          = 1
+    let buffer        = ''
 
     /**
      * 获取变量名
@@ -576,14 +583,17 @@ class Engine {
      */
     let sourceToJs = (source) => {
       let match
+      while (match = /<%source\s*(?:\s+([\w\W]+?)(?:\:([\w\W]+?))?)?\s*%>([\w\W]+?)<%\/source%>/igm.exec(source)) {
+        let [all, helper, params, content] = match
+        params = params.split(',')
 
-      while (match = /<%source\\s*([\w\W]+?)?\\s*%>(.+?)<%\/source%>/igm.exec(source)) {
-        let [all, helper, content] = match
-        if (helper && _sources_.hasOwnProperty(helper)) {
-          content = _sources_[helper](content, options, this)
+        if (is('String')(helper) && is('Function')(_processors_[helper])) {
+          content = _processors_[helper](content, params, options, this)
+        }
+        else {
+          content = _processors_.text(content)
         }
 
-        content = `<%=unescape('${escape(content)}')%>`
         source = source.replace(all, content)
       }
 
@@ -934,10 +944,55 @@ class Engine {
    * @param {string} name 名称
    * @return {Engine} 模板引擎对象
    */
-  unhelper (name) {
+  dismissHelper (name) {
     let helpers = this._helpers
     if (helpers.hasOwnProperty(name)) {
+      helpers[name] = undefined
       delete helpers[name]
+    }
+
+    return this
+  }
+
+  /**
+   * 查找/设置编译器
+   * @function
+   * @param {string|Object} query 需要查找或设置的函数名|需要设置辅助函数集合
+   * @param {Function} callback 回调函数
+   * @returns {Engine|Function} 模板引擎或辅助方法
+   */
+  processor (query, callback) {
+    if (1 < arguments.length) {
+      if (is('String')(query) && is('Function')(callback)) {
+        this._processor[query] = callback
+      }
+    }
+    else {
+      if (is('String')(query)) {
+        return this._processor[query]
+      }
+
+      if (is('PlainObject')(query)) {
+        for (let name in query) {
+          this.processor(name, query[name])
+        }
+      }
+    }
+
+    return this
+  }
+
+  /**
+   * 注销编译器
+   * @function
+   * @param {string} name 名称
+   * @return {Engine} 模板引擎对象
+   */
+  dismissProcessor (name) {
+    let processors = this._processors
+    if (processors.hasOwnProperty(name)) {
+      processors[name] = undefined
+      delete processors[name]
     }
 
     return this
@@ -1142,7 +1197,7 @@ extend(DEFAULTS, {
  * @description
  * 该模块主要提供一系列方法和基础语法供使用者更为简洁编写模板和自定义扩展语法
  * 你可以通过 `$registerSyntax` 方法来扩展自己所需求的语法；
- * 同时，现有的默认语法均可以通过 `$unregisterSyntax` 方法进行删除或清空，
+ * 同时，现有的默认语法均可以通过 `$dismissSyntax` 方法进行删除或清空，
  * 使用者可以拥有完全自主的控制权，但是语法最终必须替换成原生语法 (以 `<%` 和 `%>` 为包裹标记)
  * 其包裹内容是 Javascript 代码，你可以通过 `block` `helper` 为模板渲染时创建
  * 需要的辅助函数。
@@ -1384,7 +1439,7 @@ class Syntax extends Engine {
    * @param {string} name 语法名称
    * @returns {Syntax} 模板引擎对象
    */
-  $unregisterSyntax (name) {
+  $dismissSyntax (name) {
     let blocks = this._blocks
 
     if (blocks.hasOwnProperty(name)) {
@@ -1440,7 +1495,7 @@ class Syntax extends Engine {
    * @param {string} name 名称
    * @returns {Syntax} 模板引擎自身
    */
-  unblock (name) {
+  dismissBlock (name) {
     let helpers = this._blockHelpers
     let blocks  = this._blocks
 
@@ -1561,14 +1616,12 @@ class Client extends (Syntax || Engine) {
        */
       let dependencies  = []
       let origin        = source
+      let openTag       = '<%'
+      let closeTag      = '%>'
 
-      /**
-       * because can not make sure which syntax will be used
-       * so compile it to lit version syntax
-       * 因此不能确认使用那种语法，因此先编译成原始版本语法
-       */
       if (false === conf.noSyntax) {
-        source = this.$compileSyntax(source, conf.strict)
+        openTag   = conf.openTag
+        closeTag  = conf.closeTag
       }
 
       /**
@@ -1577,8 +1630,8 @@ class Client extends (Syntax || Engine) {
        * 找出所有依赖模板
        * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
        */
-      forEach(source.split('<%'), (code) => {
-        let [codes, match] = [code.split('%>')]
+      forEach(source.split(openTag), (code) => {
+        let [codes, match] = [code.split(closeTag)]
 
         if (1 !== codes.length
         && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
@@ -1598,7 +1651,7 @@ class Client extends (Syntax || Engine) {
             // check if dependency is in current template
             // 检测子模板是否存在当前模板中，若是则直使用
             let subSource = findChildTemplate(dependency, origin)
-            if (subSource) {
+            if (is('Defined')(subSource)) {
               this.compileSource(subSource, {
                 filename  : dependency,
                 override  : !!conf.override,
@@ -1720,16 +1773,14 @@ class Client extends (Syntax || Engine) {
      * so we must save the source at first
      * source 会受影响，因此先保存 source 的初始值
      */
-    let dependencies = []
-    let origin       = source
+    let dependencies  = []
+    let origin        = source
+    let openTag       = '<%'
+    let closeTag      = '%>'
 
-    /**
-     * because can not make sure which syntax will be used
-     * so compile it to lit version syntax
-     * 因此不能确认使用那种语法，因此先编译成原始版本语法
-     */
     if (false === conf.noSyntax) {
-      source = this.$compileSyntax(source, conf.strict)
+      openTag   = conf.openTag
+      closeTag  = conf.closeTag
     }
 
     /**
@@ -1738,8 +1789,8 @@ class Client extends (Syntax || Engine) {
      * 找出所有依赖模板
      * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
      */
-    forEach(source.split('<%'), (code) => {
-      let [codes, match] = [code.split('%>')]
+    forEach(source.split(openTag), (code) => {
+      let [codes, match] = [code.split(closeTag)]
 
       if (1 !== codes.length
       && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
@@ -1865,6 +1916,13 @@ function umd (name, factory, root) {
   }
 }
 
+/**
+ * 查找子模板
+ * 在模板中查找是否含有另外的模板
+ * @param  {string} templateId 对应的模板ID
+ * @param  {string} source     需要查找模板
+ * @return {string}            结果模板
+ */
 function findChildTemplate (templateId, source) {
   let node = document.createElement('div')
   node.innerHTML = source

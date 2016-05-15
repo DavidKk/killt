@@ -107,26 +107,24 @@ class Server extends (Syntax || Engine) {
        * so we must save the source at first
        * source 会受影响，因此先保存 source 的初始值
        */
-      let dependencies = []
-      let origin       = source
+      let dependencies  = []
+      let origin        = source
+      let openTag       = '<%'
+      let closeTag      = '%>'
 
-      /**
-       * because can not make sure which syntax will be used
-       * so compile it to lit version syntax
-       * 因此不能确认使用那种语法，因此先编译成原始版本语法
-       */
       if (false === conf.noSyntax) {
-        source = this.$compileSyntax(source, conf.strict)
+        openTag   = conf.openTag
+        closeTag  = conf.closeTag
       }
 
       /**
        * find out all dependencies of this template
-       * match any `<%# include template [, data] %>` syntax
+       * match any `include template [, data]` syntax
        * 找出所有依赖模板
        * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
        */
-      forEach(source.split('<%'), (code) => {
-        let [codes, match] = [code.split('%>')]
+      forEach(source.split(openTag), (code) => {
+        let [codes, match] = [code.split(closeTag)]
 
         if (1 !== codes.length
         && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
@@ -272,26 +270,24 @@ class Server extends (Syntax || Engine) {
      * so we must save the source at first
      * source 会受影响，因此先保存 source 的初始值
      */
-    let dependencies = []
-    let origin       = source
+    let dependencies  = []
+    let origin        = source
+    let openTag       = '<%'
+    let closeTag      = '%>'
 
-    /**
-     * because can not make sure which syntax will be used
-     * so compile it to lit version syntax
-     * 因此不能确认使用那种语法，因此先编译成原始版本语法
-     */
     if (false === conf.noSyntax) {
-      source = this.$compileSyntax(source, conf.strict)
+      openTag   = conf.openTag
+      closeTag  = conf.closeTag
     }
 
     /**
      * find out all dependencies of this template
-     * match any `<%# include template [, data] %>` syntax
+       * match any `include template [, data]` syntax
      * 找出所有依赖模板
      * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
      */
-    forEach(source.split('<%'), (code) => {
-      let [codes, match] = [code.split('%>')]
+    forEach(source.split(openTag), (code) => {
+      let [codes, match] = [code.split(closeTag)]
 
       if (1 !== codes.length
       && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {

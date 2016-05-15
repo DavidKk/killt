@@ -454,7 +454,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this._caches = {};
       this._blocks = {};
       this._blockHelpers = {};
-      this._sourceHelpers = {};
+      this._processors = {
+        text: function text(source) {
+          return '<%=unescape(\'' + escape(source) + '\')%>';
+        },
+        template: function template(source, params) {
+          return '<script id="' + params[0] + '">' + source.replace(/\n/g, '').replace(/\s+/g, ' ') + '</script>';
+        }
+      };
       this._helpers = {
         $escape: function $escape() {
           return escapeHTML.apply(escapeHTML, arguments);
@@ -580,7 +587,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var strip = !!conf.compress;
         var _helpers_ = this._helpers;
         var _blocks_ = this._blockHelpers;
-        var _sources_ = this._sourceHelpers;
+        var _processors_ = this._processors;
         var helpers = [];
         var blocks = [];
         var variables = [];
@@ -607,21 +614,24 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
          */
         var sourceToJs = function sourceToJs(source) {
           var match = void 0;
-
-          while (match = /<%source\\s*([\w\W]+?)?\\s*%>(.+?)<%\/source%>/igm.exec(source)) {
+          while (match = /<%source\s*(?:\s+([\w\W]+?)(?:\:([\w\W]+?))?)?\s*%>([\w\W]+?)<%\/source%>/igm.exec(source)) {
             var _match = match;
 
-            var _match2 = _slicedToArray(_match, 3);
+            var _match2 = _slicedToArray(_match, 4);
 
             var all = _match2[0];
             var helper = _match2[1];
-            var content = _match2[2];
+            var params = _match2[2];
+            var content = _match2[3];
 
-            if (helper && _sources_.hasOwnProperty(helper)) {
-              content = _sources_[helper](content, options, _this3);
+            params = params.split(',');
+
+            if (is('String')(helper) && is('Function')(_processors_[helper])) {
+              content = _processors_[helper](content, params, options, _this3);
+            } else {
+              content = _processors_.text(content);
             }
 
-            content = '<%=unescape(\'' + escape(content) + '\')%>';
             source = source.replace(all, content);
           }
 
@@ -964,11 +974,61 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        */
 
     }, {
-      key: 'unhelper',
-      value: function unhelper(name) {
+      key: 'dismissHelper',
+      value: function dismissHelper(name) {
         var helpers = this._helpers;
         if (helpers.hasOwnProperty(name)) {
+          helpers[name] = undefined;
           delete helpers[name];
+        }
+
+        return this;
+      }
+
+      /**
+       * 查找/设置编译器
+       * @function
+       * @param {string|Object} query 需要查找或设置的函数名|需要设置辅助函数集合
+       * @param {Function} callback 回调函数
+       * @returns {Engine|Function} 模板引擎或辅助方法
+       */
+
+    }, {
+      key: 'processor',
+      value: function processor(query, callback) {
+        if (1 < arguments.length) {
+          if (is('String')(query) && is('Function')(callback)) {
+            this._processor[query] = callback;
+          }
+        } else {
+          if (is('String')(query)) {
+            return this._processor[query];
+          }
+
+          if (is('PlainObject')(query)) {
+            for (var name in query) {
+              this.processor(name, query[name]);
+            }
+          }
+        }
+
+        return this;
+      }
+
+      /**
+       * 注销编译器
+       * @function
+       * @param {string} name 名称
+       * @return {Engine} 模板引擎对象
+       */
+
+    }, {
+      key: 'dismissProcessor',
+      value: function dismissProcessor(name) {
+        var processors = this._processors;
+        if (processors.hasOwnProperty(name)) {
+          processors[name] = undefined;
+          delete processors[name];
         }
 
         return this;
@@ -1217,7 +1277,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    * @description
    * 该模块主要提供一系列方法和基础语法供使用者更为简洁编写模板和自定义扩展语法
    * 你可以通过 `$registerSyntax` 方法来扩展自己所需求的语法；
-   * 同时，现有的默认语法均可以通过 `$unregisterSyntax` 方法进行删除或清空，
+   * 同时，现有的默认语法均可以通过 `$dismissSyntax` 方法进行删除或清空，
    * 使用者可以拥有完全自主的控制权，但是语法最终必须替换成原生语法 (以 `<%` 和 `%>` 为包裹标记)
    * 其包裹内容是 Javascript 代码，你可以通过 `block` `helper` 为模板渲染时创建
    * 需要的辅助函数。
@@ -1491,8 +1551,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        */
 
     }, {
-      key: '$unregisterSyntax',
-      value: function $unregisterSyntax(name) {
+      key: '$dismissSyntax',
+      value: function $dismissSyntax(name) {
         var blocks = this._blocks;
 
         if (blocks.hasOwnProperty(name)) {
@@ -1550,8 +1610,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        */
 
     }, {
-      key: 'unblock',
-      value: function unblock(name) {
+      key: 'dismissBlock',
+      value: function dismissBlock(name) {
         var helpers = this._blockHelpers;
         var blocks = this._blocks;
 
@@ -1709,24 +1769,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
            */
           var dependencies = [];
           var origin = source;
+          var openTag = '<%';
+          var closeTag = '%>';
 
-          /**
-           * because can not make sure which syntax will be used
-           * so compile it to lit version syntax
-           * 因此不能确认使用那种语法，因此先编译成原始版本语法
-           */
           if (false === conf.noSyntax) {
-            source = _this11.$compileSyntax(source, conf.strict);
+            openTag = conf.openTag;
+            closeTag = conf.closeTag;
           }
 
           /**
            * find out all dependencies of this template
-           * match any `<%# include template [, data] %>` syntax
+           * match any `include template [, data]` syntax
            * 找出所有依赖模板
            * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
            */
-          forEach(source.split('<%'), function (code) {
-            var _ref2 = [code.split('%>')];
+          forEach(source.split(openTag), function (code) {
+            var _ref2 = [code.split(closeTag)];
             var codes = _ref2[0];
             var match = _ref2[1];
 
@@ -1886,24 +1944,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
          */
         var dependencies = [];
         var origin = source;
+        var openTag = '<%';
+        var closeTag = '%>';
 
-        /**
-         * because can not make sure which syntax will be used
-         * so compile it to lit version syntax
-         * 因此不能确认使用那种语法，因此先编译成原始版本语法
-         */
         if (false === conf.noSyntax) {
-          source = this.$compileSyntax(source, conf.strict);
+          openTag = conf.openTag;
+          closeTag = conf.closeTag;
         }
 
         /**
          * find out all dependencies of this template
-         * match any `<%# include template [, data] %>` syntax
+           * match any `include template [, data]` syntax
          * 找出所有依赖模板
          * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
          */
-        forEach(source.split('<%'), function (code) {
-          var _ref3 = [code.split('%>')];
+        forEach(source.split(openTag), function (code) {
+          var _ref3 = [code.split(closeTag)];
           var codes = _ref3[0];
           var match = _ref3[1];
 
