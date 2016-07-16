@@ -6,11 +6,13 @@ node_js:
   - "5.2"
   - "iojs"
 
-before_script:
-  - npm install -g grunt-cli grunt-cli-babel
-
 install:
+  - npm install -g grunt-cli grunt-cli-babel
   - npm install
+
+before_script:
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
 
 script:
   - npm test
