@@ -1,0 +1,16 @@
+language: node_js
+node_js:
+  - "6"
+  - "6.1"
+  - "5"
+  - "5.2"
+  - "iojs"
+
+before_script:
+  - npm install -g grunt-cli grunt-cli-babel
+
+install:
+  - npm install
+
+script:
+  - npm test

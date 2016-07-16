@@ -4,6 +4,12 @@
   "license": "MIT",
   "description": "Template engine for Javascript.",
   "homepage": "https://github.com/DavidKk/killt",
+  "scripts": {
+    "start": "grunt release",
+    "develop": "grunt develop",
+    "release": "grunt release",
+    "test": "grunt unitest"
+  },
   "repository": {
     "type": "git",
     "url": "git@github.com:DavidKk/killt.git"
