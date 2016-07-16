@@ -7,6 +7,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/DavidKk/killt/badge.svg?branch=master)](https://coveralls.io/github/DavidKk/killt?branch=master)
 [![Inline docs](http://inch-ci.org/github/DavidKk/killt.svg?branch=master)](http://inch-ci.org/github/DavidKk/killt)
 
+[![NPM](https://nodei.co/npm/killt.png?compact=true)](https://nodei.co/npm/killt/)
+
 killt is a light template engine for Javascript.
 
 ### Examples & Docs
