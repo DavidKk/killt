@@ -2,22 +2,9 @@
 
 export default function (config) {
   config.set({
-    babelPreprocessor: {
-      options: {
-        presets: ['es2015'],
-        plugins: ['transform-class-properties'],
-      },
-    },
-    autoWatch   : false,
-    singleRun   : true,
-    frameworks  : ['jasmine'],
-    browsers    : ['PhantomJS'],
-    plugins     : [
-      'karma-jasmine',
-      'karma-phantomjs-launcher',
-      'karma-babel-preprocessor',
-    ],
-    files: [
+    frameworks : ['jasmine'],
+    browsers   : ['PhantomJS'],
+    files      : [
       'node_modules/babel-polyfill/dist/polyfill.js',
       'node_modules/jasmine-ajax/lib/mock-ajax.js',
       'tests/utilities/root.js',
@@ -28,11 +15,37 @@ export default function (config) {
       'src/core/syntax.js',
       'src/syntax/default.js',
       'src/vendors/client.js',
+
       'tests/*.spec.js',
     ],
-    preprocessors: {
-      'src/**/*.js'           : ['babel'],
-      'tests/**/*.spec.js'    : ['babel'],
+    reporters: [
+      'progress',
+      'coverage',
+    ],
+    babelPreprocessor: {
+      options: {
+        presets : ['es2015'],
+        plugins : ['transform-class-properties'],
+      },
     },
+    preprocessors: {
+      'src/**/*.js'        : ['babel', 'coverage'],
+      'tests/**/*.spec.js' : ['babel', 'coverage'],
+    },
+    coverageReporter: {
+      type  : 'lcov',
+      dir   : 'coverage/',
+      subdir (browser) {
+        return browser.toLowerCase().split(/[ /-]/)[0];
+      },
+    },
+    autoWatch : false,
+    singleRun : true,
+    plugins   : [
+      'karma-jasmine',
+      'karma-phantomjs-launcher',
+      'karma-babel-preprocessor',
+      'karma-coverage',
+    ],
   })
 }

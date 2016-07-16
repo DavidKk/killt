@@ -8,6 +8,7 @@ node_js:
 
 install:
   - npm install -g grunt-cli grunt-cli-babel
+  - npm install coveralls
   - npm install
 
 before_script:
