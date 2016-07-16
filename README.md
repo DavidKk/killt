@@ -1,5 +1,9 @@
 # killt
 
+[![Build Status](https://travis-ci.org/DavidKk/killt.svg?branch=master)](https://travis-ci.org/DavidKk/killt)
+[![Dependency Status](https://david-dm.org/DavidKk/killt.svg)](https://david-dm.org/DavidKk/killt)
+[![Inline docs](http://inch-ci.org/github/DavidKk/killt.svg?branch=master)](http://inch-ci.org/github/DavidKk/killt)
+
 killt is a light template engine for Javascript.
 
 ### Examples & Docs
