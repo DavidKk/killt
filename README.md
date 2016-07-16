@@ -1,7 +1,10 @@
 # killt
 
-[![Build Status](https://travis-ci.org/DavidKk/killt.svg?branch=master)](https://travis-ci.org/DavidKk/killt) [![Build status](https://ci.appveyor.com/api/projects/status/9yi0o53uy47xv6a7/branch/master?svg=true)](https://ci.appveyor.com/project/DavidKk/killt/branch/master)
-[![Dependency Status](https://david-dm.org/DavidKk/killt.svg)](https://david-dm.org/DavidKk/killt) [![devDependency Status](https://david-dm.org/DavidKk/killt/dev-status.svg)](https://david-dm.org/DavidKk/killt#info=devDependencies)
+[![Build Status](https://travis-ci.org/DavidKk/killt.svg?branch=master)](https://travis-ci.org/DavidKk/killt)
+[![Build status](https://ci.appveyor.com/api/projects/status/9yi0o53uy47xv6a7/branch/master?svg=true)](https://ci.appveyor.com/project/DavidKk/killt/branch/master)
+[![Dependency Status](https://david-dm.org/DavidKk/killt.svg)](https://david-dm.org/DavidKk/killt)
+[![devDependency Status](https://david-dm.org/DavidKk/killt/dev-status.svg)](https://david-dm.org/DavidKk/killt#info=devDependencies)
+[![Coverage Status](https://coveralls.io/repos/github/DavidKk/killt/badge.svg?branch=master)](https://coveralls.io/github/DavidKk/killt?branch=master)
 [![Inline docs](http://inch-ci.org/github/DavidKk/killt.svg?branch=master)](http://inch-ci.org/github/DavidKk/killt)
 
 killt is a light template engine for Javascript.
