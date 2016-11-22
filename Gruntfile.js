@@ -1,5 +1,3 @@
-'use strict'
-
 import path from 'path';
 import fs   from 'fs';
 
@@ -27,7 +25,7 @@ export default (grunt) => {
 
     concat: {
       options: {
-        banner: `~((root = {}) => {\n'use strict'\n`,
+        banner: `~((root = {}) => {\n`,
         footer: `\n})('undefined' === typeof global ? 'undefined' === typeof window ? {} : window : global)`,
       },
     },

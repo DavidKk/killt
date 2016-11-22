@@ -13,7 +13,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 ~function () {
-  'use strict';
+  var root = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
   /**
    * 判断类型
    * @typedef {isType}
@@ -26,8 +27,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    * @param {string} type 类型
    * @return {isType} 判断类型函数
    */
-
-  var root = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
   function is(type) {
     return function (value) {
       switch (type) {
@@ -100,14 +99,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    * {a:1}             -> get('a.a.a.a') -> undefined
    */
   function get(object, path) {
-    var spliter = arguments.length <= 2 || arguments[2] === undefined ? '.' : arguments[2];
+    var spliter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '.';
 
     if (!is('String')(path)) {
       return undefined;
     }
 
-    var re = object;
-    var ns = path.split(spliter);
+    var _ref = [object, path.split(spliter)],
+        re = _ref[0],
+        ns = _ref[1];
 
     for (var i = 0, l = ns.length; i < l; i++) {
       if (is('Undefined')(re[ns[i]])) {
@@ -148,7 +148,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    * @returns {string} 结果字符串
    */
   function escapeSymbol() {
-    var string = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
+    var string = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
 
     return string.replace(/("|'|\\)/g, '\\$1').replace(/\r/g, '\\r').replace(/\n/g, '\\n');
   }
@@ -187,8 +187,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }
 
     for (function () {
-      var i = 0;
-      var l = array.length;
+      var _ref2 = [0, array.length];
+      var i = _ref2[0],
+          l = _ref2[1];
     }(); i < l; i++) {
       if (array[i] === value) {
         return i;
@@ -210,8 +211,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     /* eslint eqeqeq: 0 */
     for (function () {
-      var i = 0;
-      var l = array.length;
+      var _ref3 = [0, array.length];
+      var i = _ref3[0],
+          l = _ref3[1];
     }(); i < l; i++) {
       if (index == array[i][propName]) {
         return i;
@@ -233,8 +235,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           collection.some(callback);
         } else {
           for (function () {
-            var i = 0;
-            var l = collection.length;
+            var _ref4 = [0, collection.length];
+            var i = _ref4[0],
+                l = _ref4[1];
           }(); i < l; i++) {
             if (true === callback(collection[i], i)) {
               break;
@@ -257,8 +260,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    * @return {Array} 结果数组
    */
   function unique(array) {
-    var n = {};
-    var r = [];
+    var n = {},
+        r = [];
 
 
     for (var i = array.length; i--;) {
@@ -301,8 +304,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       args[_key] = arguments[_key];
     }
 
-    var paramA = args[0];
-    var paramB = args[1];
+    var _ref5 = [args[0], args[1]],
+        paramA = _ref5[0],
+        paramB = _ref5[1];
 
 
     if (2 < args.length) {
@@ -443,11 +447,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * block syntax - 块状语法
      * @type {Object}
      */
-
     function Engine() {
       var _this = this;
 
-      var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       _classCallCheck(this, Engine);
 
@@ -578,8 +581,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function $compileShell() {
         var _this3 = this;
 
-        var source = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var source = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
         var origin = source;
         var conf = this.options(options);
@@ -615,14 +618,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var sourceToJs = function sourceToJs(source) {
           var match = void 0;
           while (match = /<%source\s*(?:\s+([\w\W]+?)(?:\:([\w\W]+?))?)?\s*%>([\w\W]+?)<%\/source%>/igm.exec(source)) {
-            var _match = match;
-
-            var _match2 = _slicedToArray(_match, 4);
-
-            var all = _match2[0];
-            var helper = _match2[1];
-            var params = _match2[2];
-            var content = _match2[3];
+            var _match = match,
+                _match2 = _slicedToArray(_match, 4),
+                all = _match2[0],
+                helper = _match2[1],
+                params = _match2[2],
+                content = _match2[3];
 
             params = params.split(',');
 
@@ -732,8 +733,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         forEach(source.split('<%'), function (code) {
           code = code.split('%>');
 
-          var p1 = code[0];
-          var p2 = code[1];
+          var _ref6 = [code[0], code[1]],
+              p1 = _ref6[0],
+              p2 = _ref6[1];
 
 
           if (1 === code.length) {
@@ -789,8 +791,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function $compile() {
         var _this4 = this;
 
-        var source = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var source = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
         var origin = source;
         var conf = this.options(options);
@@ -901,7 +903,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'compile',
       value: function compile(source) {
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
         source = toString(source);
 
@@ -930,8 +932,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'render',
       value: function render(source) {
-        var data = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+        var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
         return Engine.prototype.compile.call(this, source, options)(data);
       }
@@ -1110,7 +1112,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function _throw(error) {
         var _this5 = this;
 
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
         var conf = this.options(options);
 
@@ -1166,8 +1168,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         var max = match.length;
-        var start = 0;
-        var end = max;
+        var start = 0,
+            end = max;
 
 
         if (0 < scope && scope < max) {
@@ -1183,7 +1185,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
          * @return {string} 补零后的字符串
          */
         var zeros = function zeros(num, max) {
-          var zero = arguments.length <= 2 || arguments[2] === undefined ? ' ' : arguments[2];
+          var zero = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : ' ';
 
           num = num.toString();
           max = max.toString().replace(/\d/g, zero);
@@ -1293,7 +1295,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     function Syntax() {
       _classCallCheck(this, Syntax);
 
-      return _possibleConstructorReturn(this, Object.getPrototypeOf(Syntax).apply(this, arguments));
+      return _possibleConstructorReturn(this, (Syntax.__proto__ || Object.getPrototypeOf(Syntax)).apply(this, arguments));
     }
 
     _createClass(Syntax, [{
@@ -1351,8 +1353,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: '_compileSyntax',
       value: function _compileSyntax(source) {
-        var strict = arguments.length <= 1 || arguments[1] === undefined ? true : arguments[1];
-        var origin = arguments.length <= 2 || arguments[2] === undefined ? source : arguments[2];
+        var strict = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+        var origin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : source;
 
         var matched = false;
 
@@ -1411,7 +1413,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function $compileSyntax(source) {
         var _this7 = this;
 
-        var strict = arguments.length <= 1 || arguments[1] === undefined ? true : arguments[1];
+        var strict = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
         var origin = source;
         var conf = this.options();
@@ -1645,16 +1647,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    */
 
 
-  var Client = function (_ref) {
-    _inherits(Client, _ref);
+  var Client = function (_ref7) {
+    _inherits(Client, _ref7);
 
     function Client(options) {
       _classCallCheck(this, Client);
 
       // extends include func to support ajax request file
       // 扩展新的 include 支持 ajax
-
-      var _this9 = _possibleConstructorReturn(this, Object.getPrototypeOf(Client).call(this, options));
+      var _this9 = _possibleConstructorReturn(this, (Client.__proto__ || Object.getPrototypeOf(Client)).call(this, options));
 
       ~extend(_this9._helpers, {
         include: function include(filename, data, options) {
@@ -1679,7 +1680,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     _createClass(Client, [{
       key: 'compileSource',
       value: function compileSource(source, options) {
-        return _get(Object.getPrototypeOf(Client.prototype), 'compile', this).call(this, source, options);
+        return _get(Client.prototype.__proto__ || Object.getPrototypeOf(Client.prototype), 'compile', this).call(this, source, options);
       }
 
       /**
@@ -1697,7 +1698,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'renderSource',
       value: function renderSource(source, data, options) {
-        return _get(Object.getPrototypeOf(Client.prototype), 'render', this).call(this, source, data, options);
+        return _get(Client.prototype.__proto__ || Object.getPrototypeOf(Client.prototype), 'render', this).call(this, source, data, options);
       }
 
       /**
@@ -1716,7 +1717,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function compile(template, callback) {
         var _this10 = this;
 
-        var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
         template = toString(template);
 
@@ -1772,9 +1773,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
            * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
            */
           forEach(source.split(openTag), function (code) {
-            var _ref2 = [code.split(closeTag)];
-            var codes = _ref2[0];
-            var match = _ref2[1];
+            var _ref8 = [code.split(closeTag)],
+                codes = _ref8[0],
+                match = _ref8[1];
 
 
             if (1 !== codes.length && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
@@ -1858,7 +1859,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'render',
       value: function render(template, data, callback) {
-        var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+        var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
 
         if (is('Function')(data)) {
           this.render(template, {}, data, callback);
@@ -1885,7 +1886,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function compileSync(template) {
         var _this11 = this;
 
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
         template = toString(template);
 
@@ -1942,9 +1943,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
          * 必须使用最原始的语法来做判断 `<%# include template [, data] %>`
          */
         forEach(source.split(openTag), function (code) {
-          var _ref3 = [code.split(closeTag)];
-          var codes = _ref3[0];
-          var match = _ref3[1];
+          var _ref9 = [code.split(closeTag)],
+              codes = _ref9[0],
+              match = _ref9[1];
 
 
           if (1 !== codes.length && (match = /include\s*\(\s*([\w\W]+?)(\s*,\s*([^\)]+)?)?\)/.exec(codes[0]))) {
@@ -1980,7 +1981,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'renderSync',
       value: function renderSync(template) {
-        var data = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var options = arguments[2];
 
         var render = this.compileSync(template, options);
@@ -2000,7 +2001,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function readFileByAJAX(url, callback) {
         var _this12 = this;
 
-        var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
         if (!is('Function')(callback)) {
           callback = function callback() {};
@@ -2074,8 +2075,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    * @param {windows|global} root 当前域
    */
   function umd(name, factory, root) {
-    var define = root.define;
-    var module = factory(root);
+    var _ref10 = [root.define, factory(root)],
+        define = _ref10[0],
+        module = _ref10[1];
 
     // AMD & CMD
 

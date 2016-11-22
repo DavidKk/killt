@@ -1,5 +1,3 @@
-'use strict'
-
 describe('Test in client', function () {
   let _ = killt
 

@@ -1,5 +1,4 @@
 ~((root = {}) => {
-'use strict'
 /**
  * 判断类型
  * @typedef {isType}

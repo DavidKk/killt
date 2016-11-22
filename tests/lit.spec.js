@@ -1,5 +1,3 @@
-'use strict'
-
 describe('Test origin javascript syntax', function () {
   let _ = killt
 

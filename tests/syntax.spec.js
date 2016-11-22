@@ -1,5 +1,3 @@
-'use strict'
-
 describe('Test the simple syntax', function () {
   let _ = killt
 
